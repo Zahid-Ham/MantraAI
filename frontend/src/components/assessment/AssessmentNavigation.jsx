@@ -46,24 +46,22 @@ export default function AssessmentNavigation({
 
       {/* Next/Skip/Complete button */}
       <div>
-        {(!isAutoAdvancing || isLast || (!canGoNext && isOptional)) && (
-          <button
-            onClick={onNext}
-            disabled={!canGoNext && !isOptional}
-            className={`px-8 py-3.5 text-xs font-semibold uppercase tracking-wider transition-all duration-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-marigold ${
-              canGoNext || isOptional
-                ? "bg-marigold text-night-blue hover:bg-marigold-light cursor-pointer shadow-md shadow-marigold/5"
-                : "bg-cream-dark dark:bg-night-blue/50 text-night-blue/30 dark:text-cream/20 border border-border-light dark:border-border-dark cursor-not-allowed"
-            }`}
-          >
-            {isLast 
-              ? content.complete 
-              : (!canGoNext && isOptional) 
-                ? content.skip 
-                : content.continue
-            }
-          </button>
-        )}
+        <button
+          onClick={onNext}
+          disabled={!canGoNext && !isOptional}
+          className={`px-8 py-3.5 text-xs font-semibold uppercase tracking-wider transition-all duration-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-marigold ${
+            canGoNext || isOptional
+              ? "bg-marigold text-night-blue hover:bg-marigold-light cursor-pointer shadow-md shadow-marigold/5"
+              : "bg-cream-dark dark:bg-night-blue/50 text-night-blue/30 dark:text-cream/20 border border-border-light dark:border-border-dark cursor-not-allowed"
+          }`}
+        >
+          {isLast 
+            ? content.complete 
+            : (!canGoNext && isOptional) 
+              ? content.skip 
+              : content.continue
+          }
+        </button>
       </div>
     </div>
   );
