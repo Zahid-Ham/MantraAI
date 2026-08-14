@@ -8,11 +8,13 @@ import MagneticButton from './MagneticButton';
 export default function Hero() {
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage } = useLanguage();
+  const isDark = theme === 'dark';
   const [isTabActive, setIsTabActive] = useState(true);
   const [ctaHovered, setCtaHovered] = useState(false);
   const containerRef = useRef(null);
   const prefersReducedMotion = useReducedMotion();
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
 
   // Translations
   const content = {
@@ -66,7 +68,7 @@ export default function Hero() {
         {!prefersReducedMotion && isTabActive && (
           <MicroscopicField
             mouseReactive={!isMobile}
-            density={isMobile ? 'low' : 'medium'}
+            density={isMobile ? 'low' : isDark ? 'high' : 'medium'}
             mode="drift"
             bioForms={!isMobile}
           />
@@ -121,15 +123,25 @@ export default function Hero() {
 
         {/* Microscopic lens glow behind headline */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {/* Outer large glow — dark mode gets prominent warm amber */}
           <div
-            className={`w-[420px] h-[420px] rounded-full bg-marigold/5 dark:bg-marigold/8 blur-3xl animate-lens`}
-            style={{ maxWidth: '80vw', maxHeight: '80vw' }}
+            className={`w-[600px] h-[600px] rounded-full blur-3xl animate-lens pointer-events-none ${
+              isDark ? 'bg-marigold/10' : 'bg-marigold/4'
+            }`}
+            style={{ maxWidth: '90vw', maxHeight: '90vw' }}
           />
+          {/* Inner concentrated core (dark mode only) */}
+          {isDark && (
+            <div
+              className="absolute w-[240px] h-[240px] rounded-full blur-2xl bg-marigold/8 pointer-events-none"
+            />
+          )}
         </div>
 
         {/* Dark mode radial gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-cream dark:from-night-blue via-transparent to-cream-dark/20 dark:to-night-dark/20" />
       </div>
+
 
       {/* ── Navigation Header ────────────────────── */}
       <header className="relative z-10 w-full flex justify-between items-center border-b border-border-light dark:border-border-dark pb-4">

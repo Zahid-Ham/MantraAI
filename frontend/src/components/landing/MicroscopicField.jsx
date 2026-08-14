@@ -44,10 +44,13 @@ export default function MicroscopicField({
     return {
       x: Math.random() * W,
       y: Math.random() * H,
-      size: 0.6 + Math.random() * 1.8,
+      size: 0.8 + Math.random() * 2.2,
       vx: (Math.random() - 0.5) * 0.25,
       vy: (Math.random() - 0.5) * 0.25,
-      baseOpacity: 0.03 + Math.random() * 0.1,
+      // Dark mode gets much higher opacity so particles are visible
+      baseOpacity: isDark
+        ? 0.15 + Math.random() * 0.25
+        : 0.04 + Math.random() * 0.08,
       life: Math.random(),
       lifeDir: Math.random() > 0.5 ? 1 : -1,
       lifeSpeed: 0.003 + Math.random() * 0.004,
@@ -65,9 +68,12 @@ export default function MicroscopicField({
       y: Math.random() * H,
       angle: Math.random() * Math.PI * 2,
       speed: 0.18 + Math.random() * 0.22,
-      scale: 0.7 + Math.random() * 0.9,
-      baseOpacity: 0.05 + Math.random() * 0.08,
-      tailLen: 22 + Math.random() * 18,
+      scale: 0.9 + Math.random() * 1.1,
+      // Dark mode: much more visible (0.18–0.38); light mode: subtle (0.05–0.12)
+      baseOpacity: isDark
+        ? 0.18 + Math.random() * 0.20
+        : 0.05 + Math.random() * 0.07,
+      tailLen: 26 + Math.random() * 20,
       tailPhase: Math.random() * Math.PI * 2,
       tailFreq: 0.13 + Math.random() * 0.09,
       turnRate: (Math.random() - 0.5) * 0.007,
@@ -130,18 +136,21 @@ export default function MicroscopicField({
 
     const dark = isDark;
 
-    // Colors
+    // Colors — dark mode uses bright saffron + cream for maximum visibility
     const particleColor = dark
-      ? (a) => `rgba(217,119,6,${a})`   // saffron
-      : (a) => `rgba(100,70,10,${a})`;  // muted gold in light
+      ? (a) => `rgba(245,158,11,${a})`   // amber-400, brighter saffron
+      : (a) => `rgba(100,70,10,${a})`;   // muted gold in light
     const formHeadColor = dark
-      ? (a) => `rgba(217,119,6,${a})`
+      ? (a) => `rgba(251,191,36,${a})`   // amber-300 — glowing head
       : (a) => `rgba(90,60,10,${a})`;
     const formTailColor = dark
-      ? (a) => `rgba(217,119,6,${a})`
+      ? (a) => `rgba(217,119,6,${a})`    // saffron tail
       : (a) => `rgba(90,60,10,${a})`;
+    const nucleusColor = dark
+      ? (a) => `rgba(254,240,138,${a})`  // warm yellow nucleus highlight
+      : (a) => `rgba(200,140,50,${a})`;
     const lineColor = dark
-      ? (a) => `rgba(217,119,6,${a})`
+      ? (a) => `rgba(245,158,11,${a})`
       : (a) => `rgba(120,80,20,${a})`;
 
     const animate = () => {
@@ -263,41 +272,49 @@ export default function MicroscopicField({
 
         // Head
         ctx.beginPath();
-        ctx.ellipse(0, 0, 5, 3.2, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, 5.5, 3.6, 0, 0, Math.PI * 2);
         ctx.fillStyle = formHeadColor(alpha);
         ctx.fill();
 
         // Nucleus highlight
         ctx.beginPath();
-        ctx.ellipse(-1, -0.5, 2, 1.4, 0, 0, Math.PI * 2);
-        ctx.fillStyle = dark ? `rgba(255,200,100,${alpha * 0.4})` : `rgba(200,140,50,${alpha * 0.3})`;
+        ctx.ellipse(-1, -0.5, 2.2, 1.5, 0, 0, Math.PI * 2);
+        ctx.fillStyle = nucleusColor(alpha * (dark ? 0.5 : 0.3));
         ctx.fill();
+
+        // Outer glow (dark mode only)
+        if (dark) {
+          ctx.beginPath();
+          ctx.ellipse(0, 0, 8, 5.5, 0, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(245,158,11,${alpha * 0.08})`;
+          ctx.fill();
+        }
 
         // Tail
         ctx.beginPath();
-        ctx.moveTo(5, 0);
+        ctx.moveTo(5.5, 0);
         const tl = f.tailLen;
         for (let t = 0; t <= tl; t += 1.5) {
           const factor = t / tl;
-          const amp = 2.5 + factor * 4;
+          const amp = 3 + factor * 5;
           const wave = Math.sin(t * f.tailFreq + f.tailPhase) * amp * factor;
-          ctx.lineTo(5 + t, wave);
+          ctx.lineTo(5.5 + t, wave);
         }
-        ctx.strokeStyle = formTailColor(alpha * 0.75);
-        ctx.lineWidth = 0.9;
+        ctx.strokeStyle = formTailColor(alpha * (dark ? 0.9 : 0.75));
+        ctx.lineWidth = dark ? 1.2 : 0.9;
         ctx.lineCap = 'round';
         ctx.stroke();
 
         // Secondary tail (fainter)
         ctx.beginPath();
-        ctx.moveTo(5, 0);
-        for (let t = 0; t <= tl * 0.6; t += 1.5) {
+        ctx.moveTo(5.5, 0);
+        for (let t = 0; t <= tl * 0.65; t += 1.5) {
           const factor = t / tl;
-          const wave = Math.cos(t * f.tailFreq * 1.2 + f.tailPhase + 0.5) * 1.5 * factor;
-          ctx.lineTo(5 + t, wave);
+          const wave = Math.cos(t * f.tailFreq * 1.2 + f.tailPhase + 0.5) * 1.8 * factor;
+          ctx.lineTo(5.5 + t, wave);
         }
-        ctx.strokeStyle = formTailColor(alpha * 0.3);
-        ctx.lineWidth = 0.5;
+        ctx.strokeStyle = formTailColor(alpha * (dark ? 0.45 : 0.3));
+        ctx.lineWidth = dark ? 0.7 : 0.5;
         ctx.stroke();
 
         ctx.restore();
