@@ -81,43 +81,83 @@ MantraAI/
 
 ## 🚀 Getting Started
 
-### Prerequisites
-- Node.js 18+
-- Python 3.10+
+Follow these steps to run the MantraAI frontend and backend applications locally.
 
-### Frontend
+### 📋 Prerequisites
+- **Node.js** (version 18 or higher)
+- **Python** (version 3.10 or higher)
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+---
 
-Frontend runs at: `http://localhost:5173`
+### 🎨 Running the Frontend
 
-### Backend
+The frontend is built with React, Vite, and Tailwind CSS.
 
-```bash
-cd backend
-python -m venv .venv
-.venv\Scripts\activate      # Windows
-# source .venv/bin/activate  # macOS/Linux
+1. **Navigate to the frontend folder:**
+   ```bash
+   cd frontend
+   ```
 
-pip install fastapi uvicorn python-dotenv
-```
+2. **Install node package dependencies:**
+   ```bash
+   npm install
+   ```
 
-Create `backend/.env`:
-```env
-GROQ_API_KEY=your_groq_api_key_here
-GROQ_MODEL=llama-3.3-70b-versatile
-```
+3. **Start the local Vite development server:**
+   ```bash
+   npm run dev
+   ```
 
-Start the server:
-```bash
-python -m uvicorn main:app --reload --port 8000
-```
+4. **Access the application:**
+   Open your browser and navigate to **[http://localhost:5173](http://localhost:5173)**.
 
-Backend runs at: `http://localhost:8000`
+---
+
+### ⚡ Running the Backend
+
+The backend is built with FastAPI and connects to the Groq API for pre-clinical report generation.
+
+1. **Navigate to the backend folder:**
+   ```bash
+   cd backend
+   ```
+
+2. **Create a Python virtual environment:**
+   ```bash
+   python -m venv .venv
+   ```
+
+3. **Activate the virtual environment:**
+   - **On Windows (PowerShell/CMD):**
+     ```powershell
+     .venv\Scripts\activate
+     ```
+   - **On macOS/Linux:**
+     ```bash
+     source .venv/bin/activate
+     ```
+
+4. **Install Python package dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. **Configure environment variables:**
+   Create a `.env` file inside the `backend/` directory:
+   ```env
+   GROQ_API_KEY=your_actual_groq_api_key_here
+   GROQ_MODEL=llama-3.3-70b-versatile
+   ```
+   *(Note: Obtain your API key from the [Groq Console](https://console.groq.com/))*
+
+6. **Start the Uvicorn local server:**
+   ```bash
+   python -m uvicorn main:app --reload --port 8000
+   ```
+
+7. **Verify the server is running:**
+   - Interactive docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+   - Health check: [http://localhost:8000/health](http://localhost:8000/health)
 
 ---
 
