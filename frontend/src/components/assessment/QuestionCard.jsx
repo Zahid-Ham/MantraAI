@@ -6,6 +6,7 @@ export default function QuestionCard({
   questionData, 
   currentAnswer, 
   onAnswerChange, 
+  onAutoAdvance,
   index, 
   totalQuestions, 
   onWhyAskClick 
@@ -66,6 +67,7 @@ export default function QuestionCard({
           questionData={questionData} 
           currentAnswer={currentAnswer} 
           onAnswerChange={onAnswerChange} 
+          onAutoAdvance={onAutoAdvance}
         />
       </div>
 

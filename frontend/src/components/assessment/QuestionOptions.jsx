@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 
-export default function QuestionOptions({ questionData, currentAnswer, onAnswerChange }) {
+export default function QuestionOptions({ questionData, currentAnswer, onAnswerChange, onAutoAdvance }) {
   const { language } = useLanguage();
 
   if (!questionData) return null;
@@ -16,6 +16,15 @@ export default function QuestionOptions({ questionData, currentAnswer, onAnswerC
     }
   };
 
+  const handleSelectAuto = (val) => {
+    onAnswerChange(val);
+    if (onAutoAdvance) {
+      setTimeout(() => {
+        onAutoAdvance();
+      }, 350); // slight delay so user can see selection state
+    }
+  };
+
   // Render segmented horizontal buttons
   if (type === 'segmented') {
     return (
@@ -27,7 +36,7 @@ export default function QuestionOptions({ questionData, currentAnswer, onAnswerC
           return (
             <button
               key={idx}
-              onClick={() => onAnswerChange(opt.value)}
+              onClick={() => handleSelectAuto(opt.value)}
               className={`flex-1 min-w-[100px] px-4 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all duration-300 border focus:outline-none focus:ring-2 focus:ring-marigold rounded-sm cursor-pointer ${
                 isSelected 
                   ? "bg-marigold text-night-blue border-marigold" 
@@ -56,8 +65,8 @@ export default function QuestionOptions({ questionData, currentAnswer, onAnswerC
               role="radio"
               aria-checked={isSelected}
               tabIndex={0}
-              onClick={() => onAnswerChange(opt.value)}
-              onKeyDown={(e) => handleKeyPress(e, () => onAnswerChange(opt.value))}
+              onClick={() => handleSelectAuto(opt.value)}
+              onKeyDown={(e) => handleKeyPress(e, () => handleSelectAuto(opt.value))}
               className={`flex justify-between items-center px-4 py-2.5 border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-marigold rounded-sm cursor-pointer select-none ${
                 isSelected 
                   ? "border-marigold bg-marigold/5" 

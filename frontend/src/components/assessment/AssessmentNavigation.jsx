@@ -7,7 +7,9 @@ export default function AssessmentNavigation({
   canGoBack, 
   canGoNext, 
   isLast,
-  isOptional
+  isOptional,
+  autoAdvanceTypes = [],
+  questionType
 }) {
   const { language } = useLanguage();
 
@@ -26,6 +28,8 @@ export default function AssessmentNavigation({
     }
   }[language];
 
+  const isAutoAdvancing = autoAdvanceTypes.includes(questionType);
+
   return (
     <div className="w-full max-w-2xl mx-auto flex justify-between items-center gap-4 mt-8 font-grotesk select-none">
       {/* Back button */}
@@ -42,22 +46,24 @@ export default function AssessmentNavigation({
 
       {/* Next/Skip/Complete button */}
       <div>
-        <button
-          onClick={onNext}
-          disabled={!canGoNext && !isOptional}
-          className={`px-8 py-3.5 text-xs font-semibold uppercase tracking-wider transition-all duration-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-marigold ${
-            canGoNext || isOptional
-              ? "bg-marigold text-night-blue hover:bg-marigold-light cursor-pointer shadow-md shadow-marigold/5"
-              : "bg-cream-dark dark:bg-night-blue/50 text-night-blue/30 dark:text-cream/20 border border-border-light dark:border-border-dark cursor-not-allowed"
-          }`}
-        >
-          {isLast 
-            ? content.complete 
-            : (!canGoNext && isOptional) 
-              ? content.skip 
-              : content.continue
-          }
-        </button>
+        {(!isAutoAdvancing || isLast || (!canGoNext && isOptional)) && (
+          <button
+            onClick={onNext}
+            disabled={!canGoNext && !isOptional}
+            className={`px-8 py-3.5 text-xs font-semibold uppercase tracking-wider transition-all duration-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-marigold ${
+              canGoNext || isOptional
+                ? "bg-marigold text-night-blue hover:bg-marigold-light cursor-pointer shadow-md shadow-marigold/5"
+                : "bg-cream-dark dark:bg-night-blue/50 text-night-blue/30 dark:text-cream/20 border border-border-light dark:border-border-dark cursor-not-allowed"
+            }`}
+          >
+            {isLast 
+              ? content.complete 
+              : (!canGoNext && isOptional) 
+                ? content.skip 
+                : content.continue
+            }
+          </button>
+        )}
       </div>
     </div>
   );

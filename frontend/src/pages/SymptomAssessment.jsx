@@ -369,8 +369,8 @@ export default function SymptomAssessment({ onNavigateHome }) {
         </div>
       </header>
 
-      {/* Main wizard wrapper - minimal padding */}
-      <main className="flex-grow flex items-center justify-center py-2.5 px-6 md:px-16 relative z-10">
+      {/* Main wizard wrapper */}
+      <main className="flex-grow w-full py-5 px-6 md:px-16 relative z-10">
         <AnimatePresence mode="wait">
           {step === 'intro' && (
             <AssessmentIntro key="intro" onStart={handleStart} />
@@ -461,6 +461,7 @@ export default function SymptomAssessment({ onNavigateHome }) {
                         questionData={currentQuestion}
                         currentAnswer={answers[currentQuestion.id]}
                         onAnswerChange={handleAnswerChange}
+                        onAutoAdvance={handleNext}
                         index={questions.filter(q => q.block === currentQuestion.block && !shouldSkipQuestion(q, answers)).indexOf(currentQuestion) + 1}
                         totalQuestions={questions.filter(q => q.block === currentQuestion.block && !shouldSkipQuestion(q, answers)).length}
                         onWhyAskClick={() => setIsWhyAskOpen(true)}
@@ -473,6 +474,8 @@ export default function SymptomAssessment({ onNavigateHome }) {
                         canGoNext={answers[currentQuestion.id] !== undefined && answers[currentQuestion.id] !== ""}
                         isLast={currentQuestionIndex === questions.length - 1}
                         isOptional={currentQuestion.sensitivity}
+                        autoAdvanceTypes={['radio', 'segmented']}
+                        questionType={currentQuestion.type}
                       />
                     </div>
 
