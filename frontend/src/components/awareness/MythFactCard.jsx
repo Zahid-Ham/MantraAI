@@ -69,7 +69,8 @@ export default function MythFactCard({ mythItem }) {
 
   return (
     <div 
-      className="perspective-1000 w-full min-h-[220px] cursor-pointer focus:outline-none"
+      className="w-full min-h-[220px] cursor-pointer focus:outline-none"
+      style={{ perspective: '1000px' }}
       onClick={handleFlip}
       onKeyDown={handleKeyDown}
       tabIndex={0}
@@ -77,13 +78,17 @@ export default function MythFactCard({ mythItem }) {
       aria-label={`Myth Card: ${mythText}`}
     >
       <motion.div
-        className="relative w-full h-full transform-style-3d duration-600 flex min-h-[220px]"
+        className="relative w-full h-full flex min-h-[220px]"
+        style={{ transformStyle: 'preserve-3d' }}
         animate={flipped ? "back" : "front"}
         variants={cardVariants}
         transition={{ duration: 0.5, ease: "easeInOut" }}
       >
         {/* Front Face: Myth */}
-        <div className="absolute inset-0 backface-hidden bg-cream dark:bg-night-blue border border-border-light dark:border-border-dark p-6 flex flex-col justify-between rounded-sm shadow-sm hover:border-marigold/40 transition-colors">
+        <div 
+          className="absolute inset-0 bg-cream dark:bg-night-blue border border-border-light dark:border-border-dark p-6 flex flex-col justify-between rounded-sm shadow-sm hover:border-marigold/40 transition-colors"
+          style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+        >
           <div>
             <span className="text-[9px] uppercase tracking-[0.2em] text-red-500 font-semibold mb-3 block">
               {content.mythTitle}
@@ -98,7 +103,10 @@ export default function MythFactCard({ mythItem }) {
         </div>
 
         {/* Back Face: Fact */}
-        <div className="absolute inset-0 backface-hidden bg-cream-dark/20 dark:bg-night-dark/30 border border-marigold/30 p-6 flex flex-col justify-between rounded-sm shadow-inner rotate-y-180">
+        <div 
+          className="absolute inset-0 bg-cream-dark/20 dark:bg-night-dark/30 border border-marigold/30 p-6 flex flex-col justify-between rounded-sm shadow-inner"
+          style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+        >
           <div>
             <span className="text-[9px] uppercase tracking-[0.2em] text-ashoka-green dark:text-ashoka-green-light font-semibold mb-3 block">
               {content.factTitle}
