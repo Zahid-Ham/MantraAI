@@ -43,8 +43,8 @@ export default function Footer() {
       desc: 'Clinical-grade digital wellness and risk screening, built for the lifestyle profiles of modern Indian men.',
       col1: 'Platform',
       col1_l1: 'Symptom Risk Assessment',
-      col1_l2: 'AI Companion',
-      col1_l3: 'Fertility Screening',
+      col1_l2: 'Knowledge Hub',
+      col1_l3: 'Semen analysis glossary',
       col2: 'Protocol',
       col2_l1: 'Zero-PII Policy',
       col2_l2: 'Clinical Standards',
@@ -56,8 +56,8 @@ export default function Footer() {
       desc: 'क्लीनिकल-ग्रेड डिजिटल स्वास्थ्य और जोखिम जांच प्रणाली, आधुनिक भारतीय पुरुषों की जीवनशैली और स्वास्थ्य मापदंडों के लिए निर्मित।',
       col1: 'प्लेटफॉर्म',
       col1_l1: 'लक्षण जोखिम मूल्यांकन',
-      col1_l2: 'एआई साथी (AI Companion)',
-      col1_l3: 'प्रजनन क्षमता जांच',
+      col1_l2: 'ज्ञान केंद्र (Knowledge Hub)',
+      col1_l3: 'वीर्य विश्लेषण शब्दावली',
       col2: 'प्रोटोकॉल',
       col2_l1: 'शून्य-PII नीति',
       col2_l2: 'क्लीनिकल मानक',
@@ -123,8 +123,8 @@ export default function Footer() {
               <h4 className="text-night-blue dark:text-cream uppercase tracking-widest font-semibold mb-4">{content.col1}</h4>
               <ul className="space-y-2 font-light text-night-blue/80 dark:text-cream/80">
                 <li><a href="#assess" className="hover:text-marigold transition-colors">{content.col1_l1}</a></li>
-                <li><a href="#companion" className="hover:text-marigold transition-colors">{content.col1_l2}</a></li>
-                <li><a href="#fertility" className="hover:text-marigold transition-colors">{content.col1_l3}</a></li>
+                <li><a href="#awareness" className="hover:text-marigold transition-colors">{content.col1_l2}</a></li>
+                <li><a href="#awareness/semen-analysis-intro" className="hover:text-marigold transition-colors">{content.col1_l3}</a></li>
               </ul>
             </div>
             <div>

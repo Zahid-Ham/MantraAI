@@ -829,6 +829,49 @@ export default function SymptomAssessment({ onNavigateHome }) {
                 )}
               </div>
 
+              {/* Recommended Awareness Resources */}
+              <div className="border border-marigold/30 p-6 bg-marigold/[0.015] dark:bg-marigold/[0.005] rounded-sm mb-8">
+                <span className="text-[10px] text-marigold uppercase tracking-wider font-bold block border-b border-border-light dark:border-border-dark pb-2 mb-4">
+                  {language === 'en' ? "Recommended Awareness Resources" : "आपके लिए अनुशंसित जागरूकता संसाधन"}
+                </span>
+                <p className="text-xs font-light text-night-blue/80 dark:text-cream/70 mb-4 leading-relaxed">
+                  {language === 'en' 
+                    ? "Based on your assessment parameters, we suggest exploring these educational topics to better understand how lifestyle and biology interact:"
+                    : "आपके मूल्यांकन मापदंडों के आधार पर, हम यह समझने के लिए इन शैक्षिक विषयों को पढ़ने का सुझाव देते हैं कि जीवनशैली और जीवविज्ञान कैसे परस्पर क्रिया करते हैं:"}
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {answers['stress_level'] && (answers['stress_level'] === 'High' || answers['stress_level'] === 'Moderate') && (
+                    <a href="#awareness/stress-wellbeing" className="border border-border-light dark:border-border-dark p-3.5 hover:border-marigold transition-colors bg-cream dark:bg-night-blue rounded-xs block">
+                      <span className="text-[8px] uppercase tracking-widest text-marigold font-bold block mb-1">Focus: Mind & Stress</span>
+                      <span className="text-xs font-semibold text-night-blue dark:text-cream block">Stress & Sperm Quality →</span>
+                    </a>
+                  )}
+                  {answers['sleep_hours'] && parseInt(answers['sleep_hours'], 10) < 7 && (
+                    <a href="#awareness/sleep-sperm-health" className="border border-border-light dark:border-border-dark p-3.5 hover:border-marigold transition-colors bg-cream dark:bg-night-blue rounded-xs block">
+                      <span className="text-[8px] uppercase tracking-widest text-marigold font-bold block mb-1">Focus: Sleep</span>
+                      <span className="text-xs font-semibold text-night-blue dark:text-cream block">Sleep & Sperm Quality →</span>
+                    </a>
+                  )}
+                  {answers['smoking_status'] && answers['smoking_status'] === 'Yes' && (
+                    <a href="#awareness/smoking-sperm-health" className="border border-border-light dark:border-border-dark p-3.5 hover:border-marigold transition-colors bg-cream dark:bg-night-blue rounded-xs block">
+                      <span className="text-[8px] uppercase tracking-widest text-marigold font-bold block mb-1">Focus: Lifestyle</span>
+                      <span className="text-xs font-semibold text-night-blue dark:text-cream block">Smoking & Sperm Quality →</span>
+                    </a>
+                  )}
+                  {answers['scrotal_heat_exposure'] === 'Yes' && (
+                    <a href="#awareness/heat-exposure-sperm-health" className="border border-border-light dark:border-border-dark p-3.5 hover:border-marigold transition-colors bg-cream dark:bg-night-blue rounded-xs block">
+                      <span className="text-[8px] uppercase tracking-widest text-marigold font-bold block mb-1">Focus: Scrotal Heat</span>
+                      <span className="text-xs font-semibold text-night-blue dark:text-cream block">Heat Exposure & Scrotal Temp →</span>
+                    </a>
+                  )}
+                  {/* General testing link by default */}
+                  <a href="#awareness/semen-analysis-intro" className="border border-border-light dark:border-border-dark p-3.5 hover:border-marigold transition-colors bg-cream dark:bg-night-blue rounded-xs block">
+                    <span className="text-[8px] uppercase tracking-widest text-marigold font-bold block mb-1">Focus: Semen Analysis</span>
+                    <span className="text-xs font-semibold text-night-blue dark:text-cream block">Understanding Semen Parameters →</span>
+                  </a>
+                </div>
+              </div>
+
               {/* 12. Disclaimer */}
               <div className="border-t border-border-light dark:border-border-dark pt-6 mt-8 select-none">
                 <p className="text-[10px] text-night-blue/50 dark:text-cream/40 italic leading-relaxed text-center">

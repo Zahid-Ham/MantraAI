@@ -12,17 +12,40 @@ import CustomCursor from './components/landing/CustomCursor';
 import ScrollNarrative from './components/landing/ScrollNarrative';
 import PageLoader from './components/landing/PageLoader';
 import SymptomAssessment from './pages/SymptomAssessment';
+import Awareness from './pages/Awareness';
 
 function AppContent() {
-  // Sync page state with URL hash for seamless Back button support
-  const [page, setPage] = useState(() =>
-    window.location.hash === '#assess' ? 'assess' : 'landing'
-  );
+  // Sync page state and subpath topic slugs with URL hash
+  const [page, setPage] = useState(() => {
+    const hash = window.location.hash;
+    if (hash === '#assess') return 'assess';
+    if (hash.startsWith('#awareness')) return 'awareness';
+    return 'landing';
+  });
+
+  const [topicSlug, setTopicSlug] = useState(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith('#awareness/')) {
+      const parts = hash.replace('#awareness/', '').split('?')[0].split('/');
+      return parts[0] || null;
+    }
+    return null;
+  });
+
   const [loaderDone, setLoaderDone] = useState(false);
 
   useEffect(() => {
     const handleHashChange = () => {
-      setPage(window.location.hash === '#assess' ? 'assess' : 'landing');
+      const hash = window.location.hash;
+      if (hash === '#assess') {
+        setPage('assess');
+      } else if (hash.startsWith('#awareness')) {
+        setPage('awareness');
+        const parts = hash.replace('#awareness/', '').split('?')[0].split('/');
+        setTopicSlug(parts[0] || null);
+      } else {
+        setPage('landing');
+      }
       window.scrollTo(0, 0);
     };
     window.addEventListener('hashchange', handleHashChange);
@@ -38,7 +61,7 @@ function AppContent() {
     restDelta: 0.001,
   });
 
-  // If directly visiting #assess, skip the loader
+  // If directly visiting #assess or #awareness, skip the loader
   const showLoader = page === 'landing' && !loaderDone;
 
   return (
@@ -53,6 +76,8 @@ function AppContent() {
 
       {page === 'assess' ? (
         <SymptomAssessment onNavigateHome={handleNavigateHome} />
+      ) : page === 'awareness' ? (
+        <Awareness topicSlug={topicSlug} onNavigateHome={handleNavigateHome} />
       ) : (
         <>
           {/* Saffron top scroll-progress bar */}

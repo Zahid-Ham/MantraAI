@@ -167,6 +167,14 @@ export default function Hero() {
             {language === 'en' ? 'हिन्दी' : 'EN'}
           </button>
 
+          {/* Awareness link */}
+          <button
+            onClick={() => window.location.hash = '#awareness'}
+            className="px-2.5 py-1.5 text-[11px] border border-border-light dark:border-border-dark hover:border-marigold transition-colors duration-300 bg-cream-dark/40 dark:bg-night-blue/50 rounded-sm font-grotesk font-semibold tracking-wider cursor-pointer text-night-blue dark:text-cream"
+          >
+            {language === 'en' ? 'AWARENESS' : 'जागरूकता'}
+          </button>
+
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
@@ -253,10 +261,13 @@ export default function Hero() {
             </span>
           </MagneticButton>
 
-          {/* Secondary: Private by default badge */}
-          <span className="font-grotesk text-[10px] tracking-[0.25em] uppercase text-night-blue/40 dark:text-cream/35 border border-border-light dark:border-border-dark px-4 py-2">
-            PRIVATE BY DEFAULT
-          </span>
+          {/* Secondary: Explore Topics button */}
+          <a
+            href="#awareness"
+            className="font-grotesk text-xs tracking-[0.25em] uppercase text-night-blue/80 dark:text-cream/80 border border-border-light dark:border-border-dark hover:border-marigold px-6 py-4 transition-colors rounded-sm cursor-pointer hover:text-marigold shadow-xs"
+          >
+            {language === 'en' ? 'EXPLORE TOPICS' : 'विषयों का अन्वेषण'}
+          </a>
         </motion.div>
 
         {/* Micro stats row */}
