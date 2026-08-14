@@ -47,10 +47,10 @@ export default function MicroscopicField({
       size: 0.8 + Math.random() * 2.2,
       vx: (Math.random() - 0.5) * 0.25,
       vy: (Math.random() - 0.5) * 0.25,
-      // Dark mode gets much higher opacity so particles are visible
+      // Increased light mode opacity to ensure visibility
       baseOpacity: isDark
         ? 0.15 + Math.random() * 0.25
-        : 0.04 + Math.random() * 0.08,
+        : 0.12 + Math.random() * 0.15,
       life: Math.random(),
       lifeDir: Math.random() > 0.5 ? 1 : -1,
       lifeSpeed: 0.003 + Math.random() * 0.004,
@@ -69,10 +69,10 @@ export default function MicroscopicField({
       angle: Math.random() * Math.PI * 2,
       speed: 0.18 + Math.random() * 0.22,
       scale: 0.9 + Math.random() * 1.1,
-      // Dark mode: much more visible (0.18–0.38); light mode: subtle (0.05–0.12)
+      // Increased base opacities for both modes
       baseOpacity: isDark
         ? 0.18 + Math.random() * 0.20
-        : 0.05 + Math.random() * 0.07,
+        : 0.16 + Math.random() * 0.14,
       tailLen: 26 + Math.random() * 20,
       tailPhase: Math.random() * Math.PI * 2,
       tailFreq: 0.13 + Math.random() * 0.09,
@@ -136,22 +136,22 @@ export default function MicroscopicField({
 
     const dark = isDark;
 
-    // Colors — dark mode uses bright saffron + cream for maximum visibility
+    // Colors — dark and light modes use saffron/marigold identity tones
     const particleColor = dark
       ? (a) => `rgba(245,158,11,${a})`   // amber-400, brighter saffron
-      : (a) => `rgba(100,70,10,${a})`;   // muted gold in light
+      : (a) => `rgba(217,119,6,${a})`;   // clean saffron in light mode
     const formHeadColor = dark
       ? (a) => `rgba(251,191,36,${a})`   // amber-300 — glowing head
-      : (a) => `rgba(90,60,10,${a})`;
+      : (a) => `rgba(217,119,6,${a})`;   // clean saffron in light mode
     const formTailColor = dark
       ? (a) => `rgba(217,119,6,${a})`    // saffron tail
-      : (a) => `rgba(90,60,10,${a})`;
+      : (a) => `rgba(217,119,6,${a * 0.8})`; // slightly softer saffron tail in light mode
     const nucleusColor = dark
       ? (a) => `rgba(254,240,138,${a})`  // warm yellow nucleus highlight
-      : (a) => `rgba(200,140,50,${a})`;
+      : (a) => `rgba(245,158,11,${a})`;  // bright amber highlight in light mode
     const lineColor = dark
       ? (a) => `rgba(245,158,11,${a})`
-      : (a) => `rgba(120,80,20,${a})`;
+      : (a) => `rgba(217,119,6,${a})`;
 
     const animate = () => {
       if (!isVisibleRef.current || document.hidden) {
