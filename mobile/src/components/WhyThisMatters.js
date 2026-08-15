@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { COLORS, SPACING } from "../constants/theme";
+import { SPACING } from "../constants/theme";
+import { usePreferences } from "../context/PreferencesContext";
 
 export default function WhyThisMatters({ text }) {
   const [expanded, setExpanded] = useState(false);
+  const { colors, isDarkMode } = usePreferences();
+  const styles = createStyles(colors, isDarkMode);
 
   if (!text) return null;
 
@@ -18,13 +21,13 @@ export default function WhyThisMatters({ text }) {
         accessibilityLabel="Why are we asking this?"
       >
         <View style={styles.titleContainer}>
-          <Feather name="info" size={15} color={COLORS.marigold} style={styles.infoIcon} />
+          <Feather name="info" size={15} color={colors.marigold} style={styles.infoIcon} />
           <Text style={styles.title}>WHY ARE WE ASKING?</Text>
         </View>
         <Feather 
           name={expanded ? "chevron-up" : "chevron-down"} 
           size={16} 
-          color={COLORS.textTertiary} 
+          color={colors.textTertiary} 
         />
       </TouchableOpacity>
       
@@ -37,23 +40,23 @@ export default function WhyThisMatters({ text }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors, isDarkMode) => StyleSheet.create({
   container: {
     marginVertical: SPACING.md,
     borderWidth: 1.5,
-    borderColor: "rgba(8, 12, 22, 0.08)",
+    borderColor: colors.border,
     borderRadius: 14,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     overflow: "hidden",
-    shadowColor: COLORS.nightBlue,
+    shadowColor: colors.nightBlue,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.02,
     shadowRadius: 3,
     elevation: 1,
   },
   expandedContainer: {
-    borderColor: "rgba(217, 119, 6, 0.2)",
-    backgroundColor: "#fffdf9",
+    borderColor: isDarkMode ? "rgba(217, 119, 6, 0.3)" : "rgba(217, 119, 6, 0.2)",
+    backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.03)" : "#fffdf9",
   },
   header: {
     flexDirection: "row",
@@ -73,7 +76,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
     fontSize: 11,
     fontWeight: "800",
-    color: COLORS.nightBlue,
+    color: colors.nightBlue,
     letterSpacing: 1.5,
     backgroundColor: "transparent",
   },
@@ -84,7 +87,7 @@ const styles = StyleSheet.create({
   description: {
     fontFamily: "System",
     fontSize: 14,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 20,
     fontWeight: "500",
     backgroundColor: "transparent",

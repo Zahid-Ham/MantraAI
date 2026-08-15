@@ -1,8 +1,12 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { COLORS, SPACING } from "../constants/theme";
+import { SPACING } from "../constants/theme";
+import { usePreferences } from "../context/PreferencesContext";
 
 export default function QuestionCard({ sectionName, questionText, currentStep, totalSteps }) {
+  const { colors } = usePreferences();
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -16,7 +20,7 @@ export default function QuestionCard({ sectionName, questionText, currentStep, t
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     paddingVertical: SPACING.lg,
     backgroundColor: "transparent",
@@ -31,20 +35,23 @@ const styles = StyleSheet.create({
     fontFamily: "System",
     fontSize: 10,
     fontWeight: "800",
-    color: COLORS.marigold,
+    color: colors.marigold,
     letterSpacing: 1.8,
+    backgroundColor: "transparent",
   },
   step: {
     fontFamily: "System",
     fontSize: 10,
     fontWeight: "700",
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     letterSpacing: 1.2,
+    backgroundColor: "transparent",
   },
   question: {
     fontFamily: "InstrumentSerif_400Regular",
     fontSize: 28,
-    color: COLORS.nightBlue,
+    color: colors.nightBlue,
     lineHeight: 34,
+    backgroundColor: "transparent",
   },
 });

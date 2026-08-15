@@ -1,10 +1,13 @@
 import React, { useRef } from "react";
 import { View, Text, StyleSheet, TouchableWithoutFeedback, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { COLORS, SPACING, SHADOWS } from "../constants/theme";
+import { SPACING } from "../constants/theme";
+import { usePreferences } from "../context/PreferencesContext";
 
 export default function TopicCard({ title, category, readTime, description, onPress }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const { colors } = usePreferences();
+  const styles = createStyles(colors);
 
   // Format category to readable text
   const formatCategory = (cat) => {
@@ -42,7 +45,7 @@ export default function TopicCard({ title, category, readTime, description, onPr
         <View style={styles.header}>
           <Text style={styles.category}>{formatCategory(category).toUpperCase()}</Text>
           <View style={styles.meta}>
-            <Feather name="clock" size={10} color={COLORS.textTertiary} style={styles.clockIcon} />
+            <Feather name="clock" size={10} color={colors.textTertiary} style={styles.clockIcon} />
             <Text style={styles.readTime}>{readTime}</Text>
           </View>
         </View>
@@ -57,22 +60,22 @@ export default function TopicCard({ title, category, readTime, description, onPr
         
         <View style={styles.footer}>
           <Text style={styles.actionText}>Read Article</Text>
-          <Feather name="arrow-right" size={14} color={COLORS.marigold} />
+          <Feather name="arrow-right" size={14} color={colors.marigold} />
         </View>
       </Animated.View>
     </TouchableWithoutFeedback>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   card: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderWidth: 1.5,
-    borderColor: "rgba(8, 12, 22, 0.08)",
+    borderColor: colors.border,
     borderRadius: 16,
     padding: SPACING.lg,
     marginBottom: SPACING.md,
-    shadowColor: COLORS.nightBlue,
+    shadowColor: colors.nightBlue,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.02,
     shadowRadius: 3,
@@ -88,7 +91,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
     fontSize: 9,
     fontWeight: "800",
-    color: COLORS.marigold,
+    color: colors.marigold,
     letterSpacing: 1.2,
     backgroundColor: "transparent",
   },
@@ -102,14 +105,14 @@ const styles = StyleSheet.create({
   readTime: {
     fontFamily: "System",
     fontSize: 9,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontWeight: "600",
     backgroundColor: "transparent",
   },
   title: {
     fontFamily: "InstrumentSerif_400Regular",
     fontSize: 22,
-    color: COLORS.nightBlue,
+    color: colors.nightBlue,
     marginBottom: SPACING.xs,
     lineHeight: 24,
     backgroundColor: "transparent",
@@ -117,7 +120,7 @@ const styles = StyleSheet.create({
   description: {
     fontFamily: "System",
     fontSize: 13,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 18,
     marginBottom: SPACING.md,
     fontWeight: "500",
@@ -128,14 +131,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderTopWidth: 1,
-    borderTopColor: "rgba(8, 12, 22, 0.04)",
+    borderTopColor: colors.border,
     paddingTop: SPACING.sm,
   },
   actionText: {
     fontFamily: "System",
     fontSize: 11,
     fontWeight: "700",
-    color: COLORS.nightBlue,
+    color: colors.nightBlue,
     backgroundColor: "transparent",
   },
 });

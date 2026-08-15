@@ -65,7 +65,7 @@ export default function TabsLayout() {
               <Feather 
                 name="activity" 
                 size={18} 
-                color={COLORS.cream} 
+                color={colors.cream} 
               />
             </View>
           ),

@@ -19,7 +19,7 @@ export default function AssessmentSection() {
   const { section, editQuestionId, returnTo } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { language } = usePreferences();
+  const { language, colors, isDarkMode } = usePreferences();
   const { 
     answers, 
     currentQuestionIndex, 
@@ -374,9 +374,9 @@ export default function AssessmentSection() {
               saveAnswer(id, val);
               setSliderDisplayVal(val);
             }}
-            minimumTrackTintColor={COLORS.marigold}
-            maximumTrackTintColor="rgba(8, 12, 22, 0.08)"
-            thumbTintColor={COLORS.marigold}
+            minimumTrackTintColor={colors.marigold}
+            maximumTrackTintColor={colors.border}
+            thumbTintColor={colors.marigold}
           />
 
           <View style={styles.sliderBounds}>
@@ -430,16 +430,16 @@ export default function AssessmentSection() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors, isDarkMode) => StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   header: {
     paddingHorizontal: SPACING.lg,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
   },
   scrollContainer: {
     flexGrow: 1,
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: COLORS.nightBlue,
+    shadowColor: colors.nightBlue,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.02,
     shadowRadius: 3,
@@ -469,11 +469,11 @@ const styles = StyleSheet.create({
   },
   selectedSegmentBtn: {
     backgroundColor: "rgba(217, 119, 6, 0.06)",
-    borderColor: COLORS.marigold,
+    borderColor: colors.marigold,
   },
   unselectedSegmentBtn: {
-    backgroundColor: COLORS.white,
-    borderColor: "rgba(8, 12, 22, 0.08)",
+    backgroundColor: colors.white,
+    borderColor: colors.border,
   },
   segmentText: {
     fontFamily: "System",
@@ -482,24 +482,24 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   selectedSegmentText: {
-    color: COLORS.marigold,
+    color: colors.marigold,
     fontWeight: "700",
     backgroundColor: "transparent",
   },
   unselectedSegmentText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontWeight: "500",
     backgroundColor: "transparent",
   },
   sliderContainer: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderWidth: 1.5,
-    borderColor: "rgba(8, 12, 22, 0.08)",
+    borderColor: colors.border,
     borderRadius: 14,
     padding: SPACING.xl,
     marginTop: SPACING.md,
     alignItems: "center",
-    shadowColor: COLORS.nightBlue,
+    shadowColor: colors.nightBlue,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.02,
     shadowRadius: 3,
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
     fontSize: 10,
     fontWeight: "800",
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     letterSpacing: 1.8,
     marginBottom: SPACING.md,
   },
@@ -520,14 +520,14 @@ const styles = StyleSheet.create({
   sliderValue: {
     fontFamily: "InstrumentSerif_400Regular",
     fontSize: 48,
-    color: COLORS.marigold,
+    color: colors.marigold,
     lineHeight: 52,
   },
   sliderUnit: {
     fontFamily: "System",
     fontSize: 10,
     fontWeight: "800",
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     letterSpacing: 1.2,
     marginTop: 2,
     backgroundColor: "transparent",
@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     width: "100%",
     borderTopWidth: 1,
-    borderTopColor: "rgba(8, 12, 22, 0.04)",
+    borderTopColor: colors.border,
     paddingTop: SPACING.sm,
     marginTop: SPACING.md,
   },
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
     fontSize: 9,
     fontWeight: "600",
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
   },
   footer: {
     position: "absolute",
@@ -557,9 +557,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     flexDirection: "row",
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+    borderTopColor: colors.border,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.lg,
     gap: SPACING.md,
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
   },
   introSafeContainer: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   introContent: {
     flex: 1,
@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
     fontSize: 10,
     fontWeight: "800",
-    color: COLORS.marigold,
+    color: colors.marigold,
     letterSpacing: 2,
   },
   introCenter: {
@@ -598,9 +598,9 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: "#fffdf9",
+    backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.03)" : "#fffdf9",
     borderWidth: 1.5,
-    borderColor: "rgba(217, 119, 6, 0.15)",
+    borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: SPACING.xl,
@@ -608,14 +608,14 @@ const styles = StyleSheet.create({
   introTitle: {
     fontFamily: "InstrumentSerif_400Regular",
     fontSize: 36,
-    color: COLORS.nightBlue,
+    color: colors.nightBlue,
     textAlign: "center",
     marginBottom: SPACING.md,
   },
   introDescription: {
     fontFamily: "System",
     fontSize: 15,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     textAlign: "center",
     lineHeight: 22,
     fontWeight: "500",
@@ -636,11 +636,11 @@ const styles = StyleSheet.create({
     fontFamily: "System",
     fontSize: 12,
     fontWeight: "600",
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     backgroundColor: "transparent",
   },
   introMetaDivider: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     marginHorizontal: SPACING.xs,
     backgroundColor: "transparent",
   },
