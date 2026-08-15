@@ -152,7 +152,7 @@ The backend is built with FastAPI and connects to the Groq API for pre-clinical 
 
 6. **Start the Uvicorn local server:**
    ```bash
-   python -m uvicorn main:app --reload --port 8000
+   python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
    ```
 
 7. **Verify the server is running:**
