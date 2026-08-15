@@ -13,18 +13,18 @@ export const COLORS = {
   background: "#fbfaf7",
   surface: "#f5f3ee",
   textPrimary: "#080c16",
-  textSecondary: "rgba(8, 12, 22, 0.65)",
-  textTertiary: "rgba(8, 12, 22, 0.4)",
-  border: "rgba(8, 12, 22, 0.08)",
+  textSecondary: "#4b5563",
+  textTertiary: "#9ca3af",
+  border: "#e2e8f0",
   white: "#ffffff",
 
   // Dark Mode Semantic Fallbacks
   darkBackground: "#05070f",
-  darkSurface: "#080c16",
+  darkSurface: "#0c1322",
   darkTextPrimary: "#fbfaf7",
-  darkTextSecondary: "rgba(251, 250, 247, 0.65)",
-  darkTextTertiary: "rgba(251, 250, 247, 0.4)",
-  darkBorder: "rgba(255, 255, 255, 0.1)",
+  darkTextSecondary: "#9ca3af",
+  darkTextTertiary: "#4b5563",
+  darkBorder: "#1e293b",
 };
 
 export const FONTS = {
