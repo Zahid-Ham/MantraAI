@@ -3,6 +3,8 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { assessmentSchema } from '../data/assessmentSchema';
+import { apiRequest } from '../config/api';
+import { useAuth } from '../context/AuthContext';
 import AssessmentIntro from '../components/assessment/AssessmentIntro';
 import AssessmentProgress from '../components/assessment/AssessmentProgress';
 import AssessmentSection from '../components/assessment/AssessmentSection';
@@ -13,23 +15,21 @@ import WhyWeAsk from '../components/assessment/WhyWeAsk';
 export default function SymptomAssessment({ onNavigateHome }) {
   const { language, toggleLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+  const { isAuthenticated, user } = useAuth();
   const prefersReducedMotion = useReducedMotion();
 
   // Wizard state machine with browser-level storage persistence
-  const [step, setStep] = useState(() => {
-    return localStorage.getItem('mantra_assessment_step') || 'intro';
-  });
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(() => {
-    const saved = localStorage.getItem('mantra_assessment_question_idx');
-    return saved ? parseInt(saved, 10) : 0;
-  });
-  const [answers, setAnswers] = useState(() => {
-    const saved = localStorage.getItem('mantra_assessment_answers');
-    return saved ? JSON.parse(saved) : {};
-  });
+  const [step, setStep] = useState('intro');
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState({});
   const [isWhyAskOpen, setIsWhyAskOpen] = useState(false);
 
-  // Sync state variables to browser storage
+  const [showResumePrompt, setShowResumePrompt] = useState(false);
+  const [recoverySession, setRecoverySession] = useState(null);
+
+  const { questions, blocks } = assessmentSchema;
+
+  // Sync state variables to browser storage (as backup/scratchpad)
   useEffect(() => {
     localStorage.setItem('mantra_assessment_step', step);
   }, [step]);
@@ -42,11 +42,87 @@ export default function SymptomAssessment({ onNavigateHome }) {
     localStorage.setItem('mantra_assessment_answers', JSON.stringify(answers));
   }, [answers]);
 
+  // Session Recovery & Initialization Lifecycle
+  useEffect(() => {
+    const checkActiveSession = async () => {
+      const activeId = localStorage.getItem('mantra_active_assessment_id');
+      if (activeId) {
+        try {
+          const data = await apiRequest(`/api/v1/assessments/${activeId}/responses`);
+          if (data && data.responses) {
+            setAnswers(data.responses);
+            const unansweredIdx = questions.findIndex(q => data.responses[q.id] === undefined);
+            if (unansweredIdx !== -1) {
+              setCurrentQuestionIndex(unansweredIdx);
+              setStep('questions');
+            } else {
+              setStep('questions');
+            }
+          }
+          return;
+        } catch (e) {
+          console.error("Failed to load active session answers:", e);
+        }
+      }
+
+      // Check for any in-progress sessions in backend database
+      try {
+        const activeSessions = await apiRequest('/api/v1/assessments');
+        const inProgress = activeSessions.find(s => s.status === 'IN_PROGRESS');
+        if (inProgress) {
+          setRecoverySession(inProgress);
+          setShowResumePrompt(true);
+        } else {
+          await startNewSession();
+        }
+      } catch (err) {
+        console.error("Failed to fetch sessions from server:", err);
+        // Fallback: start session locally if server is offline
+        localStorage.setItem('mantra_active_assessment_id', 'offline_session_fallback');
+      }
+    };
+
+    checkActiveSession();
+  }, []);
+
+  const startNewSession = async () => {
+    try {
+      const sess = await apiRequest('/api/v1/assessments', {
+        method: "POST",
+        body: JSON.stringify({ assessment_version: "1.0" })
+      });
+      localStorage.setItem('mantra_active_assessment_id', sess.id);
+      setAnswers({});
+      setCurrentQuestionIndex(0);
+      setStep('intro');
+    } catch (e) {
+      console.error("Failed to start new session on server:", e);
+    }
+  };
+
+  const resumeSession = async (sessId) => {
+    localStorage.setItem('mantra_active_assessment_id', sessId);
+    try {
+      const data = await apiRequest(`/api/v1/assessments/${sessId}/responses`);
+      if (data && data.responses) {
+        setAnswers(data.responses);
+        const unansweredIdx = questions.findIndex(q => data.responses[q.id] === undefined);
+        setCurrentQuestionIndex(unansweredIdx !== -1 ? unansweredIdx : 0);
+      }
+      setStep('questions');
+    } catch (e) {
+      console.error("Failed to resume session answers:", e);
+    } finally {
+      setShowResumePrompt(false);
+    }
+  };
+
   // Clean persistent memory when navigating home or finishing
   const handleHomeClear = () => {
     localStorage.removeItem('mantra_assessment_step');
     localStorage.removeItem('mantra_assessment_question_idx');
     localStorage.removeItem('mantra_assessment_answers');
+    localStorage.removeItem('mantra_active_assessment_id');
     onNavigateHome();
   };
   
@@ -69,7 +145,6 @@ export default function SymptomAssessment({ onNavigateHome }) {
     setReportError(null);
     setLoadingStage(0);
     
-    // Advance loading stage simulation every 1.5s
     const stageInterval = setInterval(() => {
       setLoadingStage(prev => {
         if (prev < loadingStages.length - 1) return prev + 1;
@@ -77,27 +152,39 @@ export default function SymptomAssessment({ onNavigateHome }) {
       });
     }, 1500);
 
+    const activeId = localStorage.getItem('mantra_active_assessment_id');
+
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/assessment/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers })
-      });
-      
-      if (!res.ok) throw new Error("Failed to compile analysis report.");
-      const data = await res.json();
-      
-      setReportData(data);
-      setStep('report');
-      // Clear persistent memory since we completed the workflow successfully
-      localStorage.removeItem('mantra_assessment_step');
-      localStorage.removeItem('mantra_assessment_question_idx');
-      localStorage.removeItem('mantra_assessment_answers');
+      if (activeId && activeId !== 'offline_session_fallback') {
+        // 1. Submit final responses to database
+        await apiRequest(`/api/v1/assessments/${activeId}/responses`, {
+          method: "POST",
+          body: JSON.stringify({ responses: answers })
+        });
+
+        // 2. Complete session
+        await apiRequest(`/api/v1/assessments/${activeId}/complete`, {
+          method: "POST"
+        });
+
+        clearInterval(stageInterval);
+        
+        // Clear wizard keys on completion
+        localStorage.removeItem('mantra_active_assessment_id');
+        localStorage.removeItem('mantra_assessment_step');
+        localStorage.removeItem('mantra_assessment_question_idx');
+        localStorage.removeItem('mantra_assessment_answers');
+        
+        // Redirect user directly to the new Report Viewer
+        window.location.hash = `#report?id=${activeId}`;
+      } else {
+        throw new Error("No active assessment session ID set.");
+      }
     } catch (err) {
       console.error("Report generation error:", err);
       setReportError(language === 'en' 
-        ? "We couldn't generate your report right now. Your assessment has not been lost. Please try again."
-        : "हम अभी आपकी रिपोर्ट तैयार नहीं कर सके। आपका मूल्यांकन खोया नहीं है। कृपया पुनः प्रयास करें।"
+        ? "We couldn't compile your wellness analysis report. Please try again."
+        : "हम आपकी रिपोर्ट संकलित नहीं कर सके। कृपया पुनः प्रयास करें।"
       );
       setStep('error');
     } finally {
@@ -105,7 +192,6 @@ export default function SymptomAssessment({ onNavigateHome }) {
     }
   };
 
-  const { questions, blocks } = assessmentSchema;
   const currentQuestion = questions[currentQuestionIndex];
   const activeBlock = currentQuestion 
     ? blocks.find(b => b.id === currentQuestion.block)
@@ -217,7 +303,20 @@ export default function SymptomAssessment({ onNavigateHome }) {
     setStep('questions');
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    // Progressive save answers before moving forward to the next index
+    const activeId = localStorage.getItem('mantra_active_assessment_id');
+    if (activeId && activeId !== 'offline_session_fallback') {
+      try {
+        await apiRequest(`/api/v1/assessments/${activeId}/responses`, {
+          method: "POST",
+          body: JSON.stringify({ responses: answers })
+        });
+      } catch (err) {
+        console.error("Progressive save failed:", err);
+      }
+    }
+
     if (currentQuestionIndex < questions.length - 1) {
       let nextIdx = currentQuestionIndex + 1;
       while (nextIdx < questions.length && shouldSkipQuestion(questions[nextIdx], answers)) {
@@ -313,6 +412,43 @@ export default function SymptomAssessment({ onNavigateHome }) {
         </svg>
       </div>
 
+      {/* Database Session Recovery Prompter Overlay */}
+      {showResumePrompt && recoverySession && (
+        <div className="fixed inset-0 bg-night-dark/80 backdrop-blur-md z-50 flex items-center justify-center p-6">
+          <div className="max-w-md w-full border border-border-light dark:border-border-dark bg-cream dark:bg-night-blue p-8 rounded-sm space-y-6 shadow-xl relative">
+            <div className="text-center space-y-2 select-none">
+              <span className="font-sans text-[10px] text-marigold bg-marigold/10 border border-marigold/20 px-2.5 py-0.5 font-bold tracking-[0.2em] rounded-sm uppercase inline-block">
+                Session Recovery
+              </span>
+              <h2 className="font-serif text-2xl font-normal text-night-blue dark:text-cream">
+                Incomplete Assessment
+              </h2>
+              <p className="text-xs text-night-blue/50 dark:text-cream/50 leading-relaxed">
+                We identified a pending, incomplete assessment session on your profile. Would you like to resume it now or start a new one?
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 pt-2">
+              <button
+                onClick={() => resumeSession(recoverySession.id)}
+                className="w-full py-3 bg-marigold hover:bg-marigold-light text-night-blue text-xs font-bold uppercase tracking-wider rounded-sm transition-colors cursor-pointer"
+              >
+                Resume Progress
+              </button>
+              <button
+                onClick={async () => {
+                  setShowResumePrompt(false);
+                  await startNewSession();
+                }}
+                className="w-full py-3 border border-border-light dark:border-border-dark hover:border-marigold text-xs font-semibold uppercase tracking-wider rounded-sm transition-all bg-transparent text-night-blue dark:text-cream cursor-pointer"
+              >
+                Start New Assessment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header bar - Compact py spacing */}
       <header className="relative z-10 w-full flex justify-between items-center border-b border-border-light dark:border-border-dark px-6 py-3.5 md:px-16 select-none bg-cream/95 dark:bg-night-dark/95 backdrop-blur-xs transition-colors duration-500">
         <div 
@@ -362,6 +498,28 @@ export default function SymptomAssessment({ onNavigateHome }) {
               </motion.div>
             </AnimatePresence>
           </button>
+
+          {isAuthenticated ? (
+            <div className="flex items-center gap-3 border-l border-border-light dark:border-border-dark pl-4 select-none font-grotesk">
+              <div className="hidden lg:flex flex-col text-right">
+                <span className="text-[9px] uppercase tracking-wider text-night-blue/40 dark:text-cream/40 font-bold">Logged in</span>
+                <span className="text-[10px] font-semibold text-night-blue/80 dark:text-cream/80 max-w-[120px] truncate">{user?.email}</span>
+              </div>
+              <button 
+                onClick={() => window.location.hash = '#profile'}
+                className="px-2.5 py-1.5 text-[11px] border border-border-light dark:border-border-dark hover:border-marigold transition-colors duration-300 bg-cream-dark/40 dark:bg-night-blue/50 rounded-sm font-semibold tracking-wider cursor-pointer text-night-blue dark:text-cream"
+              >
+                Profile
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={() => window.location.hash = '#login'}
+              className="px-2.5 py-1.5 text-[11px] border border-border-light dark:border-border-dark hover:border-marigold transition-colors duration-300 bg-cream-dark/40 dark:bg-night-blue/50 rounded-sm font-semibold tracking-wider cursor-pointer text-night-blue dark:text-cream"
+            >
+              Sign In
+            </button>
+          )}
 
           <div className="text-xs uppercase tracking-widest text-night-blue/60 dark:text-cream/60 font-semibold font-grotesk hidden sm:block">
             {content.clinical}

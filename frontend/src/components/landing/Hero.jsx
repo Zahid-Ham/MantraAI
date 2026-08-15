@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 import MicroscopicField from './MicroscopicField';
 import MagneticButton from './MagneticButton';
 
 export default function Hero() {
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage } = useLanguage();
+  const { isAuthenticated, user } = useAuth();
   const isDark = theme === 'dark';
   const [isTabActive, setIsTabActive] = useState(true);
   const [ctaHovered, setCtaHovered] = useState(false);
@@ -201,6 +203,28 @@ export default function Hero() {
               </motion.div>
             </AnimatePresence>
           </button>
+
+          {isAuthenticated ? (
+            <div className="flex items-center gap-3 border-l border-border-light dark:border-border-dark pl-4 select-none font-grotesk">
+              <div className="hidden lg:flex flex-col text-right">
+                <span className="text-[9px] uppercase tracking-wider text-night-blue/40 dark:text-cream/40 font-bold">Logged in</span>
+                <span className="text-[10px] font-semibold text-night-blue/80 dark:text-cream/80 max-w-[120px] truncate">{user.email}</span>
+              </div>
+              <button 
+                onClick={() => window.location.hash = '#profile'}
+                className="px-2.5 py-1.5 text-[11px] border border-border-light dark:border-border-dark hover:border-marigold transition-colors duration-300 bg-cream-dark/40 dark:bg-night-blue/50 rounded-sm font-semibold tracking-wider cursor-pointer text-night-blue dark:text-cream"
+              >
+                Profile
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={() => window.location.hash = '#login'}
+              className="px-2.5 py-1.5 text-[11px] border border-border-light dark:border-border-dark hover:border-marigold transition-colors duration-300 bg-cream-dark/40 dark:bg-night-blue/50 rounded-sm font-semibold tracking-wider cursor-pointer text-night-blue dark:text-cream"
+            >
+              Sign In
+            </button>
+          )}
 
           <div className="text-xs uppercase tracking-widest text-night-blue/60 dark:text-cream/60 font-semibold font-grotesk hidden sm:block">
             {content.clinical}

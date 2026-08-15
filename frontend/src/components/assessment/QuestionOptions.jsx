@@ -193,7 +193,7 @@ export default function QuestionOptions({ questionData, currentAnswer, onAnswerC
       <div className="font-grotesk">
         <select
           value={currentAnswer || ""}
-          onChange={(e) => onAnswerChange(e.target.value)}
+          onChange={(e) => handleSelectAuto(e.target.value)}
           className="w-full bg-cream-dark/30 dark:bg-night-blue/50 text-night-blue dark:text-cream px-4 py-2.5 border border-border-light dark:border-border-dark rounded-sm focus:outline-none focus:ring-2 focus:ring-marigold text-sm font-medium cursor-pointer"
         >
           <option value="" disabled>

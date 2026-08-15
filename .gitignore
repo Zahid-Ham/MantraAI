@@ -9,6 +9,8 @@
 .env.*
 !.env.example
 *.local
+*-firebase-adminsdk-*.json
+mantraai-a20c2-firebase-adminsdk-fbsvc-869340bcf7.json
 
 # ──────────────────────────────────────────────────────────────
 # NODE / FRONTEND

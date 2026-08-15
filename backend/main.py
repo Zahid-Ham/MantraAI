@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import urllib.request
@@ -7,19 +7,25 @@ import os
 import time
 from dotenv import load_dotenv
 
-# Load configured secrets from backend/.env
-load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+# Import App configuration, routers, and database setups
+from app.config import settings
+from app.routers import auth as auth_router, assessment as assessment_router
 
 app = FastAPI(title="MantraAI Backend Clinical API", version="1.0.0")
 
-# Configure CORS middleware to accept local React client requests
+# Configure dynamic CORS origins from configurations
+origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include Authentication and Assessment Routers
+app.include_router(auth_router.router)
+app.include_router(assessment_router.router)
 
 class AnalyzeRequest(BaseModel):
     answers: dict
@@ -30,7 +36,7 @@ def health_check():
 
 def call_groq_api(prompt_system: str, prompt_user: str) -> dict:
     api_key = os.getenv("GROQ_API_KEY")
-    model = os.getenv("GROQ_MODEL", "llama3-8b-8192")
+    model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     
     if not api_key:
         print("Backend Error: GROQ_API_KEY is missing in environment variables.")
@@ -40,7 +46,7 @@ def call_groq_api(prompt_system: str, prompt_user: str) -> dict:
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        "User-Agent": "Mozilla/5.0"
     }
     payload = {
         "model": model,
@@ -232,7 +238,6 @@ Return the report using the exact JSON schema requested by the system instructio
         required_root_keys = ["summary", "key_findings", "reproductive_health", "sexual_health", "mental_wellbeing", "lifestyle", "priority_actions", "positive_factors", "questions_to_discuss_with_clinician", "when_to_seek_professional_help", "disclaimer"]
         for key in required_root_keys:
             if key not in report_data:
-                # Add default placeholder structure if key is missing from Groq response
                 if isinstance(report_data, dict):
                     if key in ["key_findings", "priority_actions", "positive_factors", "questions_to_discuss_with_clinician", "when_to_seek_professional_help"]:
                         report_data[key] = []

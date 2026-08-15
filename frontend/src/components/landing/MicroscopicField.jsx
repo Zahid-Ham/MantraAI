@@ -342,7 +342,7 @@ export default function MicroscopicField({
         window.removeEventListener('mousemove', handleMouseMove);
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDark, density, mode, bioForms, mouseReactive]);
 
   return (

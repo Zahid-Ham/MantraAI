@@ -61,7 +61,7 @@ MantraAI/
 │   ├── data/
 │   └── notebooks/
 ├── docs/                  # Documentation
-└── mobile/                # Mobile app (future)
+└── mobile/                # Mobile app (React Native / Expo)
 ```
 
 ---
@@ -161,6 +161,33 @@ The backend is built with FastAPI and connects to the Groq API for pre-clinical 
 
 ---
 
+### 📱 Running the Mobile App (Expo Go)
+
+The mobile application is built with React Native and Expo Router. It automatically resolves your developer machine's local IP address dynamically to ensure physical mobile devices running Expo Go can communicate with the backend server out-of-the-box.
+
+1. **Navigate to the mobile folder:**
+   ```bash
+   cd mobile
+   ```
+
+2. **Install node package dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Start the local Expo Metro bundler:**
+   ```bash
+   npm run start
+   ```
+   *(Note: This clears caches and boots the Expo development server, displaying a QR code in your terminal)*
+
+4. **Launch inside Expo Go:**
+   - **Android:** Download the **Expo Go** app from the Google Play Store, open it, and scan the terminal's QR code.
+   - **iOS:** Open the native iOS **Camera** app, scan the terminal's QR code, and tap the prompt to open it inside **Expo Go** (available on the App Store).
+   - **Emulators:** Press `a` in the terminal for Android Emulator or `i` for iOS Simulator.
+
+---
+
 ## 📋 Assessment Schema
 
 The questionnaire covers **13 clinical blocks** across **96 data points**:
@@ -250,7 +277,7 @@ GROQ_MODEL=            # e.g. llama-3.3-70b-versatile
 - [x] Phase 4 — Premium landing page redesign (microscopic visual identity)
 - [ ] Phase 5 — ML model training on synthetic dataset
 - [ ] Phase 6 — Backend database integration
-- [ ] Phase 7 — Mobile app (React Native)
+- [x] Phase 7 — Mobile app (React Native / Expo)
 - [ ] Phase 8 — Clinical referral pathways
 
 ---
