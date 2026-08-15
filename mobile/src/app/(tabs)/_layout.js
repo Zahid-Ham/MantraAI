@@ -19,7 +19,7 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
           position: "absolute",
-          bottom: Platform.OS === "ios" ? 24 : 16,
+          bottom: Platform.OS === "ios" ? (insets.bottom > 0 ? insets.bottom : 24) : (insets.bottom > 0 ? insets.bottom + 8 : 16),
           left: 18,
           right: 18,
           borderRadius: 20,
