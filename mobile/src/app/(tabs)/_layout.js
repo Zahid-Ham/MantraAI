@@ -8,7 +8,7 @@ import { usePreferences } from "../../context/PreferencesContext";
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  const { colors, t } = usePreferences();
+  const { colors, t, isDarkMode } = usePreferences();
   
   const styles = createStyles(colors);
 
@@ -18,11 +18,22 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.marigold,
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: colors.white,
-          borderTopColor: colors.border,
-          height: Platform.OS === "ios" ? 88 : (60 + Math.max(0, insets.bottom)),
-          paddingBottom: Platform.OS === "ios" ? 30 : Math.max(10, insets.bottom),
-          paddingTop: 10,
+          position: "absolute",
+          bottom: Platform.OS === "ios" ? 24 : 16,
+          left: 18,
+          right: 18,
+          borderRadius: 20,
+          height: 66,
+          backgroundColor: isDarkMode ? "rgba(18, 24, 38, 0.95)" : "rgba(255, 255, 255, 0.95)",
+          borderWidth: 1.5,
+          borderColor: colors.border,
+          shadowColor: colors.nightBlue,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: isDarkMode ? 0.3 : 0.05,
+          shadowRadius: 10,
+          elevation: 6,
+          paddingBottom: Platform.OS === "ios" ? 20 : 12,
+          paddingTop: 12,
         },
         tabBarLabelStyle: {
           fontFamily: "System",

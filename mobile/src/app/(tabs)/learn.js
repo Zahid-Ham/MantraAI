@@ -212,6 +212,6 @@ const createStyles = (colors) => StyleSheet.create({
   },
   topicsScroll: {
     padding: SPACING.lg,
-    paddingBottom: SPACING.xxl,
+    paddingBottom: 100,
   },
 });

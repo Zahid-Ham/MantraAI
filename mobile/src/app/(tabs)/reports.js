@@ -139,7 +139,7 @@ const createStyles = (colors) => StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: SPACING.lg,
-    paddingBottom: SPACING.xxl,
+    paddingBottom: 100,
   },
   loaderContainer: {
     flex: 1,

@@ -412,7 +412,7 @@ export default function AssessmentSection() {
       </ScrollView>
 
       {/* Persistent Navigation Footer */}
-      <View style={[styles.footer, { paddingBottom: Math.max(16, insets.bottom) }]}>
+      <View style={styles.footer}>
         <PrimaryButton
           title={returnTo === "review" ? "CANCEL" : "BACK"}
           variant="secondary"
@@ -445,7 +445,7 @@ const createStyles = (colors, isDarkMode) => StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     paddingHorizontal: SPACING.lg,
-    paddingBottom: 80, // space for footer
+    paddingBottom: SPACING.lg,
   },
   optionsContainer: {
     marginTop: SPACING.md,
@@ -553,15 +553,11 @@ const createStyles = (colors, isDarkMode) => StyleSheet.create({
     color: colors.textTertiary,
   },
   footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     flexDirection: "row",
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.lg,
     paddingHorizontal: SPACING.lg,
     gap: SPACING.md,
   },

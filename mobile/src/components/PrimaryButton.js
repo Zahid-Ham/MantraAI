@@ -1,6 +1,7 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from "react-native";
-import { COLORS, SPACING } from "../constants/theme";
+import { SPACING } from "../constants/theme";
+import { usePreferences } from "../context/PreferencesContext";
 
 export default function PrimaryButton({ 
   onPress, 
@@ -10,6 +11,9 @@ export default function PrimaryButton({
   disabled = false,
   style 
 }) {
+  const { colors, isDarkMode } = usePreferences();
+  const styles = createStyles(colors, isDarkMode);
+
   const isPrimary = variant === "primary";
   const isOrange = variant === "orange";
   
@@ -40,7 +44,7 @@ export default function PrimaryButton({
       {loading ? (
         <ActivityIndicator 
           size="small" 
-          color={isPrimary || isOrange ? COLORS.cream : COLORS.nightBlue} 
+          color={isPrimary || isOrange ? colors.cream : colors.nightBlue} 
         />
       ) : (
         <Text style={textStyles}>{title}</Text>
@@ -49,29 +53,29 @@ export default function PrimaryButton({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors, isDarkMode) => StyleSheet.create({
   button: {
     paddingVertical: SPACING.md + 2,
     paddingHorizontal: SPACING.xl,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "transparent",
   },
   primaryButton: {
-    backgroundColor: COLORS.nightBlue,
+    backgroundColor: colors.nightBlue,
   },
   orangeButton: {
-    backgroundColor: COLORS.marigold,
+    backgroundColor: colors.marigold,
   },
   secondaryButton: {
     backgroundColor: "transparent",
-    borderColor: COLORS.border,
+    borderColor: colors.border,
   },
   disabledButton: {
-    backgroundColor: COLORS.surface,
-    borderColor: COLORS.border,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
   },
   text: {
     fontFamily: "System",
@@ -80,15 +84,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   primaryText: {
-    color: COLORS.cream,
+    color: colors.cream,
   },
   orangeText: {
-    color: COLORS.cream,
+    color: colors.cream,
   },
   secondaryText: {
-    color: COLORS.nightBlue,
+    color: colors.nightBlue,
   },
   disabledText: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
   },
 });

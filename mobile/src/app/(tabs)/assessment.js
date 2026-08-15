@@ -114,6 +114,7 @@ const createStyles = (colors) => StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     padding: SPACING.lg,
+    paddingBottom: 100,
   },
   card: {
     backgroundColor: colors.white,

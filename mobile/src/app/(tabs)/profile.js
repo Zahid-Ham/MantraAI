@@ -154,7 +154,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   container: {
     paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.xxl,
+    paddingBottom: 100,
   },
   card: {
     backgroundColor: colors.white,
