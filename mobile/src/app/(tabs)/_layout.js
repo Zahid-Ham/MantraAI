@@ -24,7 +24,7 @@ export default function TabsLayout() {
           right: 18,
           borderRadius: 20,
           height: 66,
-          backgroundColor: isDarkMode ? "rgba(18, 24, 38, 0.95)" : "rgba(255, 255, 255, 0.95)",
+          backgroundColor: colors.white,
           borderWidth: 1.5,
           borderColor: colors.border,
           shadowColor: colors.nightBlue,
