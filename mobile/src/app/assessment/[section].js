@@ -20,6 +20,7 @@ export default function AssessmentSection() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { language, colors, isDarkMode } = usePreferences();
+  const styles = createStyles(colors, isDarkMode);
   const { 
     answers, 
     currentQuestionIndex, 
