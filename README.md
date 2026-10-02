@@ -74,7 +74,7 @@ MantraAI/
 | Animation | Framer Motion 13, Canvas 2D API |
 | 3D        | Three.js + @react-three/fiber |
 | Backend   | FastAPI (Python), Uvicorn |
-| AI/LLM    | Groq API (Llama-3.3-70b-versatile) |
+| AI/LLM    | Groq API (openai/gpt-oss-120b) |
 | Fonts     | Instrument Serif, Satoshi (Fontshare) |
 
 ---
@@ -146,7 +146,7 @@ The backend is built with FastAPI and connects to the Groq API for pre-clinical 
    Create a `.env` file inside the `backend/` directory:
    ```env
    GROQ_API_KEY=your_actual_groq_api_key_here
-   GROQ_MODEL=llama-3.3-70b-versatile
+   GROQ_MODEL=openai/gpt-oss-120b
    ```
    *(Note: Obtain your API key from the [Groq Console](https://console.groq.com/))*
 

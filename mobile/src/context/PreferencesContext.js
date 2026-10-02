@@ -38,6 +38,9 @@ const translations = {
     readyToSubmit: "Your responses are ready to be assessed.",
     submitAssessment: "SUBMIT ASSESSMENT",
     clearDraftsMsg: "This will erase any local assessment drafts from this device. Completed reports on the server will not be deleted.",
+    yourHealthJourney: "YOUR HEALTH JOURNEY",
+    yourLatestInsight: "YOUR LATEST INSIGHT",
+    continueLearning: "CONTINUE LEARNING",
   },
   hi: {
     secureGateway: "सुरक्षित द्वार",
@@ -69,6 +72,9 @@ const translations = {
     readyToSubmit: "आपके उत्तर मूल्यांकन के लिए तैयार हैं।",
     submitAssessment: "आकलन सबमिट करें",
     clearDraftsMsg: "यह इस डिवाइस से किसी भी स्थानीय आकलन ड्राफ्ट को मिटा देगा। सर्वर पर पूरी हो चुकी रिपोर्टें डिलीट नहीं होंगी।",
+    yourHealthJourney: "आपका स्वास्थ्य सफर",
+    yourLatestInsight: "आपकी नवीनतम अंतर्दृष्टि",
+    continueLearning: "सीखना जारी रखें",
   }
 };
 

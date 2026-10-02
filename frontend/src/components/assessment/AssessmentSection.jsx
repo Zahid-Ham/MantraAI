@@ -9,24 +9,15 @@ export default function AssessmentSection({ blockData }) {
   const name = blockData.name[language] || blockData.name.en;
   const description = blockData.description[language] || blockData.description.en;
 
-  const content = {
-    en: {
-      sectionLabel: "Active Section"
-    },
-    hi: {
-      sectionLabel: "सक्रिय खंड"
-    }
-  }[language];
-
   return (
-    <div className="w-full max-w-2xl mx-auto mb-3 text-center select-none">
-      <span className="text-marigold font-grotesk text-[10px] font-semibold tracking-[0.25em] uppercase mb-1 block">
-        {content.sectionLabel} {blockData.id}
+    <div className="w-full mb-3 select-none font-sans text-left">
+      <span className="text-[10.5px] font-bold tracking-[0.14em] text-[#D25619] uppercase block mb-0.5">
+        ACTIVE SECTION {blockData.id}
       </span>
-      <h2 className="font-serif text-2xl md:text-3xl font-normal leading-tight text-night-blue dark:text-cream tracking-tight mb-1">
+      <h2 className="text-2xl sm:text-[26px] font-serif font-normal text-[#1C1917] tracking-tight leading-snug mb-0.5">
         {name}
       </h2>
-      <p className="font-grotesk text-[11px] md:text-xs text-night-blue/50 dark:text-cream/50 max-w-lg mx-auto font-light leading-relaxed">
+      <p className="text-[13px] text-[#78716C] leading-normal font-normal max-w-2xl">
         {description}
       </p>
     </div>

@@ -12,6 +12,7 @@ import PrimaryButton from "../../components/PrimaryButton";
 import TopicCard from "../../components/TopicCard";
 import { topics } from "../../data/awareness/topics";
 import { apiRequest } from "../../services/api";
+import IndianBackground from "../../components/IndianBackground";
 
 export default function Home() {
   const router = useRouter();
@@ -133,8 +134,9 @@ export default function Home() {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <ScrollView 
-        contentContainerStyle={styles.container}
+      <IndianBackground>
+        <ScrollView 
+          contentContainerStyle={styles.container}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.marigold} />
         }
@@ -235,7 +237,8 @@ export default function Home() {
             />
           ))}
         </View>
-      </ScrollView>
+        </ScrollView>
+      </IndianBackground>
     </SafeAreaView>
   );
 }
@@ -243,7 +246,7 @@ export default function Home() {
 const createStyles = (colors) => StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: "transparent",
   },
   container: {
     paddingHorizontal: SPACING.lg,

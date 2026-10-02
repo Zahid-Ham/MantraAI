@@ -9,6 +9,7 @@ import { usePreferences } from "../../context/PreferencesContext";
 import { SPACING } from "../../constants/theme";
 import BrandHeader from "../../components/BrandHeader";
 import PrimaryButton from "../../components/PrimaryButton";
+import IndianBackground from "../../components/IndianBackground";
 
 export default function Profile() {
   const router = useRouter();
@@ -62,8 +63,9 @@ export default function Profile() {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <BrandHeader subtitle={t("secureGateway")} />
+      <IndianBackground>
+        <ScrollView contentContainerStyle={styles.container}>
+          <BrandHeader subtitle={t("secureGateway")} />
         
         {/* User Account Info */}
         <View style={styles.card}>
@@ -143,6 +145,7 @@ export default function Profile() {
           <Text style={styles.version}>MANTRA.AI MOBILE • VERSION 1.0.0 (BETA)</Text>
         </View>
       </ScrollView>
+      </IndianBackground>
     </SafeAreaView>
   );
 }
@@ -150,7 +153,7 @@ export default function Profile() {
 const createStyles = (colors) => StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: "transparent",
   },
   container: {
     paddingHorizontal: SPACING.lg,

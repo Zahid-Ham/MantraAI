@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from uuid import UUID
@@ -14,8 +16,15 @@ from app.schemas.assessment import (
     AssessmentSessionOut,
     AssessmentResponseSave,
     AssessmentResultOut,
-    ReportOut
+    ReportOut,
 )
+from app.services.normalizer import normalize_assessment_responses
+from app.services.context_engine import build_health_context
+from app.services.evidence_retriever import retrieve_evidence_for_health_context
+from app.services.report_generator import generate_mantra_report
+from app.schemas.report import new_report_to_legacy_view
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/assessments", tags=["assessments"])
 
@@ -175,106 +184,15 @@ def save_responses(
     db.commit()
     return {"status": "ok", "saved_count": len(payload.responses)}
 
-# Helper to run the Groq LLM API call (re-wired from existing main.py logic)
+# Backward-compatible helper executing the structured report generator pipeline
 def generate_report_via_groq(answers: dict) -> dict:
-    import urllib.request
-    import json
-    import time
-    from app.config import settings
-
-    api_key = settings.GROQ_API_KEY
-    model = settings.GROQ_MODEL
-    
-    if not api_key:
-        # Fallback to local default pre-compiled report if no API key exists (testing fallback)
-        return {
-            "summary": {
-                "headline": "Assessment Completed Successfully",
-                "overview": "Your assessment responses have been securely stored in the private PostgreSQL database. The Groq API key is not configured on this server instance.",
-                "overall_wellness_status": "Stable"
-            },
-            "key_findings": [],
-            "reproductive_health": {"summary": "Information saved securely.", "relevant_factors": [], "protective_factors": [], "areas_to_monitor": []},
-            "sexual_health": {"summary": "Information saved securely.", "relevant_factors": [], "areas_to_monitor": []},
-            "mental_wellbeing": {"summary": "Information saved securely.", "relevant_factors": [], "areas_to_monitor": []},
-            "lifestyle": {
-                "sleep": "Saved.", "exercise": "Saved.", "diet": "Saved.",
-                "substance_use": "Saved.", "heat_exposure": "Saved.", "environment": "Saved."
-            },
-            "behavioral_patterns": {"summary": "Saved.", "patterns": [], "potential_triggers": []},
-            "priority_actions": [],
-            "positive_factors": [],
-            "questions_to_discuss_with_clinician": [],
-            "when_to_seek_professional_help": [],
-            "disclaimer": "Groq report configuration missing. Stored responses are intact."
-        }
-
-    url = "https://api.groq.com/openai/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0"
-    }
-
-    # Same prompts as existing main.py
-    system_prompt = """You are MantraAI's AI wellness-report engine. Analyze the health questionnaire. Return ONLY valid JSON schema matching:
-{
-  "summary": {"headline": "headline", "overview": "overview", "overall_wellness_status": "Stable | Worth monitoring | Several areas need attention"},
-  "key_findings": [{"title": "Title", "severity": "low | moderate | notable", "explanation": "explanation", "evidence": []}],
-  "reproductive_health": {"summary": "summary", "relevant_factors": [], "protective_factors": [], "areas_to_monitor": []},
-  "sexual_health": {"summary": "summary", "relevant_factors": [], "areas_to_monitor": []},
-  "mental_wellbeing": {"summary": "summary", "relevant_factors": [], "areas_to_monitor": []},
-  "lifestyle": {"sleep": "sleep", "exercise": "exercise", "diet": "diet", "substance_use": "substance", "heat_exposure": "heat", "environment": "environment"},
-  "behavioral_patterns": {"summary": "summary", "patterns": [], "potential_triggers": []},
-  "priority_actions": [{"priority": 1, "area": "Area", "action": "action", "reason": "reason"}],
-  "positive_factors": [],
-  "questions_to_discuss_with_clinician": [],
-  "when_to_seek_professional_help": [],
-  "disclaimer": "disclaimer"
-}"""
-    
-    user_prompt = f"Analyze the completed questionnaire:\n{json.dumps(answers, indent=2)}"
-    payload = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-        "response_format": {"type": "json_object"},
-        "temperature": 0.2
-    }
-
-    for attempt in range(3):
-        try:
-            req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
-            with urllib.request.urlopen(req, timeout=20) as response:
-                res_body = response.read().decode("utf-8")
-                res_json = json.loads(res_body)
-                content_str = res_json["choices"][0]["message"]["content"]
-                return json.loads(content_str)
-        except Exception as e:
-            print(f"Groq API connection error on attempt {attempt+1}: {str(e)}")
-            if attempt == 2:
-                # Fallback on ultimate failure so assessment completion does not crash
-                return {
-                    "summary": {
-                        "headline": "Assessment Completed - Report Generation Deferred",
-                        "overview": "Your assessment was successfully saved, but we ran into a connection timeout when communicating with the AI report generator. Please refresh to try again.",
-                        "overall_wellness_status": "Stable"
-                    },
-                    "key_findings": [],
-                    "reproductive_health": {"summary": "Pending connection.", "relevant_factors": [], "protective_factors": [], "areas_to_monitor": []},
-                    "sexual_health": {"summary": "Pending.", "relevant_factors": [], "areas_to_monitor": []},
-                    "mental_wellbeing": {"summary": "Pending.", "relevant_factors": [], "areas_to_monitor": []},
-                    "lifestyle": {"sleep": "Pending.", "exercise": "Pending.", "diet": "Pending.", "substance_use": "Pending.", "heat_exposure": "Pending.", "environment": "Pending."},
-                    "behavioral_patterns": {"summary": "Pending.", "patterns": [], "potential_triggers": []},
-                    "priority_actions": [],
-                    "positive_factors": [],
-                    "questions_to_discuss_with_clinician": [],
-                    "when_to_seek_professional_help": [],
-                    "disclaimer": "Failed to connect to AI server. Responses are persisted."
-                }
-            time.sleep(1.0)
+    norm = normalize_assessment_responses(answers)
+    ctx = build_health_context(norm)
+    ev = retrieve_evidence_for_health_context(ctx)
+    rep = generate_mantra_report(norm, ctx, ev)
+    rep_dict = rep.model_dump(mode="json")
+    legacy_dict = new_report_to_legacy_view(rep)
+    return {**rep_dict, **legacy_dict}
 
 @router.post("/{assessment_id}/complete", response_model=AssessmentResultOut)
 def complete_assessment(
@@ -307,57 +225,76 @@ def complete_assessment(
 
     answers = {r.question_id: r.response_value for r in responses_list}
 
-    # 2. Compute non-diagnostic risk scores
-    score_lifestyle = 0
-    score_mental = 0
-    score_reproductive = 0
+    # ── CONTEXT ENGINE PIPELINE ──────────────────────────────────────────
+    # 1. Normalize raw questionnaire responses across all canonical domains
+    normalized_context = normalize_assessment_responses(answers)
 
-    if answers.get("stress_level") in ["High", "Moderate"]:
-        score_mental += 3
-    if answers.get("sleep_hours") and str(answers.get("sleep_hours")).isdigit() and int(answers.get("sleep_hours")) < 7:
-        score_lifestyle += 3
-    if answers.get("smoking_status") == "Yes":
-        score_lifestyle += 3
-    if answers.get("scrotal_heat_exposure") == "Yes":
-        score_reproductive += 3
-    if answers.get("chemical_exposure") == "Yes":
-        score_reproductive += 3
+    # 2. Build structured, deterministic health context
+    health_context = build_health_context(normalized_context)
 
-    total_score = score_lifestyle + score_mental + score_reproductive
+    # 3. Retrieve matching authoritative clinical evidence
+    evidence_context = retrieve_evidence_for_health_context(health_context)
+    logger.debug(
+        "Assessment %s evidence retrieved: %d guidelines/reviews matched across query tags.",
+        str(assessment_id),
+        evidence_context.matched_count,
+    )
 
-    overall_cat = "Stable"
-    interpretation = "Your responses suggest a stable baseline with protective daily habits."
-    
-    if total_score >= 6:
-        overall_cat = "Worth monitoring"
-        interpretation = "Some responses indicate areas worth monitoring. Adjusting environmental or lifestyle factors can help maintain healthy indicators."
-    if total_score >= 9:
+    # 3. Derive backward-compatible, non-diagnostic result summary
+    # NOTE: Obsolete scoring based on legacy field names (stress_level, sleep_hours, etc.)
+    # is replaced by the deterministic domain factor counts and clinical boundaries.
+    lifestyle_mod_count = len([f for f in health_context.modifiable_factors if f.domain == "lifestyle_wellness"])
+    mental_mod_count = len([f for f in health_context.modifiable_factors if f.domain == "mental_behavioral_wellness"])
+    reproductive_flags_count = len([f for f in health_context.context_flags if f.domain == "reproductive_health"])
+    total_score = len(health_context.modifiable_factors) + len(health_context.follow_up_flags)
+
+    if len(health_context.follow_up_flags) > 0 or total_score >= 6:
         overall_cat = "Several areas need attention"
-        interpretation = "Multiple factors suggest several areas need attention. A structured discussion with an Andrologist or Urologist is recommended."
+        interpretation = "Multiple contextual factors suggest areas for proactive optimization and clinical consultation."
+    elif total_score >= 3:
+        overall_cat = "Worth monitoring"
+        interpretation = "Some contextual factors indicate areas worth monitoring or optimizing through lifestyle and environmental adjustments."
+    else:
+        overall_cat = "Stable"
+        interpretation = "Your responses suggest a stable baseline across lifestyle, environmental, and behavioral wellness domains."
 
-    # 3. Create AssessmentResult record
+    # 4. Create AssessmentResult record
     result = AssessmentResult(
         assessment_session_id=assessment_id,
         overall_category=overall_cat,
         risk_scores={
-            "lifestyle": score_lifestyle,
-            "mental_health": score_mental,
-            "reproductive_risk": score_reproductive,
-            "total_score": total_score
+            "lifestyle": lifestyle_mod_count,
+            "mental_health": mental_mod_count,
+            "reproductive_risk": reproductive_flags_count,
+            "total_score": total_score,
+            "modifiable_factors_count": len(health_context.modifiable_factors),
+            "positive_factors_count": len(health_context.positive_factors),
+            "context_flags_count": len(health_context.context_flags),
+            "follow_up_flags_count": len(health_context.follow_up_flags),
+            "completeness": health_context.data_quality.completeness,
         },
         interpretation=interpretation
     )
     db.add(result)
 
-    # 4. Generate & store AI Report
-    report_data = generate_report_via_groq(answers)
+    # 4. Generate & store validated MantraAIReport
+    mantra_report = generate_mantra_report(
+        normalized_assessment=normalized_context,
+        health_context=health_context,
+        evidence_context=evidence_context,
+    )
+
+    report_dict = mantra_report.model_dump(mode="json")
+    legacy_view = new_report_to_legacy_view(mantra_report)
+    persisted_content = {**legacy_view, **report_dict}
+
     report = Report(
         assessment_session_id=assessment_id,
-        report_version="1.0",
-        model_provider="groq",
-        model_name=report_data.get("summary", {}).get("overall_wellness_status", "Stable"), # store status overview as name or use default
-        report_content=report_data,
-        structured_findings=report_data.get("key_findings", [])
+        report_version=mantra_report.report_metadata.report_version,
+        model_provider=mantra_report.report_metadata.model_provider,
+        model_name=mantra_report.report_metadata.model_name,
+        report_content=persisted_content,
+        structured_findings=[f.model_dump() for f in mantra_report.priority_factors]
     )
     db.add(report)
 

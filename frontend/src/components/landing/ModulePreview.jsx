@@ -260,7 +260,7 @@ export default function ModulePreview() {
           {/* Card 3: Knowledge Hub (span 4) */}
           <motion.div
             variants={itemVariants}
-            onClick={() => window.location.hash = '#awareness'}
+            onClick={() => window.location.hash = '#resources'}
             className={`md:col-span-4 ${cardClass} p-8 min-h-[300px] hover:border-marigold/40 transition-colors duration-500 cursor-pointer`}
           >
             <span className="absolute top-0 left-0 h-[2px] bg-marigold w-0 group-hover:w-full transition-all duration-500" />
@@ -294,7 +294,7 @@ export default function ModulePreview() {
             variants={itemVariants}
             onHoverStart={() => setHoveredCard('m5')}
             onHoverEnd={() => setHoveredCard(null)}
-            onClick={() => window.location.hash = '#awareness/semen-analysis-intro'}
+            onClick={() => window.location.hash = '#resources'}
             className={`md:col-span-4 ${cardClass} p-8 min-h-[300px] border-2 border-marigold/40 hover:border-marigold transition-colors duration-500 cursor-pointer`}
           >
             <span className="absolute top-0 left-0 h-[2px] bg-marigold w-full" />

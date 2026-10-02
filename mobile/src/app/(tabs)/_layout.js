@@ -19,27 +19,28 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
           position: "absolute",
-          bottom: Platform.OS === "ios" ? (insets.bottom > 0 ? insets.bottom : 24) : (insets.bottom > 0 ? insets.bottom + 8 : 16),
-          left: 18,
-          right: 18,
-          borderRadius: 20,
-          height: 66,
+          bottom: Platform.OS === "ios" ? (insets.bottom > 0 ? insets.bottom : 24) : (insets.bottom > 0 ? insets.bottom + 12 : 16),
+          left: 16,
+          right: 16,
+          borderRadius: 24,
+          height: 74,
           backgroundColor: colors.white,
           borderWidth: 1.5,
           borderColor: colors.border,
           shadowColor: colors.nightBlue,
-          shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: isDarkMode ? 0.3 : 0.05,
-          shadowRadius: 10,
-          elevation: 6,
-          paddingBottom: Platform.OS === "ios" ? 20 : 12,
-          paddingTop: 12,
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: isDarkMode ? 0.25 : 0.04,
+          shadowRadius: 12,
+          elevation: 8,
+          paddingBottom: Platform.OS === "ios" ? 14 : 10,
+          paddingTop: 10,
         },
         tabBarLabelStyle: {
           fontFamily: "System",
-          fontSize: 10,
-          fontWeight: "600",
+          fontSize: 9,
+          fontWeight: "700",
           letterSpacing: 0.5,
+          marginTop: 4,
         },
         headerShown: false,
       }}
@@ -75,18 +76,11 @@ export default function TabsLayout() {
             >
               <Feather 
                 name="activity" 
-                size={18} 
+                size={20} 
                 color={colors.cream} 
               />
             </View>
           ),
-          tabBarLabelStyle: {
-            fontFamily: "System",
-            fontSize: 10,
-            fontWeight: "700",
-            color: colors.marigold,
-            letterSpacing: 0.5,
-          }
         }}
       />
       <Tabs.Screen
@@ -113,27 +107,32 @@ export default function TabsLayout() {
 
 const createStyles = (colors) => StyleSheet.create({
   assessContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
+    marginTop: -8,
     ...Platform.select({
       ios: {
         shadowColor: colors.marigold,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.35,
+        shadowRadius: 6,
       },
       android: {
-        elevation: 3,
+        elevation: 5,
       },
     }),
   },
   assessFocused: {
     backgroundColor: colors.marigold,
+    borderColor: colors.white,
+    borderWidth: 1.5,
   },
   assessUnfocused: {
     backgroundColor: colors.nightBlue,
+    borderColor: colors.white,
+    borderWidth: 1.5,
   },
 });

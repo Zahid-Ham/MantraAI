@@ -9,6 +9,7 @@ import { COLORS, SPACING, SHADOWS } from "../../constants/theme";
 import BrandHeader from "../../components/BrandHeader";
 import PrimaryButton from "../../components/PrimaryButton";
 import SectionHeader from "../../components/SectionHeader";
+import IndianBackground from "../../components/IndianBackground";
 import { assessmentSchema } from "../../data/assessmentSchema";
 
 export default function AssessmentReview() {
@@ -109,10 +110,11 @@ export default function AssessmentReview() {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <View style={styles.header}>
-        <BrandHeader />
-        <Text style={styles.headerTitle}>REVIEW RESPONSES</Text>
-      </View>
+      <IndianBackground>
+        <View style={styles.header}>
+          <BrandHeader />
+          <Text style={styles.headerTitle}>REVIEW RESPONSES</Text>
+        </View>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.reviewPrompt}>
@@ -166,16 +168,17 @@ export default function AssessmentReview() {
         })}
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: Math.max(16, insets.bottom) }]}>
-        <Text style={styles.footerAlert}>{t("readyToSubmit")}</Text>
-        <PrimaryButton
-          title={t("submitAssessment")}
-          variant="orange"
-          loading={submitting || loading}
-          onPress={handleSubmit}
-          style={styles.submitBtn}
-        />
-      </View>
+        <View style={[styles.footer, { paddingBottom: Math.max(16, insets.bottom) }]}>
+          <Text style={styles.footerAlert}>{t("readyToSubmit")}</Text>
+          <PrimaryButton
+            title={t("submitAssessment")}
+            variant="orange"
+            loading={submitting || loading}
+            onPress={handleSubmit}
+            style={styles.submitBtn}
+          />
+        </View>
+      </IndianBackground>
     </SafeAreaView>
   );
 }
@@ -183,11 +186,11 @@ export default function AssessmentReview() {
 const createStyles = (colors) => StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: "transparent",
   },
   header: {
     paddingHorizontal: SPACING.lg,
-    backgroundColor: colors.background,
+    backgroundColor: "transparent",
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     alignItems: "center",
@@ -290,7 +293,7 @@ const createStyles = (colors) => StyleSheet.create({
     fontFamily: "System",
     fontSize: 15,
     fontWeight: "700",
-    color: COLORS.nightBlue,
+    color: colors.nightBlue,
     backgroundColor: "transparent",
   },
   footer: {
@@ -298,15 +301,15 @@ const createStyles = (colors) => StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+    borderTopColor: colors.border,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.lg,
     alignItems: "center",
     ...Platform.select({
       ios: {
-        shadowColor: COLORS.nightBlue,
+        shadowColor: colors.nightBlue,
         shadowOffset: { width: 0, height: -3 },
         shadowOpacity: 0.05,
         shadowRadius: 5,
@@ -320,7 +323,7 @@ const createStyles = (colors) => StyleSheet.create({
     fontFamily: "System",
     fontSize: 11,
     fontWeight: "600",
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     marginBottom: SPACING.sm,
   },
   submitBtn: {

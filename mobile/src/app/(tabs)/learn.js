@@ -9,6 +9,8 @@ import TopicCard from "../../components/TopicCard";
 import EmptyState from "../../components/EmptyState";
 import { topics } from "../../data/awareness/topics";
 import { categories } from "../../data/awareness/categories";
+import { usePreferences } from "../../context/PreferencesContext";
+import IndianBackground from "../../components/IndianBackground";
 
 export default function Learn() {
   const router = useRouter();
@@ -77,8 +79,9 @@ export default function Learn() {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <View style={styles.header}>
-        <BrandHeader subtitle="educational catalog" />
+      <IndianBackground>
+        <View style={styles.header}>
+          <BrandHeader subtitle="educational catalog" />
         
         {/* Search bar */}
         <View style={styles.searchContainer}>
@@ -139,6 +142,7 @@ export default function Learn() {
           )}
         </Animated.View>
       </ScrollView>
+      </IndianBackground>
     </SafeAreaView>
   );
 }
@@ -146,11 +150,11 @@ export default function Learn() {
 const createStyles = (colors) => StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: "transparent",
   },
   header: {
     paddingHorizontal: SPACING.lg,
-    backgroundColor: colors.background,
+    backgroundColor: "transparent",
   },
   searchContainer: {
     flexDirection: "row",

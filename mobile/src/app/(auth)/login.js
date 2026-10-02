@@ -10,14 +10,20 @@ import {
   ScrollView 
 } from "react-native";
 import { useRouter, Link } from "expo-router";
+import { Feather } from "@expo/vector-icons";
 import { useAuth } from "../../context/AuthContext";
-import { COLORS, SPACING } from "../../constants/theme";
+import { usePreferences } from "../../context/PreferencesContext";
+import { SPACING } from "../../constants/theme";
 import BrandHeader from "../../components/BrandHeader";
 import PrimaryButton from "../../components/PrimaryButton";
+import TricolorBar from "../../components/TricolorBar";
+import IndianBackground from "../../components/IndianBackground";
 
 export default function Login() {
   const router = useRouter();
   const { loginWithEmail } = useAuth();
+  const { colors, isDarkMode, setIsDarkMode } = usePreferences();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
@@ -36,7 +42,6 @@ export default function Login() {
       router.replace("/(tabs)/home");
     } catch (err) {
       console.error("Login failure:", err);
-      // Clean up Firebase error message
       const errMsg = err.message || "";
       if (errMsg.includes("auth/invalid-credential") || errMsg.includes("auth/user-not-found") || errMsg.includes("auth/wrong-password")) {
         setError("Invalid email or password.");
@@ -50,17 +55,34 @@ export default function Login() {
     }
   };
 
+  const styles = createStyles(colors, isDarkMode);
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
+    <IndianBackground>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
+        {/* Floating Theme Toggle Switch */}
+      <TouchableOpacity 
+        style={styles.themeToggle} 
+        onPress={() => setIsDarkMode(!isDarkMode)}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel="Toggle Theme"
+      >
+        <Feather name={isDarkMode ? "sun" : "moon"} size={20} color={colors.nightBlue} />
+      </TouchableOpacity>
+
       <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
         <View style={styles.headerContainer}>
           <BrandHeader subtitle="private reproductive health companion" />
         </View>
 
         <View style={styles.formCard}>
+          {/* Top Tricolor Strip */}
+          <TricolorBar style={styles.cardTricolor} />
+
           <Text style={styles.title}>Welcome back.</Text>
           <Text style={styles.subtitle}>Log in to access your secure profile and clinical reports.</Text>
 
@@ -76,7 +98,7 @@ export default function Login() {
               value={email}
               onChangeText={setEmail}
               placeholder="name@domain.com"
-              placeholderTextColor={COLORS.textTertiary}
+              placeholderTextColor={colors.textTertiary}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -97,7 +119,7 @@ export default function Login() {
               value={password}
               onChangeText={setPassword}
               placeholder="••••••••"
-              placeholderTextColor={COLORS.textTertiary}
+              placeholderTextColor={colors.textTertiary}
               secureTextEntry
               autoCapitalize="none"
               autoCorrect={false}
@@ -120,16 +142,17 @@ export default function Login() {
               </TouchableOpacity>
             </Link>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </IndianBackground>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors, isDarkMode) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: "transparent",
   },
   scrollContainer: {
     flexGrow: 1,
@@ -137,35 +160,68 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingBottom: SPACING.xl,
   },
+  themeToggle: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 54 : 30,
+    right: 30,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.white,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: colors.nightBlue,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: isDarkMode ? 0.2 : 0.04,
+    shadowRadius: 6,
+    elevation: 3,
+    zIndex: 10,
+  },
   headerContainer: {
     marginBottom: SPACING.xl,
+    marginTop: 40,
   },
   formCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: colors.border,
     padding: SPACING.xl,
+    overflow: "hidden",
+    shadowColor: colors.nightBlue,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: isDarkMode ? 0.2 : 0.02,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  cardTricolor: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
   },
   title: {
-    fontFamily: "System",
-    fontSize: 22,
-    fontWeight: "300",
-    color: COLORS.nightBlue,
-    marginBottom: 4,
+    fontFamily: "InstrumentSerif_400Regular",
+    fontSize: 32,
+    color: colors.nightBlue,
+    marginTop: 8,
+    marginBottom: 6,
   },
   subtitle: {
     fontFamily: "System",
     fontSize: 13,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     marginBottom: SPACING.xl,
     lineHeight: 18,
+    fontWeight: "500",
   },
   errorBox: {
     backgroundColor: "rgba(220, 38, 38, 0.05)",
     borderColor: "rgba(220, 38, 38, 0.15)",
-    borderWidth: 1,
-    borderRadius: 4,
+    borderWidth: 1.5,
+    borderRadius: 12,
     padding: SPACING.md,
     marginBottom: SPACING.lg,
   },
@@ -187,31 +243,32 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: "System",
     fontSize: 9,
-    fontWeight: "700",
-    color: COLORS.textTertiary,
-    letterSpacing: 1,
+    fontWeight: "800",
+    color: colors.textTertiary,
+    letterSpacing: 1.2,
     marginBottom: 6,
   },
   forgotText: {
     fontFamily: "System",
     fontSize: 10,
-    fontWeight: "700",
-    color: COLORS.marigold,
+    fontWeight: "800",
+    color: colors.marigold,
     letterSpacing: 0.5,
   },
   input: {
-    height: 48,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.cream,
+    height: 50,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.cream,
     paddingHorizontal: SPACING.md,
     fontFamily: "System",
     fontSize: 14,
-    color: COLORS.nightBlue,
+    color: colors.nightBlue,
   },
   loginBtn: {
     marginTop: SPACING.md,
+    height: 50,
   },
   signupPrompt: {
     flexDirection: "row",
@@ -222,13 +279,14 @@ const styles = StyleSheet.create({
   promptText: {
     fontFamily: "System",
     fontSize: 12,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
+    fontWeight: "500",
   },
   linkText: {
     fontFamily: "System",
     fontSize: 12,
     fontWeight: "700",
-    color: COLORS.nightBlue,
+    color: colors.nightBlue,
     textDecorationLine: "underline",
   },
 });

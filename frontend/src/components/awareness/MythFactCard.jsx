@@ -75,6 +75,7 @@ export default function MythFactCard({ mythItem }) {
       onKeyDown={handleKeyDown}
       tabIndex={0}
       role="button"
+
       aria-label={`Myth Card: ${mythText}`}
     >
       <motion.div

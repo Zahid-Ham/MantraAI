@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 # Import App configuration, routers, and database setups
 from app.config import settings
-from app.routers import auth as auth_router, assessment as assessment_router
+from app.routers import auth as auth_router, assessment as assessment_router, evidence as evidence_router
 
 app = FastAPI(title="MantraAI Backend Clinical API", version="1.0.0")
 
@@ -23,20 +23,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include Authentication and Assessment Routers
+# Include Authentication, Assessment, and Evidence Routers
 app.include_router(auth_router.router)
 app.include_router(assessment_router.router)
+app.include_router(evidence_router.router)
 
 class AnalyzeRequest(BaseModel):
     answers: dict
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "groq_configured": bool(os.getenv("GROQ_API_KEY"))}
+    return {"status": "ok", "groq_configured": bool(settings.GROQ_API_KEY)}
 
 def call_groq_api(prompt_system: str, prompt_user: str) -> dict:
     api_key = os.getenv("GROQ_API_KEY")
-    model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+    model = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
     
     if not api_key:
         print("Backend Error: GROQ_API_KEY is missing in environment variables.")

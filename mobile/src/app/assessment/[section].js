@@ -14,6 +14,7 @@ import OptionCard from "../../components/OptionCard";
 import WhyThisMatters from "../../components/WhyThisMatters";
 import PrimaryButton from "../../components/PrimaryButton";
 import { assessmentSchema } from "../../data/assessmentSchema";
+import IndianBackground from "../../components/IndianBackground";
 
 export default function AssessmentSection() {
   const { section, editQuestionId, returnTo } = useLocalSearchParams();
@@ -393,10 +394,11 @@ export default function AssessmentSection() {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <View style={styles.header}>
-        <BrandHeader />
-        <ProgressBar progress={progressPercent} />
-      </View>
+      <IndianBackground>
+        <View style={styles.header}>
+          <BrandHeader />
+          <ProgressBar progress={progressPercent} />
+        </View>
 
       <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
         <QuestionCard
@@ -427,6 +429,7 @@ export default function AssessmentSection() {
           style={styles.navBtn}
         />
       </View>
+      </IndianBackground>
     </SafeAreaView>
   );
 }
@@ -434,11 +437,11 @@ export default function AssessmentSection() {
 const createStyles = (colors, isDarkMode) => StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: "transparent",
   },
   header: {
     paddingHorizontal: SPACING.lg,
-    backgroundColor: colors.background,
+    backgroundColor: "transparent",
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },

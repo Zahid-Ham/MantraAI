@@ -1,66 +1,71 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 
-export default function AssessmentNavigation({ 
-  onBack, 
-  onNext, 
-  canGoBack, 
-  canGoNext, 
+export default function AssessmentNavigation({
+  onBack,
+  onNext,
+  canGoBack,
+  canGoNext,
   isLast,
   isOptional,
-  autoAdvanceTypes = [],
-  questionType
 }) {
   const { language } = useLanguage();
 
   const content = {
     en: {
-      back: "Back",
-      continue: "Continue",
-      complete: "Complete Assessment",
-      skip: "Skip Question"
+      back: 'Back',
+      continue: 'Continue',
+      complete: 'Complete Assessment',
+      skip: 'Skip Question',
     },
     hi: {
-      back: "पीछे जाएं",
-      continue: "आगे बढ़ें",
-      complete: "मूल्यांकन पूरा करें",
-      skip: "प्रश्न छोड़ें"
-    }
+      back: 'पीछे जाएं',
+      continue: 'आगे बढ़ें',
+      complete: 'मूल्यांकन पूरा करें',
+      skip: 'प्रश्न छोड़ें',
+    },
   }[language];
 
-  const isAutoAdvancing = autoAdvanceTypes.includes(questionType);
-
   return (
-    <div className="w-full max-w-2xl mx-auto flex justify-between items-center gap-4 mt-8 font-grotesk select-none">
-      {/* Back button */}
+    <div className="w-full flex items-center justify-between gap-4 mt-3.5 select-none font-sans">
+      {/* Left: Back button */}
       <div>
         {canGoBack && (
           <button
+            type="button"
             onClick={onBack}
-            className="px-6 py-3.5 border border-border-light dark:border-border-dark hover:border-marigold text-xs font-semibold uppercase tracking-wider transition-colors duration-300 rounded-sm cursor-pointer text-night-blue dark:text-cream focus:outline-none focus:ring-2 focus:ring-marigold"
+            className="inline-flex items-center gap-1.5 px-5 py-2 bg-white border border-[#EAE5DD] hover:bg-[#FAF8F5] text-[#1C1917] font-semibold text-[13.5px] rounded-xl shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D25619] cursor-pointer"
           >
-            {content.back}
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span>{content.back}</span>
           </button>
         )}
       </div>
 
-      {/* Next/Skip/Complete button */}
+      {/* Right: Continue / Complete / Skip button */}
       <div>
         <button
+          type="button"
           onClick={onNext}
           disabled={!canGoNext && !isOptional}
-          className={`px-8 py-3.5 text-xs font-semibold uppercase tracking-wider transition-all duration-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-marigold ${
+          className={`inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl font-semibold text-[14px] shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D25619] ${
             canGoNext || isOptional
-              ? "bg-marigold text-night-blue hover:bg-marigold-light cursor-pointer shadow-md shadow-marigold/5"
-              : "bg-cream-dark dark:bg-night-blue/50 text-night-blue/30 dark:text-cream/20 border border-border-light dark:border-border-dark cursor-not-allowed"
+              ? 'bg-[#D25619] hover:bg-[#B84510] text-white cursor-pointer hover:shadow'
+              : 'bg-[#EAE5DD] text-[#A8A29E] cursor-not-allowed border border-[#EAE5DD]'
           }`}
         >
-          {isLast 
-            ? content.complete 
-            : (!canGoNext && isOptional) 
-              ? content.skip 
-              : content.continue
-          }
+          <span>
+            {isLast
+              ? content.complete
+              : !canGoNext && isOptional
+              ? content.skip
+              : content.continue}
+          </span>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
         </button>
       </div>
     </div>

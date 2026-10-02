@@ -55,8 +55,8 @@ const createStyles = (colors, isDarkMode) => StyleSheet.create({
     elevation: 1,
   },
   expandedContainer: {
-    borderColor: isDarkMode ? "rgba(217, 119, 6, 0.3)" : "rgba(217, 119, 6, 0.2)",
-    backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.03)" : "#fffdf9",
+    borderColor: isDarkMode ? colors.marigold : "rgba(217, 119, 6, 0.2)",
+    backgroundColor: isDarkMode ? "#121a2e" : "#fffdf9",
   },
   header: {
     flexDirection: "row",

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import MicroscopicField from '../components/landing/MicroscopicField';
+import { getAuthenticatedEntryRoute } from '../utils/navigation';
 
 export function Login() {
   const { loginWithEmail, loginWithGoogle } = useAuth();
@@ -8,6 +9,15 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const resolveRedirect = async () => {
+    const rawRedirect = sessionStorage.getItem('mantra_auth_redirect');
+    sessionStorage.removeItem('mantra_auth_redirect');
+    if (rawRedirect && rawRedirect !== '#login' && rawRedirect !== '#signup' && rawRedirect !== '#assess') {
+      return rawRedirect;
+    }
+    return await getAuthenticatedEntryRoute();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,10 +29,8 @@ export function Login() {
     setLoading(true);
     try {
       await loginWithEmail(email, password);
-      // Retrieve redirect target or default to assess
-      const redirect = sessionStorage.getItem('mantra_auth_redirect') || '#assess';
-      sessionStorage.removeItem('mantra_auth_redirect');
-      window.location.hash = redirect;
+      const target = await resolveRedirect();
+      window.location.hash = target;
     } catch (err) {
       setError(err.message || 'Authentication failed. Please verify credentials.');
     } finally {
@@ -34,9 +42,8 @@ export function Login() {
     setError('');
     try {
       await loginWithGoogle();
-      const redirect = sessionStorage.getItem('mantra_auth_redirect') || '#assess';
-      sessionStorage.removeItem('mantra_auth_redirect');
-      window.location.hash = redirect;
+      const target = await resolveRedirect();
+      window.location.hash = target;
     } catch (err) {
       setError(err.message || 'Google authentication failed.');
     }
@@ -135,6 +142,15 @@ export function Signup() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const resolveRedirect = async () => {
+    const rawRedirect = sessionStorage.getItem('mantra_auth_redirect');
+    sessionStorage.removeItem('mantra_auth_redirect');
+    if (rawRedirect && rawRedirect !== '#login' && rawRedirect !== '#signup' && rawRedirect !== '#assess') {
+      return rawRedirect;
+    }
+    return await getAuthenticatedEntryRoute();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -155,9 +171,8 @@ export function Signup() {
     setLoading(true);
     try {
       await registerWithEmail(email, password);
-      const redirect = sessionStorage.getItem('mantra_auth_redirect') || '#assess';
-      sessionStorage.removeItem('mantra_auth_redirect');
-      window.location.hash = redirect;
+      const target = await resolveRedirect();
+      window.location.hash = target;
     } catch (err) {
       setError(err.message || 'Registration failed. Try again.');
     } finally {
@@ -169,9 +184,8 @@ export function Signup() {
     setError('');
     try {
       await loginWithGoogle();
-      const redirect = sessionStorage.getItem('mantra_auth_redirect') || '#assess';
-      sessionStorage.removeItem('mantra_auth_redirect');
-      window.location.hash = redirect;
+      const target = await resolveRedirect();
+      window.location.hash = target;
     } catch (err) {
       setError(err.message || 'Google registration failed.');
     }

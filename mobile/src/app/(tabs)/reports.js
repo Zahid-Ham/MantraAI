@@ -9,6 +9,7 @@ import BrandHeader from "../../components/BrandHeader";
 import ReportCard from "../../components/ReportCard";
 import EmptyState from "../../components/EmptyState";
 import { apiRequest } from "../../services/api";
+import IndianBackground from "../../components/IndianBackground";
 
 export default function Reports() {
   const router = useRouter();
@@ -79,9 +80,10 @@ export default function Reports() {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <View style={styles.header}>
-        <BrandHeader subtitle={language === "hi" ? "मेरा चिकित्सा इतिहास" : "my clinical history"} />
-      </View>
+      <IndianBackground>
+        <View style={styles.header}>
+          <BrandHeader subtitle={language === "hi" ? "मेरा चिकित्सा इतिहास" : "my clinical history"} />
+        </View>
 
       <ScrollView 
         contentContainerStyle={styles.container}
@@ -123,6 +125,7 @@ export default function Reports() {
           />
         )}
       </ScrollView>
+      </IndianBackground>
     </SafeAreaView>
   );
 }
@@ -130,7 +133,7 @@ export default function Reports() {
 const createStyles = (colors) => StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: "transparent",
   },
   header: {
     borderBottomWidth: 1,

@@ -8,6 +8,7 @@ import { usePreferences } from "../../context/PreferencesContext";
 import { COLORS, SPACING } from "../../constants/theme";
 import BrandHeader from "../../components/BrandHeader";
 import PrimaryButton from "../../components/PrimaryButton";
+import IndianBackground from "../../components/IndianBackground";
 
 export default function Assessment() {
   const router = useRouter();
@@ -35,8 +36,9 @@ export default function Assessment() {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <BrandHeader />
+      <IndianBackground>
+        <ScrollView contentContainerStyle={styles.container}>
+          <BrandHeader />
 
         <View style={styles.card}>
           <View style={styles.iconCircle}>
@@ -99,8 +101,9 @@ export default function Assessment() {
               style={styles.actionBtn}
             />
           )}
-        </View>
-      </ScrollView>
+          </View>
+        </ScrollView>
+      </IndianBackground>
     </SafeAreaView>
   );
 }
@@ -108,7 +111,7 @@ export default function Assessment() {
 const createStyles = (colors) => StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: "transparent",
   },
   container: {
     flexGrow: 1,

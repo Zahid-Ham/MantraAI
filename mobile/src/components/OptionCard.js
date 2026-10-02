@@ -50,7 +50,7 @@ const createStyles = (colors, isDarkMode) => StyleSheet.create({
   },
   selectedContainer: {
     borderColor: colors.marigold,
-    backgroundColor: isDarkMode ? "rgba(217, 119, 6, 0.08)" : "#fffdf9",
+    backgroundColor: isDarkMode ? "#251c16" : "#fffdf9",
   },
   unselectedContainer: {
     borderColor: colors.border,
@@ -64,7 +64,7 @@ const createStyles = (colors, isDarkMode) => StyleSheet.create({
     backgroundColor: "transparent",
   },
   selectedText: {
-    color: colors.nightBlue,
+    color: isDarkMode ? "#f59e0b" : colors.nightBlue,
     fontWeight: "700",
     backgroundColor: "transparent",
   },

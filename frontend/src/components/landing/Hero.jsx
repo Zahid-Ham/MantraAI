@@ -1,325 +1,247 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
-import { useTheme } from '../../context/ThemeContext';
-import { useLanguage } from '../../context/LanguageContext';
+import React from 'react';
 import { useAuth } from '../../context/AuthContext';
-import MicroscopicField from './MicroscopicField';
-import MagneticButton from './MagneticButton';
+import { handleGetStartedNavigation } from '../../utils/navigation';
 
 export default function Hero() {
-  const { theme, toggleTheme } = useTheme();
-  const { language, toggleLanguage } = useLanguage();
-  const { isAuthenticated, user } = useAuth();
-  const isDark = theme === 'dark';
-  const [isTabActive, setIsTabActive] = useState(true);
-  const [ctaHovered, setCtaHovered] = useState(false);
-  const containerRef = useRef(null);
-  const prefersReducedMotion = useReducedMotion();
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const { isAuthenticated } = useAuth();
 
-
-  // Translations
-  const content = {
-    en: {
-      initiative: 'An India-First Wellness Initiative',
-      headline: <>Private, evidence-based <br />men's health for India.</>,
-      desc: 'MantraAI provides anonymous, clinical-grade symptom evaluation, AI wellness support, and fertility risk screening designed specifically for the modern Indian man.',
-      cta: 'Start Symptom Assessment',
-      shielded: 'SHIELDED BY DESIGN / ANONYMOUS',
-      platform: 'MANTRA CLINICAL PLATFORM v1.0.0',
-      clinical: 'IN / CLINICAL',
-      makeInIndia: 'MADE IN INDIA',
-    },
-    hi: {
-      initiative: 'भारत-प्रथम स्वास्थ्य एवं कल्याण पहल',
-      headline: <>भारत के लिए निजी, <br />साक्ष्य-आधारित पुरुष स्वास्थ्य।</>,
-      desc: 'मंत्रएआई (MantraAI) विशेष रूप से आधुनिक भारतीय पुरुषों के लिए तैयार की गई अज्ञात, क्लीनिकल-श्रेणी लक्षण जांच, एआई स्वास्थ्य सहायता और प्रजनन क्षमता जोखिम स्क्रीनिंग प्रदान करता है।',
-      cta: 'लक्षण मूल्यांकन शुरू करें',
-      shielded: 'सुरक्षित डिजाइन / पूर्णतः अज्ञात',
-      platform: 'मंत्र क्लीनिकल प्लेटफॉर्म v1.0.0',
-      clinical: 'भारत / नैदानिक',
-      makeInIndia: 'मेक इन इंडिया',
-    },
-  }[language];
-
-  useEffect(() => {
-    const handleVisibilityChange = () => setIsTabActive(document.visibilityState === 'visible');
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
-
-  const containerVariants = {
-    hidden: {},
-    visible: { transition: { staggerChildren: 0.14, delayChildren: 0.08 } },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 28 },
-    visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 55, damping: 14 } },
+  const handleCtaClick = (e) => {
+    handleGetStartedNavigation(e, isAuthenticated);
   };
 
   return (
-    <section
-      ref={containerRef}
-      id="hero"
-      className="relative min-h-[95vh] w-full flex flex-col justify-between bg-cream dark:bg-night-blue text-night-blue dark:text-cream overflow-hidden px-6 py-8 md:px-16 md:py-12 border-b border-border-light dark:border-border-dark transition-colors duration-500"
-    >
-      {/* ── Living Microscopic Backdrop ───────────────── */}
-      <div className="absolute inset-0 z-0 pointer-events-none select-none">
-        {/* Particle field — mouse-reactive */}
-        {!prefersReducedMotion && isTabActive && (
-          <MicroscopicField
-            mouseReactive={!isMobile}
-            density={isMobile ? 'low' : isDark ? 'high' : 'medium'}
-            mode="drift"
-            bioForms={!isMobile}
-          />
-        )}
-
-        {/* Mandala-inspired concentric orbital rings */}
-        {!prefersReducedMotion && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <svg
-              className="w-[700px] h-[700px] text-night-blue dark:text-marigold opacity-[0.028] dark:opacity-[0.04]"
-              viewBox="0 0 700 700"
-              fill="none"
-            >
-              {/* Concentric rings */}
-              {[120, 180, 240, 310, 390].map((r, i) => (
-                <circle
-                  key={i}
-                  cx="350"
-                  cy="350"
-                  r={r}
-                  stroke="currentColor"
-                  strokeWidth={i === 0 ? 1.5 : 0.75}
-                  strokeDasharray={i % 2 === 0 ? '4 6' : '1 8'}
-                />
-              ))}
-              {/* Geometric spokes — 8-fold symmetry (Ashoka-inspired) */}
-              {Array.from({ length: 8 }, (_, i) => {
-                const angle = (i * Math.PI * 2) / 8;
-                const x1 = 350 + Math.cos(angle) * 110;
-                const y1 = 350 + Math.sin(angle) * 110;
-                const x2 = 350 + Math.cos(angle) * 370;
-                const y2 = 350 + Math.sin(angle) * 370;
-                return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="currentColor" strokeWidth="0.5" />;
-              })}
-              {/* Outer arc segments */}
-              {Array.from({ length: 16 }, (_, i) => {
-                const a = (i * Math.PI * 2) / 16;
-                const next = ((i + 0.6) * Math.PI * 2) / 16;
-                const r = 390;
-                const x1 = 350 + Math.cos(a) * r;
-                const y1 = 350 + Math.sin(a) * r;
-                const x2 = 350 + Math.cos(next) * r;
-                const y2 = 350 + Math.sin(next) * r;
-                return (
-                  <path key={i} d={`M${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2}`}
-                    stroke="currentColor" strokeWidth="1" fill="none" />
-                );
-              })}
-            </svg>
-          </div>
-        )}
-
-        {/* Microscopic lens glow behind headline */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          {/* Outer large glow — dark mode gets prominent warm amber */}
-          <div
-            className={`w-[600px] h-[600px] rounded-full blur-3xl animate-lens pointer-events-none ${
-              isDark ? 'bg-marigold/10' : 'bg-marigold/4'
-            }`}
-            style={{ maxWidth: '90vw', maxHeight: '90vw' }}
-          />
-          {/* Inner concentrated core (dark mode only) */}
-          {isDark && (
-            <div
-              className="absolute w-[240px] h-[240px] rounded-full blur-2xl bg-marigold/8 pointer-events-none"
-            />
-          )}
-        </div>
-
-        {/* Dark mode radial gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-cream dark:from-night-blue via-transparent to-cream-dark/20 dark:to-night-dark/20" />
-      </div>
-
-
-      {/* ── Navigation Header ────────────────────── */}
-      <header className="relative z-10 w-full flex justify-between items-center border-b border-border-light dark:border-border-dark pb-4">
-        <div className="flex items-center gap-2.5">
-          <span className="font-sans text-[10px] text-marigold bg-marigold/10 border border-marigold/20 px-1.5 py-0.5 font-medium tracking-widest rounded-sm">मंत्र</span>
-          <span className="font-grotesk font-bold text-xl tracking-wider text-night-blue dark:text-cream">
-            MANTRA<span className="text-marigold">.AI</span>
-          </span>
-        </div>
-
-        <div className="flex items-center gap-4 md:gap-6">
-          {/* Made in India badge */}
-          <span className="text-[10px] border border-ashoka-green-light dark:border-ashoka-green text-ashoka-green dark:text-ashoka-green-light bg-ashoka-green/5 font-semibold px-2 py-0.5 font-grotesk tracking-widest uppercase rounded-sm">
-            {content.makeInIndia}
-          </span>
-
-          {/* Language toggle */}
-          <button
-            onClick={toggleLanguage}
-            className="px-2.5 py-1.5 text-[11px] border border-border-light dark:border-border-dark hover:border-marigold transition-colors duration-300 bg-cream-dark/40 dark:bg-night-blue/50 rounded-sm font-grotesk font-semibold tracking-wider cursor-pointer text-night-blue dark:text-cream"
-            aria-label="Toggle language"
-          >
-            {language === 'en' ? 'हिन्दी' : 'EN'}
-          </button>
-
-          {/* Awareness link */}
-          <button
-            onClick={() => window.location.hash = '#awareness'}
-            className="px-2.5 py-1.5 text-[11px] border border-border-light dark:border-border-dark hover:border-marigold transition-colors duration-300 bg-cream-dark/40 dark:bg-night-blue/50 rounded-sm font-grotesk font-semibold tracking-wider cursor-pointer text-night-blue dark:text-cream"
-          >
-            {language === 'en' ? 'AWARENESS' : 'जागरूकता'}
-          </button>
-
-          {/* Theme toggle */}
-          <button
-            onClick={toggleTheme}
-            className="p-2 border border-border-light dark:border-border-dark hover:border-marigold transition-colors duration-300 bg-cream-dark/40 dark:bg-night-blue/50 rounded-sm cursor-pointer"
-            aria-label="Toggle visual theme"
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={theme}
-                initial={{ y: -10, opacity: 0, rotate: -45 }}
-                animate={{ y: 0, opacity: 1, rotate: 0 }}
-                exit={{ y: 10, opacity: 0, rotate: 45 }}
-                transition={{ duration: 0.2 }}
-              >
-                {theme === 'dark' ? (
-                  <svg className="w-4 h-4 text-marigold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14 12a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4 text-night-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                  </svg>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </button>
-
-          {isAuthenticated ? (
-            <div className="flex items-center gap-3 border-l border-border-light dark:border-border-dark pl-4 select-none font-grotesk">
-              <div className="hidden lg:flex flex-col text-right">
-                <span className="text-[9px] uppercase tracking-wider text-night-blue/40 dark:text-cream/40 font-bold">Logged in</span>
-                <span className="text-[10px] font-semibold text-night-blue/80 dark:text-cream/80 max-w-[120px] truncate">{user.email}</span>
-              </div>
-              <button 
-                onClick={() => window.location.hash = '#profile'}
-                className="px-2.5 py-1.5 text-[11px] border border-border-light dark:border-border-dark hover:border-marigold transition-colors duration-300 bg-cream-dark/40 dark:bg-night-blue/50 rounded-sm font-semibold tracking-wider cursor-pointer text-night-blue dark:text-cream"
-              >
-                Profile
-              </button>
+    <section id="home" className="relative overflow-hidden pt-8 pb-14 md:pt-12 md:pb-20 lg:pt-14 lg:pb-22">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Main Two-Column Hero Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+          
+          {/* LEFT COLUMN: Editorial Copy, CTAs, Trust Badges (~52%) */}
+          <div className="lg:col-span-6 xl:col-span-6 flex flex-col justify-center space-y-7 max-w-xl">
+            
+            {/* Eyebrow Label (12.5–13px) */}
+            <div>
+              <span className="inline-block text-[12.5px] sm:text-[13px] font-bold uppercase tracking-[0.14em] text-[#D25619]">
+                AN INDIA-FIRST MEN'S HEALTH INTELLIGENCE PLATFORM
+              </span>
             </div>
-          ) : (
-            <button 
-              onClick={() => window.location.hash = '#login'}
-              className="px-2.5 py-1.5 text-[11px] border border-border-light dark:border-border-dark hover:border-marigold transition-colors duration-300 bg-cream-dark/40 dark:bg-night-blue/50 rounded-sm font-semibold tracking-wider cursor-pointer text-night-blue dark:text-cream"
-            >
-              Sign In
-            </button>
-          )}
 
-          <div className="text-xs uppercase tracking-widest text-night-blue/60 dark:text-cream/60 font-semibold font-grotesk hidden sm:block">
-            {content.clinical}
-          </div>
-        </div>
-      </header>
+            {/* Main Editorial Headline (Desktop: 58–64px, Tablet: 50–54px, Mobile: 38–44px) */}
+            <h1 className="text-[40px] sm:text-[50px] lg:text-[58px] xl:text-[63px] font-normal leading-[1.03] text-[#1C1917] font-editorial-serif tracking-tight">
+              Understand your health<br />
+              today for a <span className="italic text-[#D25619] font-editorial-serif">stronger</span><br />
+              <span className="italic text-[#D25619] font-editorial-serif">tomorrow.</span>
+            </h1>
 
-      {/* ── Hero Content ─────────────────────────── */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="relative z-10 max-w-4xl mx-auto text-center my-auto flex flex-col items-center justify-center pt-16 pb-12"
-      >
-        <motion.span
-          variants={itemVariants}
-          className="text-marigold font-grotesk text-sm font-semibold tracking-[0.25em] uppercase mb-4"
-        >
-          {content.initiative}
-        </motion.span>
+            {/* Supporting Copy (17–18px comfortable line-height) */}
+            <p className="text-[17px] sm:text-[17.5px] leading-[1.62] text-[#4A453E] font-normal max-w-lg">
+              MantraAI provides private, evidence-based guidance for men's sexual, reproductive and overall wellbeing — through AI-powered assessments, personalised insights and trusted resources.
+            </p>
 
-        <motion.h1
-          variants={itemVariants}
-          className="font-serif text-5xl md:text-8xl font-normal leading-[0.95] tracking-tight text-night-blue dark:text-cream mb-8"
-        >
-          {content.headline}
-        </motion.h1>
+            {/* Primary & Secondary Action CTAs (48–52px height, 15–16px text) */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-1">
+              <button
+                onClick={handleCtaClick}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 h-[50px] text-[15px] sm:text-[15.5px] font-semibold text-white bg-[#D25619] hover:bg-[#B94711] rounded-xl shadow-sm transition-all hover:translate-x-0.5 active:translate-y-0.5 text-center cursor-pointer"
+              >
+                <span>{isAuthenticated ? 'Go to Your Dashboard' : 'Start Your Assessment'}</span>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </button>
 
-        <motion.p
-          variants={itemVariants}
-          className="font-grotesk text-base md:text-lg text-night-blue/70 dark:text-cream/70 max-w-2xl mx-auto leading-relaxed mb-10 font-light"
-        >
-          {content.desc}
-        </motion.p>
+              <a
+                href="#features"
+                className="inline-flex items-center justify-center px-6 py-3.5 h-[50px] text-[15px] sm:text-[15.5px] font-semibold text-[#1C1917] bg-white border border-[#EAE5DD] hover:border-[#D25619] rounded-xl shadow-sm transition-colors text-center"
+              >
+                Explore Features
+              </a>
+            </div>
 
-        {/* CTA — Magnetic + particle-aware */}
-        <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <MagneticButton href="#assess" strength={6} id="hero-cta">
-            <span
-              onMouseEnter={() => setCtaHovered(true)}
-              onMouseLeave={() => setCtaHovered(false)}
-              className={`
-                relative inline-flex items-center gap-3 px-8 py-4
-                bg-marigold text-night-blue font-grotesk font-semibold text-sm uppercase tracking-wider
-                transition-all duration-300 shadow-lg shadow-marigold/20
-                hover:bg-marigold-light hover:shadow-marigold/40 hover:shadow-xl
-                group
-              `}
-            >
-              {/* Subtle sweep line on hover */}
-              <span className="absolute bottom-0 left-0 h-[2px] bg-night-blue/20 transition-all duration-500 w-0 group-hover:w-full" />
+            {/* 3 Compact Trust / Value Indicators (Title: 14–15px, Description: 13–14px) */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-3 pt-6 border-t border-[#EAE5DD]">
               
-              {/* Icon */}
-              <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-              {content.cta}
-            </span>
-          </MagneticButton>
+              {/* Item 1: Private & Secure */}
+              <div className="flex items-start gap-2.5 sm:pr-2">
+                <div className="p-2 rounded-lg bg-[#EBF7F0] text-[#2D7A68] shrink-0 mt-0.5">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="text-[14px] font-bold text-[#1C1917] leading-snug">
+                    Private & Secure
+                  </h4>
+                  <p className="text-[13px] text-[#57534E] mt-0.5 leading-tight">
+                    Your data is yours, always private
+                  </p>
+                </div>
+              </div>
 
-          {/* Secondary: Explore Topics button */}
-          <a
-            href="#awareness"
-            className="font-grotesk text-xs tracking-[0.25em] uppercase text-night-blue/80 dark:text-cream/80 border border-border-light dark:border-border-dark hover:border-marigold px-6 py-4 transition-colors rounded-sm cursor-pointer hover:text-marigold shadow-xs"
-          >
-            {language === 'en' ? 'EXPLORE TOPICS' : 'विषयों का अन्वेषण'}
-          </a>
-        </motion.div>
+              {/* Item 2: Evidence-Based */}
+              <div className="flex items-start gap-2.5 sm:px-2 sm:border-l sm:border-[#EAE5DD]">
+                <div className="p-2 rounded-lg bg-[#EEF5FD] text-[#2E75D3] shrink-0 mt-0.5">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="text-[14px] font-bold text-[#1C1917] leading-snug">
+                    Evidence-Based
+                  </h4>
+                  <p className="text-[13px] text-[#57534E] mt-0.5 leading-tight">
+                    Backed by trusted research and guidelines
+                  </p>
+                </div>
+              </div>
 
-        {/* Micro stats row */}
-        <motion.div
-          variants={itemVariants}
-          className="flex items-center gap-6 mt-10 opacity-60"
-        >
-          {['Anonymous Assessment', 'Evidence-Based', 'India-First Data'].map((tag, i) => (
-            <span key={i} className="font-grotesk text-[10px] uppercase tracking-widest text-night-blue/50 dark:text-cream/40 flex items-center gap-1.5">
-              <span className="w-1 h-1 rounded-full bg-marigold inline-block" />
-              {tag}
-            </span>
-          ))}
-        </motion.div>
-      </motion.div>
+              {/* Item 3: Made for India */}
+              <div className="flex items-start gap-2.5 sm:pl-2 sm:border-l sm:border-[#EAE5DD]">
+                <div className="p-2 rounded-lg bg-[#FEF1EA] text-[#D25619] shrink-0 mt-0.5">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="text-[14px] font-bold text-[#1C1917] leading-snug">
+                    Made for India
+                  </h4>
+                  <p className="text-[13px] text-[#57534E] mt-0.5 leading-tight">
+                    Culturally sensitive and accessible
+                  </p>
+                </div>
+              </div>
 
-      {/* ── Multilingual Marquee Ticker ─────────── */}
-      <div className="relative z-10 w-full overflow-hidden border-t border-b border-border-light dark:border-border-dark py-3.5 mb-6">
-        <div className="animate-marquee whitespace-nowrap text-xs font-grotesk tracking-widest text-night-blue/45 dark:text-cream/45 uppercase select-none">
-          <span>Hindi · हिन्दी &nbsp;&nbsp;·&nbsp;&nbsp; Marathi · मराठी &nbsp;&nbsp;·&nbsp;&nbsp; Tamil · தமிழ் &nbsp;&nbsp;·&nbsp;&nbsp; Bengali · বাংলা &nbsp;&nbsp;·&nbsp;&nbsp; Kannada · ಕನ್ನಡ &nbsp;&nbsp;·&nbsp;&nbsp; Gujarati · ગુજરાતી &nbsp;&nbsp;·&nbsp;&nbsp; Telugu · తెలుగు &nbsp;&nbsp;·&nbsp;&nbsp; Punjabi · ਪੰਜਾਬੀ &nbsp;&nbsp;·&nbsp;&nbsp; </span>
-          <span>Hindi · हिन्दी &nbsp;&nbsp;·&nbsp;&nbsp; Marathi · मराठी &nbsp;&nbsp;·&nbsp;&nbsp; Tamil · தமிழ் &nbsp;&nbsp;·&nbsp;&nbsp; Bengali · বাংলা &nbsp;&nbsp;·&nbsp;&nbsp; Kannada · ಕನ್ನಡ &nbsp;&nbsp;·&nbsp;&nbsp; Gujarati · ગુજરાતી &nbsp;&nbsp;·&nbsp;&nbsp; Telugu · తెలుగు &nbsp;&nbsp;·&nbsp;&nbsp; Punjabi · ਪੰਜਾਬੀ &nbsp;&nbsp;·&nbsp;&nbsp; </span>
+            </div>
+
+          </div>
+
+          {/* RIGHT COLUMN: Hero Visual & Annotated Product Cards (~48%) */}
+          <div className="lg:col-span-6 xl:col-span-6 relative flex items-center justify-center">
+            
+            {/* Visual Frame */}
+            <div className="relative w-full max-w-[530px] rounded-[26px] overflow-hidden border border-[#EAE5DD] shadow-editorial-md bg-[#F3EFEA]">
+              
+              {/* Authentic Indian Man Image */}
+              <img
+                src="/hero_man.jpg"
+                alt="A thoughtful, confident young Indian man outdoors in warm golden sunlight"
+                className="w-full h-[440px] sm:h-[490px] lg:h-[530px] object-cover object-center"
+                loading="eager"
+              />
+
+              {/* Gentle Warm Vignette */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/5 pointer-events-none" />
+
+              {/* Script Callout Text Top Right */}
+              <div className="absolute top-5 sm:top-6 right-5 sm:right-6 font-handwriting text-2xl sm:text-[28px] text-[#633F17] -rotate-[7deg] select-none pointer-events-none drop-shadow-sm font-semibold leading-tight text-right">
+                A healthier you<br />
+                for a brighter India
+              </div>
+
+              {/* OVERLAY CARD A: Your Health Journey (Top Left) */}
+              <div className="absolute top-5 left-3.5 sm:top-6 sm:left-5 bg-white/95 backdrop-blur-md border border-[#EAE5DD] rounded-xl p-2.5 sm:p-3 shadow-editorial-sm max-w-[190px] sm:max-w-[210px] flex items-center justify-between gap-2 transition-all hover:scale-[1.02]">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-[#E8F4EE] text-[#2D7A68]">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-[13px] sm:text-[13.5px] font-bold text-[#1C1917] leading-tight">
+                      Your Health Journey
+                    </h4>
+                    <p className="text-[11.5px] sm:text-[12px] text-[#57534E] leading-tight mt-0.5">
+                      Track progress over time
+                    </p>
+                  </div>
+                </div>
+                <svg className="w-3.5 h-3.5 text-[#A8A29E] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+
+              {/* OVERLAY CARD B: AI-Powered Assessment (Middle Left) */}
+              <div
+                onClick={handleCtaClick}
+                className="group absolute top-[35%] sm:top-[37%] left-3 sm:left-5 bg-white/95 backdrop-blur-md border border-[#EAE5DD] rounded-xl p-2.5 sm:p-3 shadow-editorial-sm max-w-[215px] sm:max-w-[245px] flex items-center justify-between gap-2.5 transition-all hover:scale-[1.02] hover:border-[#D25619] cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-[#FEF0E6] text-[#D25619] shrink-0">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-[13px] sm:text-[13.5px] font-bold text-[#1C1917] group-hover:text-[#D25619] transition-colors leading-tight">
+                      AI-Powered Assessment
+                    </h4>
+                    <p className="text-[11.5px] sm:text-[12px] text-[#57534E] leading-tight mt-0.5">
+                      Personalised questions based on your responses
+                    </p>
+                  </div>
+                </div>
+                <svg className="w-3.5 h-3.5 text-[#A8A29E] group-hover:text-[#D25619] group-hover:translate-x-0.5 transition-all shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+
+              {/* OVERLAY CARD C: Action Plan (Lower Left) */}
+              <a
+                href="#features"
+                className="group absolute bottom-[18%] sm:bottom-[19%] left-3 sm:left-5 bg-white/95 backdrop-blur-md border border-[#EAE5DD] rounded-xl p-2.5 sm:p-3 shadow-editorial-sm max-w-[205px] sm:max-w-[235px] flex items-center justify-between gap-2.5 transition-all hover:scale-[1.02] hover:border-[#D25619]"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-[#FEF6EE] text-[#D97706] shrink-0">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-[13px] sm:text-[13.5px] font-bold text-[#1C1917] group-hover:text-[#D25619] transition-colors leading-tight">
+                      Action Plan
+                    </h4>
+                    <p className="text-[11.5px] sm:text-[12px] text-[#57534E] leading-tight mt-0.5">
+                      Practical steps for a healthier lifestyle
+                    </p>
+                  </div>
+                </div>
+                <svg className="w-3.5 h-3.5 text-[#A8A29E] group-hover:text-[#D25619] group-hover:translate-x-0.5 transition-all shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+
+              {/* OVERLAY CARD D: Consult a Professional (Bottom Right) */}
+              <a
+                href="#features"
+                className="group absolute bottom-4 sm:bottom-5 right-3 sm:right-5 bg-[#E2EFE7]/95 backdrop-blur-md border border-[#CCE0D4] rounded-xl p-2.5 sm:p-3 shadow-editorial-sm max-w-[200px] sm:max-w-[225px] flex items-center justify-between gap-2.5 transition-all hover:scale-[1.02]"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-[#2D7A68] text-white shrink-0">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-[13px] sm:text-[13.5px] font-bold text-[#17463A] leading-tight">
+                      Consult a Professional
+                    </h4>
+                    <p className="text-[11.5px] sm:text-[12px] text-[#2D6A58] leading-tight mt-0.5">
+                      When needed
+                    </p>
+                  </div>
+                </div>
+                <svg className="w-3.5 h-3.5 text-[#2D7A68] group-hover:translate-x-0.5 transition-transform shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+
+            </div>
+
+          </div>
+
         </div>
-      </div>
 
-      {/* ── Bottom Editorial Details ─────────────── */}
-      <div className="relative z-10 w-full flex flex-col md:flex-row justify-between items-start md:items-end border-t border-border-light dark:border-border-dark pt-6 gap-4 text-xs font-grotesk tracking-widest text-night-blue/40 dark:text-cream/40 uppercase">
-        <div>{content.shielded}</div>
-        <div>{content.platform}</div>
       </div>
     </section>
   );
