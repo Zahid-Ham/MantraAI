@@ -17,6 +17,7 @@ import FinalCTA from './components/landing/FinalCTA';
 import Footer from './components/landing/Footer';
 import SymptomAssessment from './pages/SymptomAssessment';
 import Resources from './pages/Resources';
+import Support from './pages/Support';
 import { Login, Signup, ForgotPassword } from './pages/AuthPages';
 import Profile from './pages/Profile';
 import History from './pages/History';
@@ -39,7 +40,7 @@ function AppContent() {
       const cleanHash = hash.split('?')[0];
 
       // Define routes requiring authentication
-      const protectedHashes = ['#assess', '#dashboard', '#profile', '#history', '#report', '#reports', '#progress', '#resources', '#resource'];
+      const protectedHashes = ['#assess', '#dashboard', '#profile', '#history', '#report', '#reports', '#progress', '#resources', '#resource', '#support'];
       const isProtected = protectedHashes.some(h => cleanHash.startsWith(h));
 
       if (isProtected && !isAuthenticated) {
@@ -54,6 +55,8 @@ function AppContent() {
         setPage('assess');
       } else if (cleanHash === '#resources' || cleanHash.startsWith('#resources') || cleanHash === '#resource' || cleanHash.startsWith('#resource') || cleanHash.startsWith('#awareness')) {
         setPage('resources');
+      } else if (cleanHash === '#support' || cleanHash.startsWith('#support')) {
+        setPage('support');
       } else if (hash === '#login' || hash === '#signup') {
         if (isAuthenticated) {
           const target = await getAuthenticatedEntryRoute();
@@ -106,6 +109,8 @@ function AppContent() {
         <SymptomAssessment onNavigateHome={handleNavigateHome} />
       ) : page === 'resources' ? (
         <Resources onNavigateHome={handleNavigateHome} />
+      ) : page === 'support' ? (
+        <Support onNavigateHome={handleNavigateHome} />
       ) : page === 'login' ? (
         <Login />
       ) : page === 'signup' ? (

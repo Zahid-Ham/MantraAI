@@ -74,7 +74,7 @@ export default function FAQSection() {
               We're here to help. Reach out to our support team for any queries.
             </p>
             <a
-              href="#resources"
+              href="#support"
               className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-[#059669] dark:text-[#34D399] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669] rounded"
             >
               <span>Contact Support</span>
