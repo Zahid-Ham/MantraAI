@@ -7,6 +7,7 @@ import {
   signInWithPopup,
   signOut,
   sendPasswordResetEmail,
+  updateProfile,
   onAuthStateChanged
 } from "firebase/auth";
 
@@ -32,5 +33,6 @@ export {
   signInWithPopup,
   signOut,
   sendPasswordResetEmail,
+  updateProfile,
   onAuthStateChanged
 };

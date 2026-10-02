@@ -7,6 +7,7 @@ import {
   signInWithPopup,
   signOut,
   sendPasswordResetEmail,
+  updateProfile,
   onAuthStateChanged
 } from '../config/firebase';
 
@@ -72,6 +73,13 @@ export function AuthProvider({ children }) {
     await sendPasswordResetEmail(auth, email);
   };
 
+  const updateUserProfile = async ({ displayName, photoURL }) => {
+    if (!auth.currentUser) throw new Error("No authenticated user");
+    await updateProfile(auth.currentUser, { displayName, photoURL });
+    // Update local React state clone with new values
+    setUser({ ...auth.currentUser, displayName: displayName || auth.currentUser.displayName });
+  };
+
   // Helper to fetch the raw Firebase ID token dynamically for backend requests
   const getIdToken = async () => {
     if (!auth.currentUser) return null;
@@ -87,6 +95,7 @@ export function AuthProvider({ children }) {
     loginWithGoogle,
     logout,
     resetPassword,
+    updateUserProfile,
     getIdToken
   };
 

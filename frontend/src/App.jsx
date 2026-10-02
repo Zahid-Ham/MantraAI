@@ -18,8 +18,8 @@ import Footer from './components/landing/Footer';
 import SymptomAssessment from './pages/SymptomAssessment';
 import Resources from './pages/Resources';
 import Support from './pages/Support';
+import Settings from './pages/Settings';
 import { Login, Signup, ForgotPassword } from './pages/AuthPages';
-import Profile from './pages/Profile';
 import History from './pages/History';
 import ReportViewer from './pages/ReportViewer';
 import Dashboard from './pages/Dashboard';
@@ -40,7 +40,7 @@ function AppContent() {
       const cleanHash = hash.split('?')[0];
 
       // Define routes requiring authentication
-      const protectedHashes = ['#assess', '#dashboard', '#profile', '#history', '#report', '#reports', '#progress', '#resources', '#resource', '#support'];
+      const protectedHashes = ['#assess', '#dashboard', '#profile', '#settings', '#history', '#report', '#reports', '#progress', '#resources', '#resource', '#support'];
       const isProtected = protectedHashes.some(h => cleanHash.startsWith(h));
 
       if (isProtected && !isAuthenticated) {
@@ -57,6 +57,8 @@ function AppContent() {
         setPage('resources');
       } else if (cleanHash === '#support' || cleanHash.startsWith('#support')) {
         setPage('support');
+      } else if (cleanHash === '#settings' || cleanHash.startsWith('#settings') || cleanHash === '#profile') {
+        setPage('settings');
       } else if (hash === '#login' || hash === '#signup') {
         if (isAuthenticated) {
           const target = await getAuthenticatedEntryRoute();
@@ -68,8 +70,6 @@ function AppContent() {
         }
       } else if (hash === '#forgot-password') {
         setPage('forgot-password');
-      } else if (hash === '#profile') {
-        setPage('profile');
       } else if (hash === '#history' || hash === '#reports' || hash.startsWith('#reports')) {
         setPage('history');
       } else if (hash === '#progress' || hash.startsWith('#progress')) {
@@ -117,8 +117,8 @@ function AppContent() {
         <Signup />
       ) : page === 'forgot-password' ? (
         <ForgotPassword />
-      ) : page === 'profile' ? (
-        <Profile onNavigateHome={handleNavigateHome} />
+      ) : page === 'settings' || page === 'profile' ? (
+        <Settings onNavigateHome={handleNavigateHome} />
       ) : page === 'history' ? (
         <History onNavigateHome={handleNavigateHome} />
       ) : page === 'progress' ? (

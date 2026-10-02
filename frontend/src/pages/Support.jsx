@@ -690,7 +690,7 @@ export default function Support({ onNavigateHome: _onNavigateHome }) {
                 </a>
 
                 <a
-                  href="#profile"
+                  href="#settings"
                   className="w-full flex items-center justify-between p-2 rounded-xl text-xs text-[#57534E] hover:text-[#1C1917] hover:bg-[#FAF9F6] transition-colors group"
                 >
                   <span className="group-hover:font-semibold transition-all">Account Settings</span>
