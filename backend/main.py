@@ -9,7 +9,13 @@ from dotenv import load_dotenv
 
 # Import App configuration, routers, and database setups
 from app.config import settings
-from app.routers import auth as auth_router, assessment as assessment_router, evidence as evidence_router
+from app.routers import (
+    auth as auth_router,
+    assessment as assessment_router,
+    evidence as evidence_router,
+    health as health_router,
+    goals as goals_router,
+)
 
 app = FastAPI(title="MantraAI Backend Clinical API", version="1.0.0")
 
@@ -23,10 +29,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include Authentication, Assessment, and Evidence Routers
+# Include Authentication, Assessment, Evidence, Health, and Goals Routers
 app.include_router(auth_router.router)
 app.include_router(assessment_router.router)
 app.include_router(evidence_router.router)
+app.include_router(health_router.router)
+app.include_router(goals_router.router)
 
 class AnalyzeRequest(BaseModel):
     answers: dict

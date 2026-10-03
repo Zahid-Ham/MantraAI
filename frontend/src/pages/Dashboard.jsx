@@ -16,6 +16,7 @@ export default function Dashboard({ onNavigateHome }) {
   const [error, setError] = useState('');
   const [timeframe, setTimeframe] = useState('all'); // all, 6m, 1y
   const [hoveredPoint, setHoveredPoint] = useState(null);
+  const [latestHealth, setLatestHealth] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -55,6 +56,16 @@ export default function Dashboard({ onNavigateHome }) {
           if (isMounted) {
             setReportsMap(repMap);
           }
+        }
+
+        // Fetch latest daily health metric (non-blocking)
+        try {
+          const healthRes = await apiRequest('/api/v1/health/daily/latest');
+          if (isMounted && healthRes && healthRes.date) {
+            setLatestHealth(healthRes);
+          }
+        } catch (_err) {
+          // non-blocking
         }
       } catch (_err) {
         if (isMounted) {
@@ -374,6 +385,56 @@ export default function Dashboard({ onNavigateHome }) {
                 </div>
               </div>
 
+            </div>
+
+            {/* Compact Today's Health Activity Banner */}
+            <div className="bg-white border border-[#E8E5DF] rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-[#EBF5EE] text-[#1E3A2B] flex items-center justify-center shrink-0 border border-[#D4E8DC]">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm sm:text-base font-bold text-[#1C1917]">
+                      Today's Health Activity
+                    </h3>
+                    <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-[#EAE5DD] text-[#57534E]">
+                      Demo Data
+                    </span>
+                  </div>
+                  {latestHealth ? (
+                    <div className="flex items-center gap-3 sm:gap-4 text-xs text-[#57534E] mt-1 flex-wrap font-medium">
+                      <span><strong>{latestHealth.steps ? latestHealth.steps.toLocaleString() : '--'}</strong> steps</span>
+                      <span>•</span>
+                      <span><strong>{latestHealth.active_minutes || '--'}</strong> active min</span>
+                      <span>•</span>
+                      <span><strong>{latestHealth.sleep_duration_minutes ? `${Math.floor(latestHealth.sleep_duration_minutes / 60)}h ${latestHealth.sleep_duration_minutes % 60}m` : '--'}</strong> sleep</span>
+                      {latestHealth.resting_heart_rate && (
+                        <>
+                          <span>•</span>
+                          <span><strong>{latestHealth.resting_heart_rate}</strong> bpm HR</span>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-[#78716C] mt-0.5">
+                      Connect health data to see daily activity here. Demo health data available in My Progress.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <button
+                onClick={handleViewMyProgress}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1E3A2B] hover:text-[#14281D] bg-[#FAF8F5] hover:bg-[#F3EFEA] border border-[#E8E5DF] px-3.5 py-2 rounded-xl transition-all cursor-pointer self-start sm:self-auto shrink-0"
+              >
+                <span>View Progress</span>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
 
             {/* ===================================================================== */}

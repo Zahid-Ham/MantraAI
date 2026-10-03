@@ -49,10 +49,13 @@ def override_get_current_user(db: Session = Depends(get_db)):
     # Fetch from active DB session to ensure session-binding and freshness
     return db.query(User).filter(User.id == active_user_id).first()
 
-app.dependency_overrides[get_current_user] = override_get_current_user
-
 @pytest.fixture(autouse=True)
 def run_around_tests():
+    global active_user_id
+    active_user_id = USER_1_ID
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = override_get_current_user
+
     # Setup: Insert fresh mock users into database before each test run
     db = TestingSessionLocal()
     db.query(Report).delete()
