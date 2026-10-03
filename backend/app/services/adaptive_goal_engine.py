@@ -137,7 +137,7 @@ class AdaptiveGoalEngine:
             active_rationale = f"Adapted from your recent active movement pattern (~{int(med_active)} min/day)."
         else:
             active_target = 30.0
-            active_rationale = "General wellness guideline for daily moderate active movement."
+            active_rationale = "Personalized activity goal based on your recent activity pattern."
 
         active_progress = float(today_metric.active_minutes) if (today_metric and today_metric.active_minutes is not None) else 0.0
         active_status = "completed" if active_progress >= active_target else "in_progress" if active_progress > 0 else "pending"

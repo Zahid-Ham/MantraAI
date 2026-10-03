@@ -410,17 +410,17 @@ export default function Dashboard({ onNavigateHome }) {
                       <span>•</span>
                       <span><strong>{latestHealth.active_minutes || '--'}</strong> active min</span>
                       <span>•</span>
-                      <span><strong>{latestHealth.sleep_duration_minutes ? `${Math.floor(latestHealth.sleep_duration_minutes / 60)}h ${latestHealth.sleep_duration_minutes % 60}m` : '--'}</strong> sleep</span>
+                      <span><strong>{latestHealth.sleep_duration_minutes ? `${Math.floor(latestHealth.sleep_duration_minutes / 60)}h ${latestHealth.sleep_duration_minutes % 60}m` : '--'}</strong> observed sleep</span>
                       {latestHealth.resting_heart_rate && (
                         <>
                           <span>•</span>
-                          <span><strong>{latestHealth.resting_heart_rate}</strong> bpm HR</span>
+                          <span><strong>{latestHealth.resting_heart_rate}</strong> bpm resting HR</span>
                         </>
                       )}
                     </div>
                   ) : (
                     <p className="text-xs text-[#78716C] mt-0.5">
-                      Connect health data to see daily activity here. Demo health data available in My Progress.
+                      Daily health activity isn't available yet. Sync demo data in My Progress to preview daily activity tracking.
                     </p>
                   )}
                 </div>
