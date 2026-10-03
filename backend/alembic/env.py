@@ -37,6 +37,10 @@ def run_migrations_offline() -> None:
 
     """
     url = settings.DATABASE_URL
+    if url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+    elif url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql+psycopg://", 1)
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -57,8 +61,16 @@ def run_migrations_online() -> None:
     """
     try:
         from sqlalchemy import create_engine
+        db_url = settings.DATABASE_URL
+        if db_url.startswith("postgresql://"):
+            db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
+        elif db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql+psycopg://", 1)
+        elif db_url.startswith("postgresql+psycopg2://"):
+            db_url = db_url.replace("postgresql+psycopg2://", "postgresql+psycopg://", 1)
+
         connectable = create_engine(
-            settings.DATABASE_URL,
+            db_url,
             poolclass=pool.NullPool,
         )
 
