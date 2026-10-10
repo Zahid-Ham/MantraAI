@@ -33,7 +33,7 @@ ARCHITECTURAL PIPELINE
 
 import logging
 from typing import Any, Optional, Union
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.services.normalizer import NormalizedAssessment, normalize_assessment_responses, QUESTION_DOMAIN_MAP
 
@@ -60,6 +60,25 @@ class FactorItem(BaseModel):
     source_question_ids: list[str] = Field(default_factory=list, description="Exact question IDs that triggered this factor.")
     reason: str = Field(..., description="Short, factual, non-diagnostic explanation.")
     evidence_tags: list[str] = Field(default_factory=list, description="Tags for downstream literature/evidence retrieval.")
+    evidence_grade: str = Field("B", description="Evidence grade: A, B, C, or D per new.md.")
+    construct: str = Field("reproductive", description="Clinical construct: 'reproductive', 'sexual', or 'behavioral'.")
+    counts_toward_attention: bool = Field(True, description="Whether this factor contributes to overall attention scoring.")
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_evidence_metadata(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            fid = data.get("id")
+            if fid:
+                from app.services.evidence_grades import get_factor_metadata
+                meta = get_factor_metadata(fid)
+                if "evidence_grade" not in data or data.get("evidence_grade") == "B":
+                    data["evidence_grade"] = meta.get("grade", "B")
+                if "construct" not in data or data.get("construct") == "reproductive":
+                    data["construct"] = meta.get("construct", "reproductive")
+                if "counts_toward_attention" not in data:
+                    data["counts_toward_attention"] = meta.get("counts_toward_attention", data.get("type") in ("modifiable", "follow_up"))
+        return data
 
 
 class ReproductiveHealthContext(BaseModel):
@@ -994,14 +1013,17 @@ def _evaluate_lifestyle_wellness(
         if _val_equals(water, "<1L"):
             ctx.hydration_status = "Low (<1L/day)"
             ctx.evidence_tags.extend(["hydration", "cellular_function", "fluid_balance"])
-            modifiable.append(FactorItem(
+            flags.append(FactorItem(
                 id="low_hydration",
                 domain="lifestyle_wellness",
-                type="modifiable",
+                type="context",
                 status="flagged",
                 source_question_ids=["water_intake"],
-                reason="Daily water consumption under 1 Liter.",
-                evidence_tags=["hydration", "fluid_balance"]
+                reason="Daily water intake under 1 Liter reported. Adequate hydration supports general metabolic and physiological wellness, though evidence as an independent direct fertility predictor is limited.",
+                evidence_tags=["hydration", "fluid_balance"],
+                evidence_grade="C",
+                construct="behavioral",
+                counts_toward_attention=False,
             ))
         elif _val_in(water, ["2-3L", "3L+"]):
             ctx.hydration_status = f"Adequate ({water})"
@@ -1012,7 +1034,10 @@ def _evaluate_lifestyle_wellness(
                 status="optimal",
                 source_question_ids=["water_intake"],
                 reason="Maintains healthy daily hydration of 2+ Liters.",
-                evidence_tags=["hydration"]
+                evidence_tags=["hydration"],
+                evidence_grade="C",
+                construct="behavioral",
+                counts_toward_attention=False,
             ))
 
     if supp is not None and not _val_in(supp, ["No supplement use", "none"]):
@@ -1070,8 +1095,11 @@ def _evaluate_environmental_heat(
             type="modifiable",
             status="flagged",
             source_question_ids=["laptop_on_lap"],
-            reason="Frequent laptop use directly on lap creates localized device thermal exposure.",
-            evidence_tags=["hyperthermia", "device_heat", "scrotal_temperature"]
+            reason="Frequent laptop use directly on lap represents potential localized heat exposure that may elevate scrotal temperature.",
+            evidence_tags=["hyperthermia", "device_heat", "scrotal_temperature"],
+            evidence_grade="B",
+            construct="reproductive",
+            counts_toward_attention=True,
         ))
     elif _val_equals(laptop, "Never"):
         positive.append(FactorItem(
@@ -1088,14 +1116,17 @@ def _evaluate_environmental_heat(
     if _val_equals(phone, "Front trouser pocket"):
         ctx.source_question_ids.append("mobile_phone_placement")
         ctx.evidence_tags.extend(["device_proximity", "emf_radiofrequency"])
-        modifiable.append(FactorItem(
+        flags.append(FactorItem(
             id="phone_front_pocket",
             domain="environmental_heat",
-            type="modifiable",
+            type="context",
             status="flagged",
             source_question_ids=["mobile_phone_placement"],
-            reason="Regularly carries mobile device in front trouser pocket in close proximity to groin.",
-            evidence_tags=["device_proximity", "emf_radiofrequency"]
+            reason="Regularly carries mobile device in front trouser pocket. Current clinical evidence linking mobile device placement to semen alterations is uncertain and observational.",
+            evidence_tags=["device_proximity", "emf_radiofrequency"],
+            evidence_grade="D",
+            construct="reproductive",
+            counts_toward_attention=False,
         ))
     elif _val_in(phone, ["Bag", "Other"]):
         positive.append(FactorItem(
@@ -1113,14 +1144,17 @@ def _evaluate_environmental_heat(
         ctx.heat_exposures.append("Tight / compression underwear")
         ctx.source_question_ids.append("underwear_type")
         ctx.evidence_tags.extend(["scrotal_temperature", "clothing_thermal_insulation"])
-        modifiable.append(FactorItem(
+        flags.append(FactorItem(
             id="tight_underwear_heat",
             domain="environmental_heat",
-            type="modifiable",
+            type="context",
             status="flagged",
             source_question_ids=["underwear_type"],
-            reason="Frequent use of tight or compression underwear which may restrict airflow.",
-            evidence_tags=["scrotal_temperature", "clothing_thermal_insulation"]
+            reason="Frequent use of compression or tight underwear. Clinical evidence regarding underwear style as an isolated cause of scrotal hyperthermia remains limited and uncertain.",
+            evidence_tags=["scrotal_temperature", "clothing_thermal_insulation"],
+            evidence_grade="D",
+            construct="reproductive",
+            counts_toward_attention=False,
         ))
     elif _val_equals(underwear, "Boxers"):
         positive.append(FactorItem(

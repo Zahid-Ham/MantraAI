@@ -143,7 +143,9 @@ def test_lifestyle_context_extraction():
     assert "prolonged_daily_sitting" in mod_ids
     assert "low_antioxidant_intake" in mod_ids
     assert "daily_processed_food" in mod_ids
-    assert "low_hydration" in mod_ids
+    assert "low_hydration" not in mod_ids
+    flag_ids = [f.id for f in ctx.context_flags]
+    assert "low_hydration" in flag_ids
 
     assert ctx.domains.lifestyle_wellness.sleep_status is not None
     assert "Severely deficient" in ctx.domains.lifestyle_wellness.sleep_status
@@ -254,11 +256,12 @@ def test_environmental_heat_context_extraction():
 
     mod_ids = [f.id for f in ctx.modifiable_factors]
     assert "laptop_on_lap_heat" in mod_ids
-    assert "tight_underwear_heat" in mod_ids
+    assert "tight_underwear_heat" not in mod_ids
     assert "frequent_hot_baths_sauna" in mod_ids
     assert "heated_plastic_exposure" in mod_ids
 
     flag_ids = [f.id for f in ctx.context_flags]
+    assert "tight_underwear_heat" in flag_ids
     assert "occupational_heat_exposure" in flag_ids
 
     fu_ids = [f.id for f in ctx.follow_up_flags]

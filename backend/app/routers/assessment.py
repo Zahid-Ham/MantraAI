@@ -240,48 +240,97 @@ def complete_assessment(
         evidence_context.matched_count,
     )
 
-    # 3. Derive backward-compatible, non-diagnostic result summary
-    # NOTE: Obsolete scoring based on legacy field names (stress_level, sleep_hours, etc.)
-    # is replaced by the deterministic domain factor counts and clinical boundaries.
-    lifestyle_mod_count = len([f for f in health_context.modifiable_factors if f.domain == "lifestyle_wellness"])
-    mental_mod_count = len([f for f in health_context.modifiable_factors if f.domain == "mental_behavioral_wellness"])
-    reproductive_flags_count = len([f for f in health_context.context_flags if f.domain == "reproductive_health"])
-    total_score = len(health_context.modifiable_factors) + len(health_context.follow_up_flags)
+    # 3. Derive crisis safety flag (server is source of truth from stored responses)
+    phq9_item_9_val = answers.get("phq9_item_9")
+    crisis_flag = False
+    if phq9_item_9_val is not None:
+        try:
+            crisis_flag = int(phq9_item_9_val) > 0
+        except (ValueError, TypeError):
+            crisis_flag = False
+    safety_flags = {"crisis_flag": True} if crisis_flag else None
 
-    if len(health_context.follow_up_flags) > 0 or total_score >= 6:
+    # 4. Derive evidence-graded per-construct result summary
+    from app.services.evidence_grades import (
+        ATTENTION_THRESHOLD_FOLLOW_UPS,
+        ATTENTION_THRESHOLD_MODIFIABLE,
+        MONITORING_THRESHOLD_MODIFIABLE_MIN,
+    )
+
+    modifiable_ab = [
+        f for f in health_context.modifiable_factors
+        if f.evidence_grade in ("A", "B") and f.counts_toward_attention
+    ]
+    follow_ups = health_context.follow_up_flags
+
+    repro_mod_ab = len([f for f in modifiable_ab if f.construct == "reproductive"])
+    repro_fu = len([f for f in follow_ups if f.construct == "reproductive"])
+
+    sex_mod_ab = len([f for f in modifiable_ab if f.construct == "sexual"])
+    sex_fu = len([f for f in follow_ups if f.construct == "sexual"])
+
+    behav_mod_ab = len([f for f in modifiable_ab if f.construct == "behavioral"])
+    behav_fu = len([f for f in follow_ups if f.construct == "behavioral"])
+
+    total_grade_ab_modifiable = len(modifiable_ab)
+    total_follow_ups = len(follow_ups)
+
+    if total_follow_ups >= ATTENTION_THRESHOLD_FOLLOW_UPS or total_grade_ab_modifiable >= ATTENTION_THRESHOLD_MODIFIABLE:
         overall_cat = "Several areas need attention"
-        interpretation = "Multiple contextual factors suggest areas for proactive optimization and clinical consultation."
-    elif total_score >= 3:
+        interpretation = "Several clinical or evidence-informed lifestyle factors suggest areas for proactive focus and professional consultation."
+    elif total_grade_ab_modifiable >= MONITORING_THRESHOLD_MODIFIABLE_MIN:
         overall_cat = "Worth monitoring"
-        interpretation = "Some contextual factors indicate areas worth monitoring or optimizing through lifestyle and environmental adjustments."
+        interpretation = "Some contextual factors indicate areas worth monitoring or optimizing through evidence-based lifestyle adjustments."
     else:
         overall_cat = "Stable"
-        interpretation = "Your responses suggest a stable baseline across lifestyle, environmental, and behavioral wellness domains."
+        interpretation = "Your responses suggest a stable baseline across reproductive, sexual, and behavioral wellness domains."
 
-    # 4. Create AssessmentResult record
+    # 5. Create AssessmentResult record
     result = AssessmentResult(
         assessment_session_id=assessment_id,
         overall_category=overall_cat,
         risk_scores={
-            "lifestyle": lifestyle_mod_count,
-            "mental_health": mental_mod_count,
-            "reproductive_risk": reproductive_flags_count,
-            "total_score": total_score,
+            "construct_summaries": {
+                "reproductive": {
+                    "modifiable_grade_ab_count": repro_mod_ab,
+                    "follow_up_count": repro_fu,
+                },
+                "sexual": {
+                    "modifiable_grade_ab_count": sex_mod_ab,
+                    "follow_up_count": sex_fu,
+                },
+                "behavioral": {
+                    "modifiable_grade_ab_count": behav_mod_ab,
+                    "follow_up_count": behav_fu,
+                },
+            },
+            "reproductive_factors": repro_mod_ab + repro_fu,
+            "sexual_factors": sex_mod_ab + sex_fu,
+            "behavioral_factors": behav_mod_ab + behav_fu,
+            "total_grade_ab_modifiable": total_grade_ab_modifiable,
+            "total_follow_ups": total_follow_ups,
+            # Legacy backward-compatible keys retained for one release
+            "reproductive_risk": repro_mod_ab + repro_fu,
+            "lifestyle": behav_mod_ab,
+            "mental_health": behav_fu,
+            "total_score": total_grade_ab_modifiable + total_follow_ups,
             "modifiable_factors_count": len(health_context.modifiable_factors),
             "positive_factors_count": len(health_context.positive_factors),
             "context_flags_count": len(health_context.context_flags),
             "follow_up_flags_count": len(health_context.follow_up_flags),
             "completeness": health_context.data_quality.completeness,
         },
-        interpretation=interpretation
+        safety_flags=safety_flags,
+        interpretation=interpretation,
     )
     db.add(result)
 
-    # 4. Generate & store validated MantraAIReport
+    # 6. Generate & store validated MantraAIReport
     mantra_report = generate_mantra_report(
         normalized_assessment=normalized_context,
         health_context=health_context,
         evidence_context=evidence_context,
+        crisis_flag=crisis_flag,
     )
 
     report_dict = mantra_report.model_dump(mode="json")

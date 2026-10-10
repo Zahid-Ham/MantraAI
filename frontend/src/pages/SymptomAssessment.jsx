@@ -42,6 +42,7 @@ export default function SymptomAssessment({ onNavigateHome }) {
 
   const [maxReachedBlockId, setMaxReachedBlockId] = useState(1);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
+  const [showCrisisInterstitial, setShowCrisisInterstitial] = useState(false);
   const [recoverySession, setRecoverySession] = useState(null);
 
   const { questions, blocks } = assessmentSchema;
@@ -311,6 +312,13 @@ export default function SymptomAssessment({ onNavigateHome }) {
       ...prev,
       [currentQuestion.id]: val
     }));
+
+    if (currentQuestion && currentQuestion.id === 'phq9_item_9') {
+      const numVal = parseInt(val, 10);
+      if (!isNaN(numVal) && numVal > 0) {
+        setShowCrisisInterstitial(true);
+      }
+    }
   };
 
   const handleStart = () => {
@@ -626,6 +634,63 @@ export default function SymptomAssessment({ onNavigateHome }) {
               >
                 Cancel & Return
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* PHQ-9 Item 9 Crisis Support Interstitial */}
+        {showCrisisInterstitial && (
+          <div className="fixed inset-0 z-50 bg-[#1C1917]/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-[#E8E5DF] shadow-lg space-y-5 animate-in fade-in zoom-in duration-200">
+              <div className="w-12 h-12 rounded-2xl bg-[#F5F5F4] text-[#44403C] flex items-center justify-center">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-[#1C1917]">Support Is Always Available</h3>
+                <p className="text-xs sm:text-sm text-[#57534E] leading-relaxed">
+                  Thank you for sharing your feelings honestly. If you are going through a difficult or painful time, please remember that you do not have to carry this alone. Free, confidential support is available 24/7 across India.
+                </p>
+              </div>
+
+              <div className="bg-[#FAF9F5] border border-[#E7E5E0] rounded-2xl p-4 space-y-3">
+                <div className="text-xs font-semibold text-[#1C1917] tracking-wider uppercase">Verified National Helplines</div>
+                <div className="space-y-2 text-xs text-[#292524]">
+                  <div className="flex items-start justify-between gap-2 pb-2 border-b border-[#E7E5E0]">
+                    <div>
+                      <div className="font-semibold text-[#1C1917]">Tele-MANAS (Govt. of India)</div>
+                      <div className="text-[11px] text-[#78716C]">24/7 National Tele Mental Health Programme</div>
+                    </div>
+                    <a href="tel:14416" className="font-mono font-bold text-[#1E3A2B] hover:underline shrink-0">14416 / 1800-891-4416</a>
+                  </div>
+                  <div className="flex items-start justify-between gap-2 pb-2 border-b border-[#E7E5E0]">
+                    <div>
+                      <div className="font-semibold text-[#1C1917]">KIRAN Mental Health Helpline</div>
+                      <div className="text-[11px] text-[#78716C]">24/7 Support by Ministry of Social Justice</div>
+                    </div>
+                    <a href="tel:18005990019" className="font-mono font-bold text-[#1E3A2B] hover:underline shrink-0">1800-599-0019</a>
+                  </div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-semibold text-[#1C1917]">National Emergency</div>
+                      <div className="text-[11px] text-[#78716C]">Immediate Police & Medical Assistance</div>
+                    </div>
+                    <a href="tel:112" className="font-mono font-bold text-[#1E3A2B] hover:underline shrink-0">112</a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCrisisInterstitial(false)}
+                  className="w-full py-3 px-5 rounded-xl bg-[#1E3A2B] hover:bg-[#14281D] text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-xs"
+                >
+                  Continue Assessment
+                </button>
+              </div>
             </div>
           </div>
         )}

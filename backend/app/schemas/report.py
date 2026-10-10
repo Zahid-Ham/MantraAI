@@ -309,6 +309,28 @@ class ReportLimitations(BaseModel):
     items: list[str] = Field(default_factory=list, description="Specific context limitations.")
 
 
+class CrisisHelplineResource(BaseModel):
+    """Verified helpline contact info."""
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(..., description="Service or helpline name.")
+    number: str = Field(..., description="Primary phone number or short code.")
+    alt_number: Optional[str] = Field(None, description="Alternative toll-free or landline number.")
+    description: str = Field(..., description="Service description.")
+    source_url: str = Field(..., description="Official government / organizational URL.")
+    last_verified: str = Field(..., description="Date of last verification (YYYY-MM-DD).")
+
+
+class CrisisSupportSection(BaseModel):
+    """Deterministic crisis support resources when safety flags are triggered."""
+    model_config = ConfigDict(extra="forbid")
+
+    title: str = Field("Immediate Crisis & Support Resources", description="Section title.")
+    message: str = Field(..., description="Compassionate, validating message.")
+    helplines: list[CrisisHelplineResource] = Field(default_factory=list, description="Verified emergency/support helplines.")
+    immediate_action: str = Field(..., description="Guidance for immediate emergencies.")
+
+
 # ---------------------------------------------------------------------------
 # Master Top-Level Report Model
 # ---------------------------------------------------------------------------
@@ -336,6 +358,7 @@ class MantraAIReport(BaseModel):
     questions_to_discuss_with_clinician: list[ClinicianQuestion] = Field(default_factory=list)
     when_to_seek_professional_help: list[ProfessionalHelpItem] = Field(default_factory=list)
     evidence: list[EvidenceReference] = Field(default_factory=list)
+    crisis_support: Optional[CrisisSupportSection] = Field(None, description="Deterministic crisis resources when safety flags are triggered.")
     limitations: ReportLimitations = Field(
         default_factory=lambda: ReportLimitations(
             summary=(

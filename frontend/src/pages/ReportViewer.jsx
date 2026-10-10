@@ -43,6 +43,7 @@ export const FIELD_LABEL_MAP = {
 
   // Mental Health & Stress Proxies
   daily_work_hours: 'Daily work duration',
+  perceived_stress_rating: 'Perceived stress rating (0-10)',
   perceived_stress_pss10: 'Brief perceived stress proxy indicator',
   gad7_score: 'Brief anxiety questionnaire proxy indicator',
   phq9_score: 'Brief depression questionnaire proxy indicator',
@@ -542,6 +543,46 @@ export default function ReportViewer({ onNavigateHome }) {
         {/* Report Content */}
         {!loading && !error && report && (
           <>
+            {/* SafetyBanner: Mental Health & Crisis Resources */}
+            {(report.crisis_support || result?.safety_flags?.crisis_flag) && (
+              <div className="bg-[#FAF9F5] border border-[#E7E5E0] rounded-2xl sm:rounded-3xl p-5 sm:p-6 mb-6 shadow-xs">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-[#EBE9E2] text-[#44403C] flex items-center justify-center shrink-0 mt-0.5">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </div>
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-sm sm:text-base font-bold text-[#1C1917]">
+                        {report.crisis_support?.title || "Confidential Support & Crisis Resources"}
+                      </h2>
+                      <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#EBE9E2] text-[#44403C]">
+                        24/7 Available
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-[#57534E] leading-relaxed">
+                      {report.crisis_support?.message || "Your screening responses indicate that you may be going through a difficult time. Please remember that free, confidential, and compassionate help is available 24/7."}
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                      <div className="bg-white border border-[#E8E5DF] rounded-xl p-3">
+                        <div className="text-[11px] text-[#78716C] font-medium">Tele-MANAS (Govt. of India)</div>
+                        <a href="tel:14416" className="text-xs font-bold text-[#1E3A2B] hover:underline font-mono">14416 / 1800-891-4416</a>
+                      </div>
+                      <div className="bg-white border border-[#E8E5DF] rounded-xl p-3">
+                        <div className="text-[11px] text-[#78716C] font-medium">KIRAN Mental Health Helpline</div>
+                        <a href="tel:18005990019" className="text-xs font-bold text-[#1E3A2B] hover:underline font-mono">1800-599-0019</a>
+                      </div>
+                      <div className="bg-white border border-[#E8E5DF] rounded-xl p-3">
+                        <div className="text-[11px] text-[#78716C] font-medium">National Emergency</div>
+                        <a href="tel:112" className="text-xs font-bold text-[#1E3A2B] hover:underline font-mono">112</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* 1. Page Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
               <div>

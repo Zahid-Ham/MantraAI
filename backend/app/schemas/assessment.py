@@ -30,6 +30,7 @@ class AssessmentResultOut(BaseModel):
     assessment_session_id: UUID
     overall_category: str
     risk_scores: Dict[str, Any]
+    safety_flags: Optional[Dict[str, Any]] = None
     interpretation: str
     created_at: datetime
 

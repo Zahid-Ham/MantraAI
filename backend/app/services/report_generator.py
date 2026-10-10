@@ -66,6 +66,8 @@ from app.schemas.report import (
     ProfessionalHelpGuidance,
     EvidenceReference,
     ReportLimitations,
+    CrisisSupportSection,
+    CrisisHelplineResource,
     FORBIDDEN_FIELDS,
     ReportDomain,
     ActionType,
@@ -75,6 +77,7 @@ from app.schemas.report import (
 from app.services.normalizer import NormalizedAssessment, QUESTION_DOMAIN_MAP
 from app.services.context_engine import HealthContext, FactorItem
 from app.services.evidence_retriever import EvidenceContext, EvidenceItem
+from app.constants.crisis_resources import CRISIS_RESOURCES
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +149,7 @@ You are writing for a person with NO medical or technical background. Your goal 
 PLAIN-LANGUAGE WRITING RULES:
 1. SIMPLICITY & TONE: Write in friendly, empathetic everyday English. Use short paragraphs and short, active sentences.
 2. BAN ON JARGON: NEVER use internal or technical phrases such as "risk vector", "deterministic context", "evidence mapping", "optimization opportunity", "LLM synthesis", "context signal", or "screening artifact".
-3. NO RAW TECHNICAL VARIABLE NAMES: NEVER output raw database keys, internal question IDs, or snake_case identifiers (such as `known_varicocele: Unsure`, `ejaculation_concerns: Low volume`, `phq9_score: 4`, `gad7_score: 5`, `perceived_stress_pss10: 10`, `masturbation_control: Often`, `spectatoring_self_monitoring: Agree`, `prior_sti_history: Yes`, `childhood_disease_mumps: Yes`) in `reported_context`, `relevant_factors`, summaries, or anywhere in the report. Always express reported items in natural, respectful English sentences.
+3. NO RAW TECHNICAL VARIABLE NAMES: NEVER output raw database keys, internal question IDs, or snake_case identifiers (such as `known_varicocele: Unsure`, `ejaculation_concerns: Low volume`, `phq9_score: 4`, `gad7_score: 5`, `perceived_stress_rating: 6`, `masturbation_control: Often`, `spectatoring_self_monitoring: Agree`, `prior_sti_history: Yes`, `childhood_disease_mumps: Yes`) in `reported_context`, `relevant_factors`, summaries, or anywhere in the report. Always express reported items in natural, respectful English sentences.
 4. EXPLAIN TERMS: If you mention a term like BMI, oxidative stress, or scrotal temperature, explain what it means in one simple sentence immediately.
 5. ANSWER THE THREE CORE QUESTIONS:
    - For every priority factor: What is it? Why does it matter to your health? What practical step can you take?
@@ -330,10 +333,12 @@ def build_user_prompt(
     health_context: HealthContext,
     evidence_context: EvidenceContext,
     metadata: ReportMetadata,
+    crisis_flag: bool = False,
 ) -> str:
     """
     Constructs a compact, token-efficient JSON payload containing normalized responses,
     deterministic health signals, and retrieved evidence context.
+    Scrubs raw PHQ-9 item 9 per privacy shield invariants.
     """
     # Filter out empty domains and None values to optimize token payload
     clean_assessment = {
@@ -342,12 +347,16 @@ def build_user_prompt(
         if isinstance(answers, dict) and any(v is not None for v in answers.values())
     }
 
-    # Extract all valid canonical question IDs that were answered
+    # Privacy Shield: raw PHQ-9 item 9 value must NEVER reach an LLM prompt
+    if "mental_health_stress" in clean_assessment:
+        clean_assessment["mental_health_stress"].pop("phq9_item_9", None)
+
+    # Extract all valid canonical question IDs that were answered (excluding phq9_item_9)
     valid_q_ids: list[str] = []
     for domain, answers in clean_assessment.items():
         if isinstance(answers, dict):
             for q_id in answers.keys():
-                if q_id in QUESTION_DOMAIN_MAP:
+                if q_id in QUESTION_DOMAIN_MAP and q_id != "phq9_item_9":
                     valid_q_ids.append(q_id)
 
     if not valid_q_ids:
@@ -369,10 +378,26 @@ def build_user_prompt(
 
     valid_ev_ids = [item["evidence_id"] for item in clean_evidence_items]
 
+    instructions = (
+        "Generate the complete MantraAIReport in clear, natural, everyday English. "
+        "Explain what is going well, what areas are worth paying attention to, why they matter, and what practical steps to take. "
+        "You MUST generate ALL 16 top-level sections matching the JSON schema in the system prompt. "
+        "Ensure priority_factors has 2-5 items, positive_factors has 2-5 items, personalized_action_plan has 3-5 items, "
+        "questions_to_discuss_with_clinician has 2-4 items, when_to_seek_professional_help has 2-4 items, and evidence has all retrieved items. "
+        "Every item in priority_factors and positive_factors MUST have source_question_ids containing at least 1 valid ID from valid_question_ids_to_cite. "
+        "Use only the supplied evidence_id values in valid_evidence_ids_to_cite. Do not omit any section."
+    )
+    if crisis_flag:
+        instructions += (
+            " CRITICAL PRIVACY & SAFETY: crisis_support_shown is true. The platform automatically attaches verified helplines "
+            "and crisis support resources. You must NEVER discuss self-harm, suicide, or crisis details anywhere in the report text."
+        )
+
     payload = {
         "report_metadata": metadata.model_dump(),
         "valid_question_ids_to_cite": valid_q_ids,
         "valid_evidence_ids_to_cite": valid_ev_ids,
+        "crisis_support_shown": crisis_flag,
         "assessment_context": clean_assessment,
         "health_context": {
             "modifiable_factors": [
@@ -392,15 +417,7 @@ def build_user_prompt(
             "matched_count": len(clean_evidence_items),
             "items": clean_evidence_items,
         },
-        "instructions": (
-            "Generate the complete MantraAIReport in clear, natural, everyday English. "
-            "Explain what is going well, what areas are worth paying attention to, why they matter, and what practical steps to take. "
-            "You MUST generate ALL 16 top-level sections matching the JSON schema in the system prompt. "
-            "Ensure priority_factors has 2-5 items, positive_factors has 2-5 items, personalized_action_plan has 3-5 items, "
-            "questions_to_discuss_with_clinician has 2-4 items, when_to_seek_professional_help has 2-4 items, and evidence has all retrieved items. "
-            "Every item in priority_factors and positive_factors MUST have source_question_ids containing at least 1 valid ID from valid_question_ids_to_cite. "
-            "Use only the supplied evidence_id values in valid_evidence_ids_to_cite. Do not omit any section."
-        )
+        "instructions": instructions,
     }
 
     return json.dumps(payload, separators=(',', ':'))
@@ -611,19 +628,28 @@ def build_fallback_report(
     evidence_context: EvidenceContext,
     metadata: ReportMetadata,
     error_note: str = "",
+    crisis_flag: bool = False,
 ) -> MantraAIReport:
     """
     Constructs a deterministic, fully compliant MantraAIReport directly from
     the HealthContext and EvidenceContext when the LLM is unavailable or fails.
     Written in clear, compassionate, non-technical plain English.
     """
-    # 1. Executive Summary Status
-    mod_count = len(health_context.modifiable_factors)
+    # 1. Executive Summary Status per evidence-graded criteria
+    from app.services.evidence_grades import (
+        ATTENTION_THRESHOLD_FOLLOW_UPS,
+        ATTENTION_THRESHOLD_MODIFIABLE,
+        MONITORING_THRESHOLD_MODIFIABLE_MIN,
+    )
+    grade_ab_mod_count = len([
+        f for f in health_context.modifiable_factors
+        if f.evidence_grade in ("A", "B") and f.counts_toward_attention
+    ])
     flag_count = len(health_context.follow_up_flags)
-    
-    if flag_count > 0 or mod_count >= 5:
+
+    if flag_count >= ATTENTION_THRESHOLD_FOLLOW_UPS or grade_ab_mod_count >= ATTENTION_THRESHOLD_MODIFIABLE:
         overall_status: WellnessStatus = "Several areas need attention"
-    elif mod_count >= 2:
+    elif grade_ab_mod_count >= MONITORING_THRESHOLD_MODIFIABLE_MIN:
         overall_status = "Worth monitoring"
     else:
         overall_status = "Stable"
@@ -859,6 +885,29 @@ def build_fallback_report(
         questions_to_discuss_with_clinician=clinician_questions,
         when_to_seek_professional_help=when_to_seek_help,
         evidence=evidence_references,
+        crisis_support=(
+            CrisisSupportSection(
+                title="Immediate Crisis & Support Resources",
+                message=(
+                    "Your responses indicate that you may be going through a difficult time. "
+                    "Please know that confidential support is available. You don't have to face this alone."
+                ),
+                helplines=[
+                    CrisisHelplineResource(
+                        name=res["name"],
+                        number=res["number"],
+                        alt_number=res.get("alt_number"),
+                        description=res["description"],
+                        source_url=res["source_url"],
+                        last_verified=res["last_verified"],
+                    )
+                    for res in CRISIS_RESOURCES
+                ],
+                immediate_action="If you are in immediate danger, please contact 112 or go to the nearest emergency department right away.",
+            )
+            if crisis_flag
+            else None
+        ),
         limitations=ReportLimitations(
             summary="Assessment conducted via self-reported structured questionnaire.",
             methodology_notes=[
@@ -885,6 +934,7 @@ def enrich_and_complete_report(
     health_context: HealthContext,
     evidence_context: EvidenceContext,
     normalized_assessment: NormalizedAssessment,
+    crisis_flag: bool = False,
 ) -> MantraAIReport:
     """
     Guarantees that every section of the report is populated with rich, traceable,
@@ -1203,6 +1253,29 @@ def enrich_and_complete_report(
         questions_to_discuss_with_clinician=enriched_questions,
         when_to_seek_professional_help=enriched_help,
         evidence=enriched_evidence,
+        crisis_support=(
+            CrisisSupportSection(
+                title="Immediate Crisis & Support Resources",
+                message=(
+                    "Your responses indicate that you may be going through a difficult time. "
+                    "Please know that confidential support is available. You don't have to face this alone."
+                ),
+                helplines=[
+                    CrisisHelplineResource(
+                        name=res["name"],
+                        number=res["number"],
+                        alt_number=res.get("alt_number"),
+                        description=res["description"],
+                        source_url=res["source_url"],
+                        last_verified=res["last_verified"],
+                    )
+                    for res in CRISIS_RESOURCES
+                ],
+                immediate_action="If you are in immediate danger, please contact 112 or go to the nearest emergency department right away.",
+            )
+            if (crisis_flag or report.crisis_support is not None)
+            else None
+        ),
         limitations=report.limitations,
         disclaimer=report.disclaimer,
     )
@@ -1329,6 +1402,7 @@ def generate_mantra_report(
     api_key: Optional[str] = None,
     model: Optional[str] = None,
     max_attempts: int = MAX_REPORT_ATTEMPTS,
+    crisis_flag: bool = False,
 ) -> MantraAIReport:
     """
     High-level orchestrator that synthesizes a validated MantraAIReport.
@@ -1357,12 +1431,14 @@ def generate_mantra_report(
             health_context=health_context,
             evidence_context=evidence_context,
             metadata=metadata,
+            crisis_flag=crisis_flag,
         )
         return enrich_and_complete_report(
             report=fb,
             health_context=health_context,
             evidence_context=evidence_context,
             normalized_assessment=normalized_assessment,
+            crisis_flag=crisis_flag,
         )
 
     system_prompt = build_system_prompt()
@@ -1371,6 +1447,7 @@ def generate_mantra_report(
         health_context=health_context,
         evidence_context=evidence_context,
         metadata=metadata,
+        crisis_flag=crisis_flag,
     )
 
     last_error: Optional[Exception] = None
@@ -1407,6 +1484,7 @@ def generate_mantra_report(
                 health_context=health_context,
                 evidence_context=evidence_context,
                 normalized_assessment=normalized_assessment,
+                crisis_flag=crisis_flag,
             )
 
             duration_ms = int((time.time() - attempt_start) * 1000)
@@ -1475,10 +1553,12 @@ def generate_mantra_report(
         health_context=health_context,
         evidence_context=evidence_context,
         metadata=metadata,
+        crisis_flag=crisis_flag,
     )
     return enrich_and_complete_report(
         report=fb,
         health_context=health_context,
         evidence_context=evidence_context,
         normalized_assessment=normalized_assessment,
+        crisis_flag=crisis_flag,
     )
