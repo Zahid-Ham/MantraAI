@@ -216,13 +216,34 @@ export function AssessmentProvider({ children }) {
       // 1. Final sync of all answers
       await syncAllResponses();
 
-      // 2. Complete session on backend (triggers report scoring & Groq AI compilation)
+      // 2. Complete session on backend (returns immediately; report generates in background)
       const result = await apiRequest(`/api/v1/assessments/${activeAssessmentId}/complete`, {
         method: "POST"
       });
 
       const finishedId = activeAssessmentId;
-      // 3. Clear local storage draft
+
+      // 3. Poll for report status with progressive backoff
+      let pollDelay = 800;
+      const maxAttempts = 20;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        await new Promise(res => setTimeout(res, pollDelay));
+        try {
+          const statusRes = await apiRequest(`/api/v1/assessments/${finishedId}/report/status`);
+          if (statusRes && statusRes.status === 'ready') {
+            break;
+          } else if (statusRes && statusRes.status === 'failed') {
+            // Report failed but assessment is still complete; navigate anyway
+            console.warn('Report generation failed in background:', statusRes.error_class);
+            break;
+          }
+        } catch (statusErr) {
+          // Transient polling error, continue
+        }
+        pollDelay = Math.min(pollDelay * 1.35, 3000);
+      }
+
+      // 4. Clear local storage draft
       await clearLocalDraft();
       
       return { success: true, assessmentId: finishedId, result };

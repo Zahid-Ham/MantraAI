@@ -11,6 +11,8 @@ class AssessmentSessionOut(BaseModel):
     user_id: UUID
     assessment_version: str
     status: str
+    report_status: Optional[str] = "ready"
+    report_error_class: Optional[str] = None
     started_at: datetime
     completed_at: Optional[datetime] = None
     created_at: datetime
@@ -18,6 +20,17 @@ class AssessmentSessionOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ReportStatusOut(BaseModel):
+    assessment_session_id: UUID
+    status: str  # "pending", "ready", "failed"
+    error_class: Optional[str] = None
+    report_id: Optional[UUID] = None
+
+class ReportRetryOut(BaseModel):
+    assessment_session_id: UUID
+    status: str
+    message: str
 
 class AssessmentResponseSave(BaseModel):
     responses: Dict[str, Any]  # Dictionary of question_id: response_value
