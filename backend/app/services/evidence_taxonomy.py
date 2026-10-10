@@ -45,6 +45,8 @@ REPRODUCTIVE_TAGS: set[str] = {
     "libido_baseline",
     "androgen_balance",
     "psychosexual_context",
+    "paternal_age",
+    "dna_fragmentation",
 }
 
 SEXUAL_HEALTH_TAGS: set[str] = {

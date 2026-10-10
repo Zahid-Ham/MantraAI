@@ -492,6 +492,548 @@ EVIDENCE_CORPUS: list[EvidenceDocument] = [
             ),
         ],
     ),
+
+    # ── 7. Age-Dependent Semen Quality Decline (Sharma et al. 2015) ──────────
+    EvidenceDocument(
+        id="age-decline-meta-2015",
+        title="Consistent age-dependent declines in human semen quality: a systematic review and meta-analysis",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2015,
+        document_type="systematic_review",
+        url="https://pubmed.ncbi.nlm.nih.gov/25462195/",
+        source_identifier="PMID: 25462195",
+        evidence_tags=["paternal_age", "dna_fragmentation", "semen_parameters", "reproductive_history"],
+        population_context="Systematic review of 90 studies and 93,839 men evaluating semen changes across paternal age cohorts.",
+        summary="Found consistent age-associated declines in semen volume, motility, progressive motility, and normal morphology across adult male lifespan.",
+        limitations=[
+            "Chronological age alone is a non-diagnostic background variable; significant biological variation exists across individuals.",
+        ],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="age-decline-semen-params",
+                document_id="age-decline-meta-2015",
+                topic="Paternal Age and Semen Quality Parameters",
+                text="In this meta-analysis of 90 studies, advancing paternal age was consistently associated with moderate declines in semen volume, progressive sperm motility, and normal morphology, alongside elevated sperm DNA fragmentation indices.",
+                evidence_tags=["paternal_age", "dna_fragmentation", "semen_parameters"],
+                clinical_significance="Provides epidemiological baseline for contextualizing age-related reproductive wellness questions.",
+                limitations=["Chronological age is not an infertility diagnosis; male reproductive function persists across advanced years."],
+            )
+        ],
+    ),
+
+    # ── 8. Advanced Paternal Age & DNA Fragmentation (2021) ─────────────────
+    EvidenceDocument(
+        id="paternal-age-dna-frag-2021",
+        title="Advanced Paternal Age and Sperm DNA Fragmentation: A Systematic Review",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2021,
+        document_type="systematic_review",
+        url="https://pubmed.ncbi.nlm.nih.gov/33987998/",
+        source_identifier="PMID: 33987998",
+        evidence_tags=["paternal_age", "dna_fragmentation", "semen_parameters"],
+        population_context="Systematic review of 40,668 men assessing age-stratified sperm chromatin structure and DNA breaks.",
+        summary="Observed significant correlations between advancing paternal age and increased sperm DNA fragmentation indices across multiple testing modalities.",
+        limitations=["Testing modalities varied between TUNEL, SCSA, and Comet assays across included trials."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="paternal-age-chromatin",
+                document_id="paternal-age-dna-frag-2021",
+                topic="Age-Associated Sperm Chromatin Integrity",
+                text="Advancing paternal age exhibits a recognized biological correlation with increased sperm DNA fragmentation, primarily mediated through accumulated reactive oxygen species exposure and reduced testicular antioxidant capacity.",
+                evidence_tags=["paternal_age", "dna_fragmentation"],
+                clinical_significance="Explains biological mechanisms connecting age to genomic integrity markers.",
+                limitations=["DNA fragmentation screening requires laboratory testing and cannot be diagnosed via questionnaire."],
+            )
+        ],
+    ),
+
+    # ── 9. Body Mass Index & Semen Quality (Guo et al. 2024) ────────────────
+    EvidenceDocument(
+        id="bmi-semen-quality-meta-2024",
+        title="Association between body mass index and semen quality: a systematic review and meta-analysis",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2024,
+        document_type="systematic_review",
+        url="https://pubmed.ncbi.nlm.nih.gov/39003321/",
+        source_identifier="PMID: 39003321",
+        evidence_tags=["bmi", "metabolic_health", "semen_parameters"],
+        population_context="Meta-analysis of 71,337 subjects evaluating BMI classifications and seminal parameters.",
+        summary="Demonstrated that elevated BMI and obesity correlate with reductions in semen volume, total sperm count, and motility.",
+        limitations=["BMI does not differentiate visceral adipose tissue from lean muscle mass."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="bmi-metabolic-semen-reduction",
+                document_id="bmi-semen-quality-meta-2024",
+                topic="Adiposity and Seminal Characteristics",
+                text="Obesity and elevated BMI are associated with peripheral aromatization of androgens into estrogens, elevated scrotal insulation, and reductions in progressive motility and total sperm number.",
+                evidence_tags=["bmi", "metabolic_health", "semen_parameters"],
+                clinical_significance="Underpins nutritional and metabolic health screening in reproductive contexts.",
+                limitations=["Moderate BMI shifts are modifiable; questionnaire BMI is observational screening."],
+            )
+        ],
+    ),
+
+    # ── 10. Cigarette Smoking & Semen Quality (Sharma et al. 2016) ──────────
+    EvidenceDocument(
+        id="tobacco-smoking-meta-2016",
+        title="Cigarette Smoking and Semen Quality: A New Meta-analysis Examining the Effect of the 2010 World Health Organization Laboratory Methods for the Examination of Human Semen",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2016,
+        document_type="systematic_review",
+        url="https://pubmed.ncbi.nlm.nih.gov/27113031/",
+        source_identifier="PMID: 27113031",
+        evidence_tags=["tobacco", "nicotine", "tobacco_abstinence", "semen_parameters"],
+        population_context="Meta-analysis of cigarette smoking cohorts evaluated under standardized WHO 2010 semen examination guidelines.",
+        summary="Cigarette smoking was associated with significant reductions in sperm density, motility, and normal morphology across infertile and general populations.",
+        limitations=["Self-reported smoking dose and duration; unmeasured lifestyle confounding."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="tobacco-semen-density-motility",
+                document_id="tobacco-smoking-meta-2016",
+                topic="Cigarette Smoking and Semen Parameters",
+                text="Exposure to cigarette smoke constituents induces seminal oxidative stress, reduces seminal leukocyte defenses, and is inversely correlated with total sperm density and progressive motility.",
+                evidence_tags=["tobacco", "nicotine", "semen_parameters"],
+                clinical_significance="Validates smoking cessation as a primary modifiable recommendation in reproductive health.",
+                limitations=["Self-reported cigarette use; smoking cessation has documented restorative benefits over spermatogenic cycles."],
+            )
+        ],
+    ),
+
+    # ── 11. Alcohol Intake & Semen Quality (Ricci et al. 2017) ───────────────
+    EvidenceDocument(
+        id="alcohol-intake-semen-meta-2017",
+        title="Semen quality and alcohol intake: a systematic review and meta-analysis",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2017,
+        document_type="systematic_review",
+        url="https://pubmed.ncbi.nlm.nih.gov/28029592/",
+        source_identifier="PMID: 28029592",
+        evidence_tags=["alcohol", "alcohol_moderation", "semen_parameters", "lifestyle_balance"],
+        population_context="Systematic review and meta-analysis examining moderate vs heavy alcohol intake and semen parameters.",
+        summary="Heavy alcohol consumption was significantly associated with detrimental effects on semen volume and sperm morphology, while occasional moderate intake exhibited minimal isolated impact.",
+        limitations=["Variable operational definitions of standard drinks and consumption frequencies."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="alcohol-dose-semen-volume",
+                document_id="alcohol-intake-semen-meta-2017",
+                topic="Alcohol Consumption and Seminal Profiles",
+                text="Daily and heavy episodic alcohol consumption disrupts the hypothalamic-pituitary-gonadal axis, impairs testosterone synthesis, and negatively affects semen volume and morphology.",
+                evidence_tags=["alcohol", "alcohol_moderation", "semen_parameters"],
+                clinical_significance="Guides clinical lifestyle recommendations emphasizing moderation rather than binary abstinence for low-frequency consumers.",
+                limitations=["Self-reported alcohol intake frequency; threshold effects vary across populations."],
+            )
+        ],
+    ),
+
+    # ── 12. Physical Activity & Semen Quality (Foucaut et al. 2019) ──────────
+    EvidenceDocument(
+        id="physical-activity-meta-2019",
+        title="An update on the implication of physical activity on semen quality: a systematic review and meta-analysis",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2019,
+        document_type="systematic_review",
+        url="https://pubmed.ncbi.nlm.nih.gov/30671700/",
+        source_identifier="PMID: 30671700",
+        evidence_tags=["physical_activity", "cardiovascular_fitness", "sedentary_behavior", "semen_parameters"],
+        population_context="Systematic review evaluating leisure-time aerobic and resistance exercise across adult men.",
+        summary="Demonstrated that moderate regular physical activity improves antioxidant defenses and semen quality compared to chronic sedentary patterns.",
+        limitations=["High-intensity exhaustive endurance overtraining can conversely elicit temporary endocrine suppression."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="exercise-antioxidant-semen",
+                document_id="physical-activity-meta-2019",
+                topic="Physical Activity and Semen Wellness",
+                text="Moderate, consistent physical activity enhances systemic insulin sensitivity, reduces circulating inflammatory cytokines, and supports optimal seminal parameters relative to prolonged sedentary lifestyles.",
+                evidence_tags=["physical_activity", "cardiovascular_fitness", "sedentary_behavior"],
+                clinical_significance="Underpins regular physical activity recommendations in lifestyle reproductive wellness.",
+                limitations=["Physical activity is a supportive lifestyle factor, not a standalone medical intervention for clinical infertility."],
+            )
+        ],
+    ),
+
+    # ── 13. Sedentary Behavior & Sitting Time (Belladelli et al. 2024) ───────
+    EvidenceDocument(
+        id="sedentariness-sitting-meta-2024",
+        title="The sitting men: A systematic review of spare and working time exposure to sedentariness in relation to semen parameters",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2024,
+        document_type="systematic_review",
+        url="https://pubmed.ncbi.nlm.nih.gov/39648572/",
+        source_identifier="PMID: 39648572",
+        evidence_tags=["sedentary_behavior", "circulation", "scrotal_temperature"],
+        population_context="Systematic review analyzing prolonged daily occupational and leisure sitting hours.",
+        summary="Evaluated prolonged seated posture (>6-8 hours daily), observing associations with pelvic venous stasis and elevated scrotal temperatures.",
+        limitations=["Variation in workplace ergonomical postures and break frequencies across cohorts."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="sitting-venous-stasis-temperature",
+                document_id="sedentariness-sitting-meta-2024",
+                topic="Prolonged Sitting, Venous Stasis, and Scrotal Heat",
+                text="Prolonged continuous sitting impedes pelvic microcirculation and induces localized intrascrotal temperature increases of 1.5 to 2.2 deg C, which may impair thermoregulatory spermatogenesis.",
+                evidence_tags=["sedentary_behavior", "circulation", "scrotal_temperature"],
+                clinical_significance="Supports recommendations for frequent standing intervals and ergonomic movement breaks.",
+                limitations=["Sitting time is an observational risk factor, not a clinical diagnosis."],
+            )
+        ],
+    ),
+
+    # ── 14. Sleep Duration & Semen Parameters (Zou et al. 2020) ─────────────
+    EvidenceDocument(
+        id="sleep-duration-semen-2020",
+        title="Sleep duration and quality in relation to semen quality in healthy men screened as potential sperm donors",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2020,
+        document_type="systematic_review",
+        url="https://pubmed.ncbi.nlm.nih.gov/31830732/",
+        source_identifier="PMID: 31830732",
+        evidence_tags=["sleep_duration", "sleep_hygiene", "circadian_rhythm", "semen_parameters"],
+        population_context="Observational cohort study in healthy screened men evaluating nocturnal sleep duration and quality.",
+        summary="Identified an inverted U-shaped correlation between sleep duration and semen quality, with 7-8 hours reflecting optimal parameters compared to short (<6.5h) or excessive (>9h) sleep.",
+        limitations=["Screened donor population may exhibit higher baseline health parameters than general clinical populations."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="sleep-u-shaped-duration",
+                document_id="sleep-duration-semen-2020",
+                topic="Sleep Duration Optimization and Semen Quality",
+                text="Both chronic sleep restriction (<6.5 hours) and prolonged sleep (>9.0 hours) correlate with reduced total sperm counts and motility, highlighting the role of circadian melatonin and gonadotropin rhythmicity.",
+                evidence_tags=["sleep_duration", "sleep_hygiene", "circadian_rhythm"],
+                clinical_significance="Informs circadian rhythm and sleep regularity advice in digital health assessments.",
+                limitations=["Self-reported sleep durations; actigraphy confirmation was not universally performed."],
+            )
+        ],
+    ),
+
+    # ── 15. Healthy Dietary Patterns & Semen Quality (Salas-Huetos 2022) ─────
+    EvidenceDocument(
+        id="dietary-patterns-semen-meta-2022",
+        title="The effect of healthy dietary patterns on male semen quality: a systematic review and meta-analysis",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2022,
+        document_type="systematic_review",
+        url="https://pubmed.ncbi.nlm.nih.gov/35915543/",
+        source_identifier="PMID: 35915543",
+        evidence_tags=["dietary_antioxidants", "diet_quality", "micronutrients", "oxidative_stress"],
+        population_context="Systematic review and meta-analysis evaluating dietary quality indices and human seminal parameters.",
+        summary="Diets rich in vegetables, fruits, whole grains, nuts, and fish were positively associated with sperm concentration, total count, and progressive motility.",
+        limitations=["Dietary questionnaires have inherent recall bias; socio-economic status serves as a frequent confounder."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="dietary-antioxidant-sperm-motility",
+                document_id="dietary-patterns-semen-meta-2022",
+                topic="Diet Quality and Micronutrient Density",
+                text="Prudent dietary patterns supplying vitamins C, E, folate, zinc, and omega-3 fatty acids attenuate seminal lipid peroxidation and support membrane fluidity essential for progressive sperm motility.",
+                evidence_tags=["dietary_antioxidants", "diet_quality", "micronutrients"],
+                clinical_significance="Provides evidence base for nutritional lifestyle guidance in male health apps.",
+                limitations=["Nutrition is a supportive metabolic foundation, not a substitute for medical andrological care."],
+            )
+        ],
+    ),
+
+    # ── 16. Mediterranean Diet & Reproductive Outcomes (Montano 2024) ───────
+    EvidenceDocument(
+        id="mediterranean-diet-semen-meta-2024",
+        title="Mediterranean Diet, Semen Quality, and Medically Assisted Reproductive Outcomes in the Male Population: A Systematic Review and Meta-Analysis",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2024,
+        document_type="systematic_review",
+        url="https://pubmed.ncbi.nlm.nih.gov/40419219/",
+        source_identifier="PMID: 40419219",
+        evidence_tags=["diet_quality", "micronutrients", "oxidative_stress", "metabolic_health"],
+        population_context="Meta-analysis assessing Mediterranean diet adherence in male cohorts undergoing fertility evaluation.",
+        summary="High Mediterranean diet adherence was significantly associated with superior sperm motility, morphology, and improved assisted reproduction outcomes.",
+        limitations=["Observational study designs cannot establish direct clinical causality."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="mediterranean-diet-outcomes",
+                document_id="mediterranean-diet-semen-meta-2024",
+                topic="Mediterranean Diet Adherence and Semen Parameters",
+                text="The Mediterranean dietary model, characterized by unrefined plant foods, extra virgin olive oil, and seafood, reduces oxidative damage in the male reproductive tract and promotes favorable sperm morphology.",
+                evidence_tags=["diet_quality", "micronutrients", "oxidative_stress"],
+                clinical_significance="Standard evidence-based nutritional pattern cited in andrology literature.",
+                limitations=["Dietary modification supports general and reproductive wellness but does not treat obstructive or genetic conditions."],
+            )
+        ],
+    ),
+
+    # ── 17. Radiofrequency Exposure & Semen Viability (2024) ────────────────
+    EvidenceDocument(
+        id="mobile-rf-exposure-meta-2024",
+        title="The effects of radiofrequency exposure on male fertility: A systematic review of human observational studies with dose-response meta-analysis",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2024,
+        document_type="systematic_review",
+        url="https://pubmed.ncbi.nlm.nih.gov/38880061/",
+        source_identifier="PMID: 38880061",
+        evidence_tags=["device_proximity", "emf_radiofrequency", "semen_parameters"],
+        population_context="Dose-response meta-analysis of observational studies evaluating mobile phone carrying habits.",
+        summary="Identified associations between carrying active mobile devices in front trousers pockets and reductions in sperm progressive motility and viability.",
+        limitations=["Exposure assessment relies primarily on self-reported phone carrying habits rather than dosimetric radiation measurements."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="rf-exposure-pocket-proximity",
+                document_id="mobile-rf-exposure-meta-2024",
+                topic="Mobile Phone Proximity and Radiofrequency Exposure",
+                text="Carrying active mobile devices in trouser pockets in close proximity to scrotal tissue is associated in human observational studies with modest declines in sperm motility, potentially through localized thermal or non-thermal electromagnetic mechanisms.",
+                evidence_tags=["device_proximity", "emf_radiofrequency"],
+                clinical_significance="Informs prudent lifestyle placement guidance (carrying devices in jackets or bags).",
+                limitations=["Human observational data contains heterogeneity; no definitive pathological threshold has been established."],
+            )
+        ],
+    ),
+
+    # ── 18. Pesticides & Male Fertility Review (Jurewicz et al. 2022) ────────
+    EvidenceDocument(
+        id="pesticides-male-fertility-review-2022",
+        title="The environmental and occupational influence of pesticides on male fertility: A systematic review of human studies",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2022,
+        document_type="systematic_review",
+        url="https://pubmed.ncbi.nlm.nih.gov/35793270/",
+        source_identifier="PMID: 35793270",
+        evidence_tags=["pesticides", "organophosphates", "endocrine_disruptors", "environmental_toxins"],
+        population_context="Systematic review of occupational and environmental human exposures to agrochemical compounds.",
+        summary="Documented associations between organophosphate, pyrethroid, and carbamate exposure and adverse semen parameters, DNA damage, and reproductive hormone disruption.",
+        limitations=["Real-world exposures involve chemical mixtures rather than isolated compounds."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="pesticide-endocrine-disruption",
+                document_id="pesticides-male-fertility-review-2022",
+                topic="Pesticides, Endocrine Disruption, and Spermatogenesis",
+                text="Occupational and residential pesticide exposures can induce endocrine disruption via anti-androgenic activity and generate seminal reactive oxygen species that impair spermatogenesis.",
+                evidence_tags=["pesticides", "organophosphates", "endocrine_disruptors"],
+                clinical_significance="Underpins environmental risk screening questions in agricultural and industrial occupations.",
+                limitations=["Occupational protection equipment substantially mitigates exposure risk."],
+            )
+        ],
+    ),
+
+    # ── 19. Bisphenol A & Reproductive Hormones (Miao et al. 2024) ──────────
+    EvidenceDocument(
+        id="bisphenol-a-meta-2024",
+        title="Bisphenol A Exposure Interferes with Reproductive Hormones and Decreases Sperm Counts: A Systematic Review and Meta-Analysis of Epidemiological Studies",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2024,
+        document_type="systematic_review",
+        url="https://pubmed.ncbi.nlm.nih.gov/38668517/",
+        source_identifier="PMID: 38668517",
+        evidence_tags=["bisphenol_a", "endocrine_disruptors", "endocrine_protection"],
+        population_context="Epidemiological meta-analysis measuring urinary BPA biomarkers and male reproductive parameters.",
+        summary="Found elevated urinary bisphenol A levels correlate with lower total sperm counts and altered circulating testosterone and gonadotropin concentrations.",
+        limitations=["BPA has rapid urinary elimination; single spot measurements may not reflect chronic long-term exposure."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="bpa-urinary-sperm-count",
+                document_id="bisphenol-a-meta-2024",
+                topic="Bisphenol A Exposure and Endocrine Balance",
+                text="Bisphenol A acts as a synthetic xenoestrogen capable of binding estrogen receptors and perturbing testicular steroidogenesis, correlating with decreased sperm counts in epidemiological cohorts.",
+                evidence_tags=["bisphenol_a", "endocrine_disruptors"],
+                clinical_significance="Informs guidance on minimizing plastic heating and food container exposure.",
+                limitations=["Biological half-life is short; avoidance of hot plastic contact reduces exposure."],
+            )
+        ],
+    ),
+
+    # ── 20. GAD-7 Anxiety Assessment Validation (Spitzer et al. 2006) ────────
+    EvidenceDocument(
+        id="gad7-validation-2006",
+        title="A brief measure for assessing generalized anxiety disorder: the GAD-7",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2006,
+        document_type="consensus",
+        url="https://pubmed.ncbi.nlm.nih.gov/16717171/",
+        source_identifier="PMID: 16717171",
+        evidence_tags=["anxiety", "autonomic_regulation", "psychological_wellbeing"],
+        population_context="Validation study across 2,740 primary care and mental health patients.",
+        summary="Established the psychometric validity, criterion accuracy, and reliability of the 7-item GAD-7 anxiety screening scale.",
+        limitations=["Screening tool only; clinical diagnosis requires full structured psychiatric interview."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="gad7-psychometrics",
+                document_id="gad7-validation-2006",
+                topic="Generalized Anxiety Disorder Psychometric Screening",
+                text="The GAD-7 is a well-validated 7-item instrument that captures somatic tension, worry, and autonomic anxiety levels, providing reliable symptom severity categorization.",
+                evidence_tags=["anxiety", "autonomic_regulation"],
+                clinical_significance="Gold-standard clinical screening tool for assessing non-diagnostic generalized anxiety symptoms.",
+                limitations=["Scores identify symptom burdens that warrant professional support, not automated diagnostic labels."],
+            )
+        ],
+    ),
+
+    # ── 21. PHQ-9 Depression Measure Validation (Kroenke et al. 2001) ────────
+    EvidenceDocument(
+        id="phq9-validation-2001",
+        title="The PHQ-9: validity of a brief depression severity measure",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2001,
+        document_type="consensus",
+        url="https://pubmed.ncbi.nlm.nih.gov/11556941/",
+        source_identifier="PMID: 11556941",
+        evidence_tags=["mood_screening", "psychological_wellbeing", "somatic_strain"],
+        population_context="Validation in 6,000 primary care and obstetrics/gynecology patients.",
+        summary="Demonstrated excellent diagnostic validity and sensitivity for the 9-item Patient Health Questionnaire for depression severity evaluation.",
+        limitations=["Self-report screening instrument; positive items require compassionate clinical evaluation."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="phq9-validity-severity",
+                document_id="phq9-validation-2001",
+                topic="PHQ-9 Depression Symptom Severity Scoring",
+                text="The PHQ-9 provides valid assessment of mood disturbance, sleep disruption, energy loss, and psychological strain, tracking responses over standard time windows.",
+                evidence_tags=["mood_screening", "psychological_wellbeing"],
+                clinical_significance="Internationally recognized standard for mood symptom screening.",
+                limitations=["Self-administered screening score; does not substitute for licensed healthcare professional evaluation."],
+            )
+        ],
+    ),
+
+    # ── 22. Sexually Transmitted Infections & Infertility (Moazzam 2024) ──────
+    EvidenceDocument(
+        id="sti-infertility-review-2024",
+        title="Are sexually transmitted infections associated with male infertility? A systematic review and in-depth evaluation of the evidence and mechanisms of action of 11 pathogens",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2024,
+        document_type="systematic_review",
+        url="https://pubmed.ncbi.nlm.nih.gov/38178949/",
+        source_identifier="PMID: 38178949",
+        evidence_tags=["sti_history", "sti_screening", "reproductive_tract", "inflammatory_markers"],
+        population_context="Systematic review of 11 STI pathogens across clinical andrology cohorts.",
+        summary="Detailed pathological mechanisms of Chlamydia trachomatis, Neisseria gonorrhoeae, and mycoplasmas in accessory gland inflammation, urethral stricture, and leukocytospermia.",
+        limitations=["Asymptomatic infection history may have variable long-term impact on seminal parameters."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="sti-inflammation-ductal",
+                document_id="sti-infertility-review-2024",
+                topic="Sexually Transmitted Pathogens and Reproductive Tract Inflammation",
+                text="Pathogens including Chlamydia and Gonococcus can provoke epididymitis, ductal occlusion, and persistent leukocytospermia with associated elevated reactive oxygen species in the male reproductive tract.",
+                evidence_tags=["sti_history", "reproductive_tract", "inflammatory_markers"],
+                clinical_significance="Underpins the clinical rationale for screening reproductive history and prior STI episodes.",
+                limitations=["Prior treated infections frequently resolve without permanent reproductive sequelae."],
+            )
+        ],
+    ),
+
+    # ── 23. Ejaculatory Abstinence Duration & Semen Parameters (Hansen 2024) ──
+    EvidenceDocument(
+        id="abstinence-period-meta-2024",
+        title="Impact of Shorter Abstinence Periods on Semen Parameters: A Systematic Review and Meta-Analysis",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2024,
+        document_type="systematic_review",
+        url="https://pubmed.ncbi.nlm.nih.gov/39434390/",
+        source_identifier="PMID: 39434390",
+        evidence_tags=["semen_parameters", "semen_analysis", "accessory_gland_function"],
+        population_context="Systematic review and meta-analysis comparing short (1-2 days) vs standard (2-7 days) abstinence.",
+        summary="Demonstrated that while longer abstinence increases total ejaculate volume and sperm count, shorter abstinence periods correlate with higher progressive motility and lower sperm DNA fragmentation.",
+        limitations=["Optimal window balances volume requirements against genomic integrity depending on clinical indication."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="abstinence-motility-dna-frag",
+                document_id="abstinence-period-meta-2024",
+                topic="Abstinence Duration Trade-offs in Semen Parameters",
+                text="Shorter ejaculatory abstinence windows of 1-2 days improve sperm progressive motility and reduce sperm DNA fragmentation, counterbalancing lower total ejaculate volume.",
+                evidence_tags=["semen_parameters", "semen_analysis"],
+                clinical_significance="Informs clinical context regarding timing of semen analysis and reproductive intercourse schedules.",
+                limitations=["Abstinence advice must be customized based on baseline sperm density."],
+            )
+        ],
+    ),
+
+    # ── 24. 5-Alpha Reductase Inhibitors & Semen Parameters (Amory 2007) ──────
+    EvidenceDocument(
+        id="finasteride-semen-trial-2007",
+        title="The effect of 5alpha-reductase inhibition with dutasteride and finasteride on semen parameters and serum hormones in healthy men",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2007,
+        document_type="systematic_review",
+        url="https://pubmed.ncbi.nlm.nih.gov/17299062/",
+        source_identifier="PMID: 17299062",
+        evidence_tags=["finasteride", "5_alpha_reductase_inhibitors", "dht_modulation", "endocrine_suppression"],
+        population_context="Randomized double-blind placebo-controlled trial across 99 healthy adult men.",
+        summary="Showed that finasteride and dutasteride treatment induced reversible reductions in sperm count and semen volume in a notable subset of healthy participants.",
+        limitations=["Changes were generally reversible upon drug cessation; individual susceptibility varies."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="finasteride-sperm-suppression",
+                document_id="finasteride-semen-trial-2007",
+                topic="Finasteride and Semen Parameter Reversibility",
+                text="Finasteride administration reduces intraprostatic DHT and can cause variable, reversible reductions in total sperm count and ejaculate volume in healthy men, which typically normalize following discontinuation.",
+                evidence_tags=["finasteride", "5_alpha_reductase_inhibitors"],
+                clinical_significance="Guides clinical history taking for hair-loss medications in men seeking fertility assessment.",
+                limitations=["Medication adjustments must be discussed with the prescribing physician."],
+            )
+        ],
+    ),
+
+    # ── 25. SSRI Antidepressants & Semen Quality (Semet et al. 2022) ──────────
+    EvidenceDocument(
+        id="ssri-semen-quality-meta-2022",
+        title="The effect of SSRIs on Semen quality: A systematic review and meta-analysis",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2022,
+        document_type="systematic_review",
+        url="https://pubmed.ncbi.nlm.nih.gov/36188547/",
+        source_identifier="PMID: 36188547",
+        evidence_tags=["ssri", "serotonin", "sexual_function", "semen_parameters"],
+        population_context="Systematic review and meta-analysis evaluating selective serotonin reuptake inhibitors on seminal parameters.",
+        summary="Identified associations between SSRI pharmacotherapy and increases in sperm DNA fragmentation alongside delayed ejaculation and reduced progressive motility.",
+        limitations=["Psychological depression is itself an important confounder; patients must not stop psychiatric medication without physician consultation."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="ssri-sperm-dna-fragmentation",
+                document_id="ssri-semen-quality-meta-2022",
+                topic="SSRI Pharmacotherapy and Seminal Integrity",
+                text="SSRIs can impact male reproductive parameters through central serotonergic inhibition of ejaculation and peripheral induction of oxidative stress in the epididymis leading to elevated DNA fragmentation.",
+                evidence_tags=["ssri", "sexual_function", "semen_parameters"],
+                clinical_significance="Ensures clinical reports handle antidepressant medication screening sensitively and avoid unguided cessation.",
+                limitations=["Antidepressants must never be discontinued without direct medical supervision."],
+            )
+        ],
+    ),
+
+    # ── 26. Male Genital Self-Image Scale Validation (Herbenick 2013) ─────────
+    EvidenceDocument(
+        id="genital-self-image-validation-2013",
+        title="The development and validation of the Male Genital Self-Image Scale: results from a nationally representative probability sample of men in the United States",
+        source="PubMed",
+        organization="National Institutes of Health / PubMed",
+        publication_year=2013,
+        document_type="consensus",
+        url="https://pubmed.ncbi.nlm.nih.gov/23551571/",
+        source_identifier="PMID: 23551571",
+        evidence_tags=["genital_self_image", "body_confidence", "body_image"],
+        population_context="Nationally representative US probability sample validation study of 1,690 men.",
+        summary="Validated the Male Genital Self-Image Scale (MGSIS) as an psychometrically sound measure of genital satisfaction correlated with psychosexual comfort.",
+        limitations=["Genital self-perception scores have zero association with physical fertility or semen quality."],
+        chunks=[
+            EvidenceChunk(
+                chunk_id="mgsis-psychosexual-comfort",
+                document_id="genital-self-image-validation-2013",
+                topic="Genital Self-Image and Intimacy Confidence",
+                text="The Male Genital Self-Image Scale measures cognitive-affective satisfaction with genital appearance. Scores correlate strongly with sexual esteem and intimacy confidence, but have no biological connection to fertility potential.",
+                evidence_tags=["genital_self_image", "body_confidence"],
+                clinical_significance="Safeguards reporting to ensure body image questions are never conflated with fertility diagnoses.",
+                limitations=["Construct is purely psychosexual; zero diagnostic fertility significance."],
+            )
+        ],
+    ),
 ]
 
 
