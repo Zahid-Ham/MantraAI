@@ -48,19 +48,58 @@ This normalizer structures questionnaire context only. It is NOT a clinically
 validated instrument and does NOT produce clinical diagnoses.
 """
 
+import json
 import logging
+from pathlib import Path
 from typing import Any, Optional, Union
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Canonical question → domain mapping
-# Built from assessment_questions_document.md (86 questions, 13 blocks)
+# Block to Domain Mapping for Canonical Assessment Schema
 # ---------------------------------------------------------------------------
+BLOCK_TO_DOMAIN_MAP: dict[int, str] = {
+    1: "demographics",
+    2: "lifestyle_behaviors",
+    3: "heat_exposure",
+    4: "diet_nutrition",
+    5: "environmental_exposure",
+    6: "mental_health_stress",
+    7: "reproductive_history_symptoms",
+    8: "substance_medication_use",
+    9: "digital_sexual_behavior",
+    10: "sexual_performance_anxiety",
+    11: "body_image_self_perception",
+    12: "social_relational_context",
+    13: "coping_mechanisms",
+}
 
-#: Maps every known question_id → its internal domain name.
-QUESTION_DOMAIN_MAP: dict[str, str] = {
+def _derive_question_domain_map(fallback_map: dict[str, str]) -> dict[str, str]:
+    candidates = [
+        Path(__file__).resolve().parents[3] / "shared" / "assessment_schema.json",
+        Path(__file__).resolve().parents[2] / "shared" / "assessment_schema.json",
+        Path.cwd() / "shared" / "assessment_schema.json",
+        Path.cwd().parent / "shared" / "assessment_schema.json",
+    ]
+    for p in candidates:
+        if p.is_file():
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                derived = {
+                    q["id"]: BLOCK_TO_DOMAIN_MAP[q["block"]]
+                    for q in data.get("questions", [])
+                    if "id" in q and "block" in q and q["block"] in BLOCK_TO_DOMAIN_MAP
+                }
+                if derived:
+                    return derived
+            except Exception as e:
+                logger.warning("Could not read shared/assessment_schema.json (%s); using fallback map", e)
+                break
+    return fallback_map
+
+_STATIC_FALLBACK_QUESTION_DOMAIN_MAP: dict[str, str] = {
     # ── Block 1: Demographics ──────────────────────────────────────────────
     "age_years":                      "demographics",
     "bmi_category":                   "demographics",
@@ -188,6 +227,9 @@ QUESTION_DOMAIN_MAP: dict[str, str] = {
     "substance_use_under_stress":     "coping_mechanisms",
     "mindfulness_or_meditation_practice": "coping_mechanisms",
 }
+
+#: Maps every known question_id -> its internal domain name (derived dynamically from shared schema).
+QUESTION_DOMAIN_MAP: dict[str, str] = _derive_question_domain_map(_STATIC_FALLBACK_QUESTION_DOMAIN_MAP)
 
 # ---------------------------------------------------------------------------
 # Fields that should be treated as numeric (slider responses).
