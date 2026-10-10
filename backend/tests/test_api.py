@@ -100,16 +100,16 @@ def test_valid_token_returns_authenticated():
 def test_assessment_creation_works():
     global active_user_id
     active_user_id = USER_1_ID
-    response = client.post("/api/v1/assessments", json={"assessment_version": "1.0"})
+    response = client.post("/api/v1/assessments", json={"assessment_version": "2.0"})
     assert response.status_code == 200
     assert response.json()["status"] == "IN_PROGRESS"
-    assert response.json()["assessment_version"] == "1.0"
+    assert response.json()["assessment_version"] == "2.0"
 
 def test_response_persistence_works():
     global active_user_id
     active_user_id = USER_1_ID
     # 1. Create session
-    sess_res = client.post("/api/v1/assessments", json={"assessment_version": "1.0"})
+    sess_res = client.post("/api/v1/assessments", json={"assessment_version": "2.0"})
     sess_id = sess_res.json()["id"]
 
     # 2. Post responses progressive
@@ -124,7 +124,7 @@ def test_user_cannot_access_another_users_assessment():
     global active_user_id
     # 1. User 1 creates session
     active_user_id = USER_1_ID
-    sess_res = client.post("/api/v1/assessments", json={"assessment_version": "1.0"})
+    sess_res = client.post("/api/v1/assessments", json={"assessment_version": "2.0"})
     sess_id = sess_res.json()["id"]
 
     # 2. User 2 tries to access User 1 session

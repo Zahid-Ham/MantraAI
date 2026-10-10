@@ -106,7 +106,7 @@ def synthetic_answers():
         "hours_sitting_per_day": "8-10_hours",
         "laptop_on_lap": "daily_2plus_hours",
         "hot_bath_frequency": "multiple_weekly",
-        "perceived_stress_pss10": 22,
+        "perceived_stress_rating": 7,
         "sleep_duration": "less_than_6",
         "anticipatory_anxiety_before_sex": "occasional",
         "partnered_sexual_difficulty": "occasional",
@@ -167,7 +167,7 @@ def valid_report_dict(sample_evidence_context):
         },
         "mental_behavioral_wellness": {
             "summary": "Screening indicator suggests elevated perceived workload stress and short sleep duration.",
-            "reported_context": ["PSS-10 screening indicator elevated"],
+            "reported_context": ["Stress screening indicator elevated"],
             "relevant_factors": ["Chronic sympathetic activation can disrupt endocrine homeostasis"],
             "evidence_refs": [ev_id],
             "limitations": ["Screening indicators do not constitute formal psychological or psychiatric diagnosis."],

@@ -39,8 +39,10 @@ from app.services.normalizer import NormalizedAssessment, normalize_assessment_r
 
 logger = logging.getLogger(__name__)
 
-# Canonical total question count
-CANONICAL_QUESTION_COUNT = 86
+# Canonical total question count — derived from QUESTION_DOMAIN_MAP in normalizer.py
+# Update this when adding/removing questions from the schema.
+from app.services.normalizer import QUESTION_DOMAIN_MAP
+CANONICAL_QUESTION_COUNT = len(QUESTION_DOMAIN_MAP)
 
 # ---------------------------------------------------------------------------
 # Pydantic Schemas for Structured Health Context
@@ -1357,10 +1359,10 @@ def _evaluate_mental_behavioral_wellness(
     social = norm.social_relational_context
 
     work_hours = m_stress.get("daily_work_hours")
-    pss = m_stress.get("perceived_stress_pss10")
+    pss = m_stress.get("perceived_stress_rating")
     gad7 = m_stress.get("gad7_score")
     phq9 = m_stress.get("phq9_score")
-    sleep_qual = m_stress.get("sleep_quality_psqi_proxy")
+    sleep_qual = m_stress.get("sleep_quality_screening")
 
     stress_coping = coping.get("primary_stress_coping_method")
     emo_reg = coping.get("emotional_regulation_ability")
@@ -1382,93 +1384,104 @@ def _evaluate_mental_behavioral_wellness(
             evidence_tags=["workplace_stress", "fatigue"]
         ))
 
-    # PSS-10 Perceived Stress (slider: 0-33)
+    # Perceived Stress Rating (slider: 0-10)
     if isinstance(pss, (int, float)):
-        ctx.source_question_ids.append("perceived_stress_pss10")
-        if pss >= 27:
-            ctx.stress_context = f"Severe perceived stress (score: {int(pss)}/33)"
+        ctx.source_question_ids.append("perceived_stress_rating")
+        if pss >= 7:
+            ctx.stress_context = f"Severe perceived stress (score: {int(pss)}/10)"
             ctx.evidence_tags.extend(["stress", "cortisol", "hpa_axis"])
             flag_pss = FactorItem(
                 id="severe_perceived_stress",
                 domain="mental_behavioral_wellness",
                 type="context",
                 status="flagged",
-                source_question_ids=["perceived_stress_pss10"],
-                reason=f"High perceived stress screening score ({int(pss)}/33) indicating substantial psychological strain.",
+                source_question_ids=["perceived_stress_rating"],
+                reason=f"High perceived stress screening score ({int(pss)}/10) indicating substantial psychological strain.",
                 evidence_tags=["stress", "cortisol", "hpa_axis"]
             )
             modifiable.append(flag_pss)
             flags.append(flag_pss)
-        elif pss >= 16:
-            ctx.stress_context = f"Moderate perceived stress (score: {int(pss)}/33)"
+        elif pss >= 4:
+            ctx.stress_context = f"Moderate perceived stress (score: {int(pss)}/10)"
             ctx.evidence_tags.extend(["stress", "cortisol"])
             modifiable.append(FactorItem(
                 id="elevated_perceived_stress",
                 domain="mental_behavioral_wellness",
                 type="modifiable",
                 status="flagged",
-                source_question_ids=["perceived_stress_pss10"],
-                reason=f"Moderate perceived stress screening score ({int(pss)}/33).",
+                source_question_ids=["perceived_stress_rating"],
+                reason=f"Moderate perceived stress screening score ({int(pss)}/10).",
                 evidence_tags=["stress", "cortisol"]
             ))
-        elif pss <= 13:
-            ctx.stress_context = f"Low perceived stress (score: {int(pss)}/33)"
+        elif pss <= 3:
+            ctx.stress_context = f"Low perceived stress (score: {int(pss)}/10)"
             positive.append(FactorItem(
                 id="low_perceived_stress",
                 domain="mental_behavioral_wellness",
                 type="positive",
                 status="optimal",
-                source_question_ids=["perceived_stress_pss10"],
+                source_question_ids=["perceived_stress_rating"],
                 reason="Low perceived stress score on screening indicator.",
                 evidence_tags=["stress_resilience"]
             ))
 
-    # GAD-7 Anxiety Screening Proxy (slider: 0-16)
+    # GAD-7 Anxiety Screening Proxy (0-21)
     if isinstance(gad7, (int, float)):
-        ctx.source_question_ids.append("gad7_score")
+        ctx.source_question_ids.extend([f"gad7_item_{i}" for i in range(1, 8)])
+        severity = "minimal"
+        if gad7 >= 15: severity = "severe"
+        elif gad7 >= 10: severity = "moderate"
+        elif gad7 >= 5: severity = "mild"
+        
         if gad7 >= 10:
-            ctx.mood_anxiety_context = f"Elevated anxiety proxy score ({int(gad7)}/16)"
+            ctx.mood_anxiety_context = f"Elevated anxiety proxy score ({int(gad7)}/21, {severity})"
             ctx.evidence_tags.extend(["anxiety", "autonomic_regulation", "sympathetic_tone"])
             fu_gad = FactorItem(
                 id="elevated_anxiety_screening_proxy",
                 domain="mental_behavioral_wellness",
                 type="follow_up",
                 status="flagged",
-                source_question_ids=["gad7_score"],
-                reason=f"Elevated anxiety screening proxy score ({int(gad7)}/16) — discussion with a mental health professional may be helpful (screening indicator, not a clinical diagnosis).",
+                source_question_ids=[f"gad7_item_{i}" for i in range(1, 8)],
+                reason=f"Elevated anxiety screening proxy score ({int(gad7)}/21) — screening score in a range where speaking with a professional is suggested; this is not a diagnosis.",
                 evidence_tags=["anxiety", "autonomic_regulation", "sympathetic_tone"]
             )
             flags.append(fu_gad)
             follow_ups.append(fu_gad)
 
-    # PHQ-9 Mood Screening Proxy (slider: 0-19)
+    # PHQ-9 Mood Screening Proxy (0-27)
     if isinstance(phq9, (int, float)):
-        ctx.source_question_ids.append("phq9_score")
+        ctx.source_question_ids.extend([f"phq9_item_{i}" for i in range(1, 10)])
+        severity = "minimal"
+        if phq9 >= 20: severity = "severe"
+        elif phq9 >= 15: severity = "moderately severe"
+        elif phq9 >= 10: severity = "moderate"
+        elif phq9 >= 5: severity = "mild"
+        
         if phq9 >= 10:
-            ctx.mood_anxiety_context = f"Elevated mood screening proxy score ({int(phq9)}/19)"
+            ctx.mood_anxiety_context = f"Elevated mood screening proxy score ({int(phq9)}/27, {severity})"
             ctx.evidence_tags.extend(["mood_screening", "somatic_strain", "psychological_wellbeing"])
             fu_phq = FactorItem(
                 id="elevated_mood_screening_proxy",
                 domain="mental_behavioral_wellness",
                 type="follow_up",
                 status="flagged",
-                source_question_ids=["phq9_score"],
-                reason=f"Elevated mood screening proxy score ({int(phq9)}/19) — professional evaluation recommended for mood wellbeing (screening indicator, not a clinical diagnosis).",
+                source_question_ids=[f"phq9_item_{i}" for i in range(1, 10)],
+                reason=f"Elevated mood screening proxy score ({int(phq9)}/27) — screening score in a range where speaking with a professional is suggested; this is not a diagnosis.",
                 evidence_tags=["mood_screening", "somatic_strain", "psychological_wellbeing"]
             )
             flags.append(fu_phq)
             follow_ups.append(fu_phq)
 
-    # Sleep Quality (PSQI proxy)
+    # Sleep quality screening
     if _val_in(sleep_qual, ["Trouble falling asleep", "Trouble staying asleep", "Waking early"]):
-        ctx.source_question_ids.append("sleep_quality_psqi_proxy")
+        ctx.source_question_ids.append("sleep_quality_screening")
         ctx.evidence_tags.extend(["sleep_quality", "sleep_architecture", "autonomic_balance"])
         modifiable.append(FactorItem(
             id="disrupted_sleep_quality",
             domain="mental_behavioral_wellness",
             type="modifiable",
             status="flagged",
-            source_question_ids=["sleep_quality_psqi_proxy"],
+            source_question_ids=["sleep_quality_screening"],
             reason=f"Reported sleep quality disruption: {sleep_qual}.",
             evidence_tags=["sleep_quality", "sleep_architecture"]
         ))
@@ -1478,10 +1491,28 @@ def _evaluate_mental_behavioral_wellness(
             domain="mental_behavioral_wellness",
             type="positive",
             status="optimal",
-            source_question_ids=["sleep_quality_psqi_proxy"],
+            source_question_ids=["sleep_quality_screening"],
             reason="Wakes up feeling rested and refreshed.",
             evidence_tags=["sleep_quality"]
         ))
+
+    # PHQ-9 Item 9 crisis safety flag (suicidal ideation)
+    phq9_item_9 = m_stress.get("phq9_item_9")
+    if isinstance(phq9_item_9, int) and phq9_item_9 >= 1:
+        from app.constants.crisis_resources import get_crisis_support_text
+        ctx.evidence_tags.extend(["safety_flag", "crisis_support_required"])
+        ctx.source_question_ids.append("phq9_item_9")
+        crisis_flag = FactorItem(
+            id="phq9_item9_safety_flag",
+            domain="mental_behavioral_wellness",
+            type="follow_up",
+            status="flagged",
+            source_question_ids=["phq9_item_9"],
+            reason=get_crisis_support_text(),
+            evidence_tags=["safety_flag", "crisis_support_required"]
+        )
+        flags.append(crisis_flag)
+        follow_ups.append(crisis_flag)
 
     # Coping Mechanisms
     if _val_in(stress_coping, ["Substance use", "Pornography"]):

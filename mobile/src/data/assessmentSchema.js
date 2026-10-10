@@ -347,7 +347,7 @@ export const assessmentSchema = {
     {
       id: "mobile_phone_placement",
       block: 3,
-      question: { en: "Where do you typically carry your mobile phone?", hi: "आप आमतौर पर अपना मोबाइल फोन कहां रखते हैं?" },
+      question: { en: "How often do you keep a mobile device close to the groin for prolonged periods?", hi: "TODO(verify): validated Hindi translation" },
       field: "mobile_phone_placement",
       type: "radio",
       options: [
@@ -663,15 +663,15 @@ export const assessmentSchema = {
       evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
     },
     {
-      id: "perceived_stress_pss10",
+      id: "perceived_stress_rating",
       block: 6,
-      question: { en: "Rate your overall perceived stress level (corresponds to PSS-10 scale):", hi: "अपने कुल कथित तनाव स्तर को रेट करें (PSS-10 पैमाने के अनुसार):" },
-      field: "perceived_stress_pss10",
+      question: { en: "Over the past month, how stressed have you felt overall?", hi: "पिछले एक महीने में, आपने कुल मिलाकर कितना तनाव महसूस किया है?" },
+      field: "perceived_stress_rating",
       type: "slider",
       options: [
         { value: "0", label: { en: "Minimal (0)", hi: "न्यूनतम (0)" } },
-        { value: "16", label: { en: "Moderate (16)", hi: "मध्यम (16)" } },
-        { value: "33", label: { en: "Severe (33)", hi: "गंभीर (33)" } },
+        { value: "5", label: { en: "Moderate (5)", hi: "मध्यम (5)" } },
+        { value: "10", label: { en: "Severe (10)", hi: "गंभीर (10)" } }
       ],
       required: true,
       whyWeAsk: { en: "High perceived stress levels activate the hypothalamic-pituitary-adrenal axis, elevating cortisol.", hi: "उच्च तनाव का स्तर शरीर में कोर्टिसोल हार्मोन के स्राव को बढ़ाता है।" },
@@ -680,15 +680,18 @@ export const assessmentSchema = {
       evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
     },
     {
-      id: "gad7_score",
+      id: "gad7_item_1",
       block: 6,
-      question: { en: "Provide your Generalized Anxiety Scale score (GAD-7):", hi: "अपना सामान्यीकृत चिंता विकार स्कोर दर्ज करें (GAD-7):" },
-      field: "gad7_score",
-      type: "slider",
+      group: "gad7",
+      preamble: { en: "Over the last 2 weeks, how often have you been bothered by the following problems?", hi: "TODO(verify): validated Hindi translation" },
+      question: { en: "Feeling nervous, anxious or on edge", hi: "TODO(verify): validated Hindi translation" },
+      field: "gad7_item_1",
+      type: "segmented",
       options: [
-        { value: "0", label: { en: "Minimal (0)", hi: "न्यूनतम (0)" } },
-        { value: "8", label: { en: "Moderate (8)", hi: "मध्यम (8)" } },
-        { value: "16", label: { en: "Severe (16)", hi: "गंभीर (16)" } },
+        { value: "0", label: { en: "Not at all", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "1", label: { en: "Several days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "2", label: { en: "More than half the days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "3", label: { en: "Nearly every day", hi: "TODO(verify): validated Hindi translation" } }
       ],
       required: true,
       whyWeAsk: { en: "Generalized anxiety triggers physiological sympathetic responses affecting vascular efficiency.", hi: "सामान्यीकृत चिंता शारीरिक तनाव को बढ़ाती है जो रक्त प्रवाह की दक्षता को प्रभावित करती है।" },
@@ -697,15 +700,132 @@ export const assessmentSchema = {
       evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
     },
     {
-      id: "phq9_score",
+      id: "gad7_item_2",
       block: 6,
-      question: { en: "Provide your Patient Depression Scale score (PHQ-9):", hi: "अपना अवसाद रेटिंग स्कोर दर्ज करें (PHQ-9):" },
-      field: "phq9_score",
-      type: "slider",
+      group: "gad7",
+      question: { en: "Not being able to stop or control worrying", hi: "TODO(verify): validated Hindi translation" },
+      field: "gad7_item_2",
+      type: "segmented",
       options: [
-        { value: "0", label: { en: "Minimal (0)", hi: "न्यूनतम (0)" } },
-        { value: "10", label: { en: "Moderate (10)", hi: "मध्यम (10)" } },
-        { value: "19", label: { en: "Severe (19)", hi: "गंभीर (19)" } },
+        { value: "0", label: { en: "Not at all", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "1", label: { en: "Several days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "2", label: { en: "More than half the days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "3", label: { en: "Nearly every day", hi: "TODO(verify): validated Hindi translation" } }
+      ],
+      required: true,
+      whyWeAsk: { en: "Generalized anxiety triggers physiological sympathetic responses affecting vascular efficiency.", hi: "सामान्यीकृत चिंता शारीरिक तनाव को बढ़ाती है जो रक्त प्रवाह की दक्षता को प्रभावित करती है।" },
+      relevance: "high",
+      sensitivity: false,
+      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+    },
+    {
+      id: "gad7_item_3",
+      block: 6,
+      group: "gad7",
+      question: { en: "Worrying too much about different things", hi: "TODO(verify): validated Hindi translation" },
+      field: "gad7_item_3",
+      type: "segmented",
+      options: [
+        { value: "0", label: { en: "Not at all", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "1", label: { en: "Several days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "2", label: { en: "More than half the days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "3", label: { en: "Nearly every day", hi: "TODO(verify): validated Hindi translation" } }
+      ],
+      required: true,
+      whyWeAsk: { en: "Generalized anxiety triggers physiological sympathetic responses affecting vascular efficiency.", hi: "सामान्यीकृत चिंता शारीरिक तनाव को बढ़ाती है जो रक्त प्रवाह की दक्षता को प्रभावित करती है।" },
+      relevance: "high",
+      sensitivity: false,
+      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+    },
+    {
+      id: "gad7_item_4",
+      block: 6,
+      group: "gad7",
+      question: { en: "Trouble relaxing", hi: "TODO(verify): validated Hindi translation" },
+      field: "gad7_item_4",
+      type: "segmented",
+      options: [
+        { value: "0", label: { en: "Not at all", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "1", label: { en: "Several days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "2", label: { en: "More than half the days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "3", label: { en: "Nearly every day", hi: "TODO(verify): validated Hindi translation" } }
+      ],
+      required: true,
+      whyWeAsk: { en: "Generalized anxiety triggers physiological sympathetic responses affecting vascular efficiency.", hi: "सामान्यीकृत चिंता शारीरिक तनाव को बढ़ाती है जो रक्त प्रवाह की दक्षता को प्रभावित करती है।" },
+      relevance: "high",
+      sensitivity: false,
+      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+    },
+    {
+      id: "gad7_item_5",
+      block: 6,
+      group: "gad7",
+      question: { en: "Being so restless that it is hard to sit still", hi: "TODO(verify): validated Hindi translation" },
+      field: "gad7_item_5",
+      type: "segmented",
+      options: [
+        { value: "0", label: { en: "Not at all", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "1", label: { en: "Several days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "2", label: { en: "More than half the days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "3", label: { en: "Nearly every day", hi: "TODO(verify): validated Hindi translation" } }
+      ],
+      required: true,
+      whyWeAsk: { en: "Generalized anxiety triggers physiological sympathetic responses affecting vascular efficiency.", hi: "सामान्यीकृत चिंता शारीरिक तनाव को बढ़ाती है जो रक्त प्रवाह की दक्षता को प्रभावित करती है।" },
+      relevance: "high",
+      sensitivity: false,
+      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+    },
+    {
+      id: "gad7_item_6",
+      block: 6,
+      group: "gad7",
+      question: { en: "Becoming easily annoyed or irritable", hi: "TODO(verify): validated Hindi translation" },
+      field: "gad7_item_6",
+      type: "segmented",
+      options: [
+        { value: "0", label: { en: "Not at all", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "1", label: { en: "Several days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "2", label: { en: "More than half the days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "3", label: { en: "Nearly every day", hi: "TODO(verify): validated Hindi translation" } }
+      ],
+      required: true,
+      whyWeAsk: { en: "Generalized anxiety triggers physiological sympathetic responses affecting vascular efficiency.", hi: "सामान्यीकृत चिंता शारीरिक तनाव को बढ़ाती है जो रक्त प्रवाह की दक्षता को प्रभावित करती है।" },
+      relevance: "high",
+      sensitivity: false,
+      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+    },
+    {
+      id: "gad7_item_7",
+      block: 6,
+      group: "gad7",
+      question: { en: "Feeling afraid, as if something awful might happen", hi: "TODO(verify): validated Hindi translation" },
+      field: "gad7_item_7",
+      type: "segmented",
+      options: [
+        { value: "0", label: { en: "Not at all", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "1", label: { en: "Several days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "2", label: { en: "More than half the days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "3", label: { en: "Nearly every day", hi: "TODO(verify): validated Hindi translation" } }
+      ],
+      required: true,
+      whyWeAsk: { en: "Generalized anxiety triggers physiological sympathetic responses affecting vascular efficiency.", hi: "सामान्यीकृत चिंता शारीरिक तनाव को बढ़ाती है जो रक्त प्रवाह की दक्षता को प्रभावित करती है।" },
+      relevance: "high",
+      sensitivity: false,
+      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+    },
+    {
+      id: "phq9_item_1",
+      block: 6,
+      group: "phq9",
+      preamble: { en: "Over the last 2 weeks, how often have you been bothered by any of the following problems?", hi: "TODO(verify): validated Hindi translation" },
+      question: { en: "Little interest or pleasure in doing things", hi: "TODO(verify): validated Hindi translation" },
+      field: "phq9_item_1",
+      type: "segmented",
+      options: [
+        { value: "0", label: { en: "Not at all", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "1", label: { en: "Several days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "2", label: { en: "More than half the days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "3", label: { en: "Nearly every day", hi: "TODO(verify): validated Hindi translation" } }
       ],
       required: true,
       whyWeAsk: { en: "Somatic and mood parameters directly correlate with overall metabolic stability.", hi: "मनोदशा और शारीरिक मापदंड सीधे तौर पर समग्र चयापचय स्थिरता से संबंधित होते हैं।" },
@@ -714,10 +834,162 @@ export const assessmentSchema = {
       evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
     },
     {
-      id: "sleep_quality_psqi_proxy",
+      id: "phq9_item_2",
+      block: 6,
+      group: "phq9",
+      question: { en: "Feeling down, depressed, or hopeless", hi: "TODO(verify): validated Hindi translation" },
+      field: "phq9_item_2",
+      type: "segmented",
+      options: [
+        { value: "0", label: { en: "Not at all", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "1", label: { en: "Several days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "2", label: { en: "More than half the days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "3", label: { en: "Nearly every day", hi: "TODO(verify): validated Hindi translation" } }
+      ],
+      required: true,
+      whyWeAsk: { en: "Somatic and mood parameters directly correlate with overall metabolic stability.", hi: "मनोदशा और शारीरिक मापदंड सीधे तौर पर समग्र चयापचय स्थिरता से संबंधित होते हैं।" },
+      relevance: "high",
+      sensitivity: false,
+      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+    },
+    {
+      id: "phq9_item_3",
+      block: 6,
+      group: "phq9",
+      question: { en: "Trouble falling or staying asleep, or sleeping too much", hi: "TODO(verify): validated Hindi translation" },
+      field: "phq9_item_3",
+      type: "segmented",
+      options: [
+        { value: "0", label: { en: "Not at all", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "1", label: { en: "Several days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "2", label: { en: "More than half the days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "3", label: { en: "Nearly every day", hi: "TODO(verify): validated Hindi translation" } }
+      ],
+      required: true,
+      whyWeAsk: { en: "Somatic and mood parameters directly correlate with overall metabolic stability.", hi: "मनोदशा और शारीरिक मापदंड सीधे तौर पर समग्र चयापचय स्थिरता से संबंधित होते हैं।" },
+      relevance: "high",
+      sensitivity: false,
+      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+    },
+    {
+      id: "phq9_item_4",
+      block: 6,
+      group: "phq9",
+      question: { en: "Feeling tired or having little energy", hi: "TODO(verify): validated Hindi translation" },
+      field: "phq9_item_4",
+      type: "segmented",
+      options: [
+        { value: "0", label: { en: "Not at all", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "1", label: { en: "Several days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "2", label: { en: "More than half the days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "3", label: { en: "Nearly every day", hi: "TODO(verify): validated Hindi translation" } }
+      ],
+      required: true,
+      whyWeAsk: { en: "Somatic and mood parameters directly correlate with overall metabolic stability.", hi: "मनोदशा और शारीरिक मापदंड सीधे तौर पर समग्र चयापचय स्थिरता से संबंधित होते हैं।" },
+      relevance: "high",
+      sensitivity: false,
+      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+    },
+    {
+      id: "phq9_item_5",
+      block: 6,
+      group: "phq9",
+      question: { en: "Poor appetite or overeating", hi: "TODO(verify): validated Hindi translation" },
+      field: "phq9_item_5",
+      type: "segmented",
+      options: [
+        { value: "0", label: { en: "Not at all", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "1", label: { en: "Several days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "2", label: { en: "More than half the days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "3", label: { en: "Nearly every day", hi: "TODO(verify): validated Hindi translation" } }
+      ],
+      required: true,
+      whyWeAsk: { en: "Somatic and mood parameters directly correlate with overall metabolic stability.", hi: "मनोदशा और शारीरिक मापदंड सीधे तौर पर समग्र चयापचय स्थिरता से संबंधित होते हैं।" },
+      relevance: "high",
+      sensitivity: false,
+      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+    },
+    {
+      id: "phq9_item_6",
+      block: 6,
+      group: "phq9",
+      question: { en: "Feeling bad about yourself, or that you are a failure or have let yourself or your family down", hi: "TODO(verify): validated Hindi translation" },
+      field: "phq9_item_6",
+      type: "segmented",
+      options: [
+        { value: "0", label: { en: "Not at all", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "1", label: { en: "Several days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "2", label: { en: "More than half the days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "3", label: { en: "Nearly every day", hi: "TODO(verify): validated Hindi translation" } }
+      ],
+      required: true,
+      whyWeAsk: { en: "Somatic and mood parameters directly correlate with overall metabolic stability.", hi: "मनोदशा और शारीरिक मापदंड सीधे तौर पर समग्र चयापचय स्थिरता से संबंधित होते हैं।" },
+      relevance: "high",
+      sensitivity: false,
+      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+    },
+    {
+      id: "phq9_item_7",
+      block: 6,
+      group: "phq9",
+      question: { en: "Trouble concentrating on things, such as reading the newspaper or watching television", hi: "TODO(verify): validated Hindi translation" },
+      field: "phq9_item_7",
+      type: "segmented",
+      options: [
+        { value: "0", label: { en: "Not at all", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "1", label: { en: "Several days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "2", label: { en: "More than half the days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "3", label: { en: "Nearly every day", hi: "TODO(verify): validated Hindi translation" } }
+      ],
+      required: true,
+      whyWeAsk: { en: "Somatic and mood parameters directly correlate with overall metabolic stability.", hi: "मनोदशा और शारीरिक मापदंड सीधे तौर पर समग्र चयापचय स्थिरता से संबंधित होते हैं।" },
+      relevance: "high",
+      sensitivity: false,
+      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+    },
+    {
+      id: "phq9_item_8",
+      block: 6,
+      group: "phq9",
+      question: { en: "Moving or speaking so slowly that other people could have noticed? Or the opposite: being so fidgety or restless that you have been moving around a lot more than usual", hi: "TODO(verify): validated Hindi translation" },
+      field: "phq9_item_8",
+      type: "segmented",
+      options: [
+        { value: "0", label: { en: "Not at all", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "1", label: { en: "Several days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "2", label: { en: "More than half the days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "3", label: { en: "Nearly every day", hi: "TODO(verify): validated Hindi translation" } }
+      ],
+      required: true,
+      whyWeAsk: { en: "Somatic and mood parameters directly correlate with overall metabolic stability.", hi: "मनोदशा और शारीरिक मापदंड सीधे तौर पर समग्र चयापचय स्थिरता से संबंधित होते हैं।" },
+      relevance: "high",
+      sensitivity: false,
+      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+    },
+    {
+      id: "phq9_item_9",
+      block: 6,
+      group: "phq9",
+      question: { en: "Thoughts that you would be better off dead, or of hurting yourself in some way", hi: "TODO(verify): validated Hindi translation" },
+      field: "phq9_item_9",
+      type: "segmented",
+      options: [
+        { value: "0", label: { en: "Not at all", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "1", label: { en: "Several days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "2", label: { en: "More than half the days", hi: "TODO(verify): validated Hindi translation" } },
+        { value: "3", label: { en: "Nearly every day", hi: "TODO(verify): validated Hindi translation" } }
+      ],
+      required: true,
+      whyWeAsk: { en: "Somatic and mood parameters directly correlate with overall metabolic stability.", hi: "मनोदशा और शारीरिक मापदंड सीधे तौर पर समग्र चयापचय स्थिरता से संबंधित होते हैं।" },
+      relevance: "high",
+      sensitivity: false,
+      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+    },
+    {
+      id: "sleep_quality_screening",
       block: 6,
       question: { en: "Which statement best describes your typical night's sleep quality?", hi: "कौन सा कथन आपकी रात की नींद की गुणवत्ता का सबसे अच्छा वर्णन करता है?" },
-      field: "sleep_quality_psqi_proxy",
+      field: "sleep_quality_screening",
       type: "radio",
       options: [
         { value: "Feeling rested", label: { en: "I wake up feeling rested", hi: "मैं तरोताजा महसूस करते हुए जागता हूँ" } },

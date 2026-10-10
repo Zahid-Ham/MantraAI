@@ -100,7 +100,7 @@ export function AssessmentProvider({ children }) {
       await clearLocalDraft();
       const sess = await apiRequest("/api/v1/assessments", {
         method: "POST",
-        body: JSON.stringify({ assessment_version: "1.0" })
+        body: JSON.stringify({ assessment_version: "2.0" })
       });
       
       setActiveAssessmentId(sess.id);

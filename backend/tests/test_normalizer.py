@@ -52,7 +52,7 @@ def test_basic_domain_mapping():
         "laptop_on_lap": "Occasionally",        # heat_exposure
         "diet_type": "Vegetarian",              # diet_nutrition
         "proximity_to_industrial_or_traffic": "No",  # environmental_exposure
-        "perceived_stress_pss10": 10,           # mental_health_stress
+        "perceived_stress_rating": 3,           # mental_health_stress
         "prior_sti_history": "No",              # reproductive_history_symptoms
         "anabolic_steroid_use": "Never",        # substance_medication_use
         "pornography_use_frequency": "Never",   # digital_sexual_behavior
@@ -72,7 +72,7 @@ def test_basic_domain_mapping():
     assert "laptop_on_lap" in result.heat_exposure
     assert "diet_type" in result.diet_nutrition
     assert "proximity_to_industrial_or_traffic" in result.environmental_exposure
-    assert "perceived_stress_pss10" in result.mental_health_stress
+    assert "perceived_stress_rating" in result.mental_health_stress
     assert "prior_sti_history" in result.reproductive_history_symptoms
     assert "anabolic_steroid_use" in result.substance_medication_use
     assert "pornography_use_frequency" in result.digital_sexual_behavior
@@ -92,20 +92,20 @@ def test_numeric_normalization_string_to_int():
     Only fields explicitly listed in NUMERIC_FIELDS should be converted.
     """
     mock_responses = {
-        "age_years": "24",          # string "24" → int 24
-        "perceived_stress_pss10": "16",  # string "16" → int 16
-        "gad7_score": "8",          # string "8" → int 8
-        "phq9_score": "5",          # string "5" → int 5
+        "age_years": "24",                # string "24" → int 24
+        "perceived_stress_rating": "5",   # string "5" → int 5 (0-10 scale)
+        "gad7_item_1": "2",               # string "2" → int 2
+        "phq9_item_1": "1",               # string "1" → int 1
     }
 
     result = normalize_assessment_responses(mock_responses)
 
     assert result.demographics["age_years"] == 24
     assert isinstance(result.demographics["age_years"], int)
-    assert result.mental_health_stress["perceived_stress_pss10"] == 16
-    assert isinstance(result.mental_health_stress["perceived_stress_pss10"], int)
-    assert result.mental_health_stress["gad7_score"] == 8
-    assert result.mental_health_stress["phq9_score"] == 5
+    assert result.mental_health_stress["perceived_stress_rating"] == 5
+    assert isinstance(result.mental_health_stress["perceived_stress_rating"], int)
+    assert result.mental_health_stress["gad7_item_1"] == 2
+    assert result.mental_health_stress["phq9_item_1"] == 1
 
 
 def test_numeric_normalization_already_int():
@@ -311,7 +311,7 @@ def test_normalizer_does_not_log_answer_values(caplog):
     mock_responses = {
         "age_years": 25,
         "smoking_status": "Regular",
-        "perceived_stress_pss10": 20,
+        "perceived_stress_rating": 6,
     }
     with caplog.at_level(logging.WARNING, logger="app.services.normalizer"):
         normalize_assessment_responses(mock_responses)
@@ -380,8 +380,11 @@ def test_all_86_question_ids_are_mapped():
         "proximity_to_industrial_or_traffic", "pesticide_occupational_exposure",
         "heavy_metal_occupational_exposure", "plastic_use_hot_food_water", "emf_radiation_at_work",
         # Block 6
-        "daily_work_hours", "perceived_stress_pss10", "gad7_score", "phq9_score",
-        "sleep_quality_psqi_proxy",
+        "daily_work_hours", "perceived_stress_rating",
+        "gad7_item_1", "gad7_item_2", "gad7_item_3", "gad7_item_4", "gad7_item_5", "gad7_item_6", "gad7_item_7",
+        "phq9_item_1", "phq9_item_2", "phq9_item_3", "phq9_item_4", "phq9_item_5",
+        "phq9_item_6", "phq9_item_7", "phq9_item_8", "phq9_item_9",
+        "sleep_quality_screening",
         # Block 7
         "prior_sti_history", "scrotal_or_groin_injury", "childhood_disease_mumps",
         "known_varicocele", "sexual_abstinence_period_days", "libido_changes",
@@ -452,9 +455,11 @@ def test_full_synthetic_assessment():
         "plastic_use_hot_food_water": "Occasional",
         "emf_radiation_at_work": "No exposure",
         # Mental health
-        "daily_work_hours": "8-10", "perceived_stress_pss10": "16",
-        "gad7_score": "5", "phq9_score": "3",
-        "sleep_quality_psqi_proxy": "Trouble falling asleep",
+        "daily_work_hours": "8-10", "perceived_stress_rating": 5,
+        "gad7_item_1": 1, "gad7_item_2": 1, "gad7_item_3": 1, "gad7_item_4": 1, "gad7_item_5": 1, "gad7_item_6": 1, "gad7_item_7": 1,
+        "phq9_item_1": 1, "phq9_item_2": 1, "phq9_item_3": 1, "phq9_item_4": 1, "phq9_item_5": 1,
+        "phq9_item_6": 1, "phq9_item_7": 1, "phq9_item_8": 1, "phq9_item_9": 0,
+        "sleep_quality_screening": "Trouble falling asleep",
         # Reproductive
         "prior_sti_history": "No", "scrotal_or_groin_injury": "No",
         "childhood_disease_mumps": "No", "known_varicocele": "No",
@@ -510,7 +515,7 @@ def test_full_synthetic_assessment():
     # All 13 domains populated
     assert result.demographics["age_years"] == 27      # numeric coercion applied
     assert isinstance(result.diet_nutrition["supplement_use"], list)
-    assert result.mental_health_stress["perceived_stress_pss10"] == 16
+    assert result.mental_health_stress["perceived_stress_rating"] == 5
     assert result.lifestyle_behaviors["smoking_status"] == "Never"
     # No scoring — nothing in the output resembles a risk score
     assert result.unmapped_fields == {}

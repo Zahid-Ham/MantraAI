@@ -9,7 +9,7 @@ class AssessmentSession(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    assessment_version = Column(String, nullable=False, default="1.0")
+    assessment_version = Column(String, nullable=False, default="2.0")
     status = Column(String, nullable=False, index=True)  # IN_PROGRESS, COMPLETED, ABANDONED
     started_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     completed_at = Column(DateTime(timezone=True), nullable=True)
@@ -38,6 +38,7 @@ class AssessmentResult(Base):
     assessment_session_id = Column(UUID(as_uuid=True), ForeignKey("assessment_sessions.id", ondelete="CASCADE"), nullable=False, index=True)
     overall_category = Column(String, nullable=False)
     risk_scores = Column(JSONB, nullable=False)  # Map of category: score
+    safety_flags = Column(JSONB, nullable=True)  # E.g. {"crisis_flag": true}
     interpretation = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
@@ -49,7 +50,7 @@ class Report(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     assessment_session_id = Column(UUID(as_uuid=True), ForeignKey("assessment_sessions.id", ondelete="CASCADE"), nullable=False, index=True)
-    report_version = Column(String, nullable=False, default="1.0")
+    report_version = Column(String, nullable=False, default="2.0")
     model_provider = Column(String, nullable=False)  # e.g., groq
     model_name = Column(String, nullable=False)      # e.g., llama-3.3-70b-versatile
     report_content = Column(JSONB, nullable=False)  # full JSON report output from Groq

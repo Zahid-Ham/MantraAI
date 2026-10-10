@@ -4,7 +4,7 @@ from uuid import UUID
 from datetime import datetime
 
 class AssessmentSessionCreate(BaseModel):
-    assessment_version: Optional[str] = "1.0"
+    assessment_version: Optional[str] = "2.0"
 
 class AssessmentSessionOut(BaseModel):
     id: UUID

@@ -46,7 +46,7 @@ export const FIELD_LABEL_MAP = {
   perceived_stress_pss10: 'Brief perceived stress proxy indicator',
   gad7_score: 'Brief anxiety questionnaire proxy indicator',
   phq9_score: 'Brief depression questionnaire proxy indicator',
-  sleep_quality_psqi_proxy: 'Sleep quality indicator',
+  sleep_quality_screening: 'Sleep quality indicator',
   sleep_quality: 'Sleep quality',
   sleep_duration_hours: 'Daily sleep duration',
   sleep_duration: 'Daily sleep duration',

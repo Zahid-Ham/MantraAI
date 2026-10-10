@@ -209,9 +209,10 @@ def test_sexual_health_context_extraction():
 def test_mental_behavioral_context_extraction():
     """Verifies stress, GAD-7/PHQ-9 screening proxy interpretation, and coping."""
     raw = {
-        "perceived_stress_pss10": 28,
-        "gad7_score": 12,
-        "phq9_score": 11,
+        "perceived_stress_rating": 8,
+        "gad7_item_1": 2, "gad7_item_2": 2, "gad7_item_3": 2, "gad7_item_4": 2, "gad7_item_5": 2, "gad7_item_6": 2, "gad7_item_7": 2,
+        # PHQ-9: items 1-8 = 2 each (total 16), item 9 = 0 (no crisis flag)
+        "phq9_item_1": 2, "phq9_item_2": 2, "phq9_item_3": 2, "phq9_item_4": 2, "phq9_item_5": 2, "phq9_item_6": 2, "phq9_item_7": 2, "phq9_item_8": 2, "phq9_item_9": 0,
         "daily_work_hours": "10+",
         "primary_stress_coping_method": "Substance use",
         "substance_use_under_stress": "Smoking",
@@ -230,6 +231,8 @@ def test_mental_behavioral_context_extraction():
     fu_ids = [f.id for f in ctx.follow_up_flags]
     assert "elevated_anxiety_screening_proxy" in fu_ids
     assert "elevated_mood_screening_proxy" in fu_ids
+    # phq9_item_9 = 0 → no crisis flag
+    assert "phq9_item9_safety_flag" not in fu_ids
 
 
 # ===========================================================================
@@ -426,10 +429,10 @@ def test_multiple_domains_simultaneously():
         "plastic_use_hot_food_water": "Never",
         "emf_radiation_at_work": "No exposure",
         "daily_work_hours": "6-8",
-        "perceived_stress_pss10": 10,
-        "gad7_score": 3,
-        "phq9_score": 2,
-        "sleep_quality_psqi_proxy": "Feeling rested",
+        "perceived_stress_rating": 3,
+        "gad7_item_1": 2, "gad7_item_2": 2, "gad7_item_3": 2, "gad7_item_4": 2, "gad7_item_5": 2, "gad7_item_6": 2, "gad7_item_7": 2,
+        "phq9_item_1": 1, "phq9_item_2": 1, "phq9_item_3": 1, "phq9_item_4": 1, "phq9_item_5": 1, "phq9_item_6": 1, "phq9_item_7": 1, "phq9_item_8": 1, "phq9_item_9": 1,
+        "sleep_quality_screening": "Feeling rested",
         "prior_sti_history": "No",
         "scrotal_or_groin_injury": "No",
         "childhood_disease_mumps": "No",
@@ -480,18 +483,22 @@ def test_multiple_domains_simultaneously():
         "substance_use_under_stress": "No substance use",
         "mindfulness_or_meditation_practice": "Yes (regular)",
     }
-    assert len(raw) == 86
+    assert len(raw) == 100
 
     norm = normalize_assessment_responses(raw)
     ctx = build_health_context(norm)
 
-    assert ctx.data_quality.answered_count == 86
+    assert ctx.data_quality.answered_count == 100
     assert ctx.data_quality.completeness == 1.0
     assert ctx.data_quality.missing_count == 0
     assert ctx.data_quality.unmapped_count == 0
 
     assert len(ctx.positive_factors) >= 15
-    assert len(ctx.follow_up_flags) == 0
+    # Fixture has gad7_item_N=2 (total 14, anxiety flag) AND phq9_item_9=1 (crisis flag)
+    assert len(ctx.follow_up_flags) == 2
+    fu_ids = {f.id for f in ctx.follow_up_flags}
+    assert "elevated_anxiety_screening_proxy" in fu_ids
+    assert "phq9_item9_safety_flag" in fu_ids
 
 
 # ===========================================================================
@@ -519,7 +526,7 @@ def test_unknown_and_unmapped_values():
 def test_invalid_numeric_values():
     """String values that fail numeric coercion must be treated safely as None without exceptions."""
     raw = {
-        "perceived_stress_pss10": "invalid_stress_string",
+        "perceived_stress_rating": "invalid_stress_string",
         "gad7_score": "not_a_number",
         "phq9_score": None,
     }
@@ -527,8 +534,9 @@ def test_invalid_numeric_values():
     ctx = build_health_context(norm)
 
     # Invalid numeric strings should become None during normalization
-    assert norm.mental_health_stress["perceived_stress_pss10"] is None
-    assert norm.mental_health_stress["gad7_score"] is None
+    assert norm.mental_health_stress["perceived_stress_rating"] is None
+    # gad7_score and phq9_score are now derived (computed from items); not in raw domain dict
+    assert norm.mental_health_stress.get("gad7_score") is None
     assert len(ctx.follow_up_flags) == 0
 
 
@@ -544,7 +552,7 @@ def test_partial_assessment():
         "laptop_on_lap": "Often",
         "working_in_hot_conditions": "No",
         "pesticide_occupational_exposure": "No",
-        "perceived_stress_pss10": 15,
+        "perceived_stress_rating": 5,
         "known_varicocele": "No",
         "anabolic_steroid_use": "Never",
         "primary_stress_coping_method": "Exercise",
@@ -553,8 +561,8 @@ def test_partial_assessment():
     ctx = build_health_context(norm)
 
     assert ctx.data_quality.answered_count == 10
-    assert ctx.data_quality.missing_count == 76
-    assert ctx.data_quality.completeness == round(10 / 86.0, 3)
+    assert ctx.data_quality.missing_count == 90
+    assert ctx.data_quality.completeness == round(10 / 100.0, 3)
 
     mod_ids = [f.id for f in ctx.modifiable_factors]
     assert "smoking_tobacco_use" in mod_ids
@@ -592,7 +600,7 @@ def test_all_factors_have_source_question_ids():
         "pesticide_occupational_exposure": "Yes",
         "known_varicocele": "Yes",
         "anabolic_steroid_use": "Current",
-        "gad7_score": 14,
+        "gad7_item_1": 2, "gad7_item_2": 2, "gad7_item_3": 2, "gad7_item_4": 2, "gad7_item_5": 2, "gad7_item_6": 2, "gad7_item_7": 2,
         "anticipatory_anxiety_before_sex": "Always",
     }
     norm = normalize_assessment_responses(raw)
@@ -655,8 +663,8 @@ def test_no_fertility_percentage_in_output():
 def test_no_diagnosis_claims():
     """Verifies that output maintains non-diagnostic boundaries."""
     raw = {
-        "gad7_score": 15,
-        "phq9_score": 18,
+        "gad7_item_1": 2, "gad7_item_2": 2, "gad7_item_3": 2, "gad7_item_4": 2, "gad7_item_5": 2, "gad7_item_6": 2, "gad7_item_7": 2,
+        "phq9_item_1": 1, "phq9_item_2": 1, "phq9_item_3": 1, "phq9_item_4": 1, "phq9_item_5": 1, "phq9_item_6": 1, "phq9_item_7": 1, "phq9_item_8": 1, "phq9_item_9": 1,
         "known_varicocele": "Yes",
         "anticipatory_anxiety_before_sex": "Always",
         "partnered_sexual_difficulty": "Difficulty getting an erection",
@@ -689,8 +697,8 @@ def test_determinism():
         "sleep_duration": "5-7",
         "laptop_on_lap": "Often",
         "known_varicocele": "Yes",
-        "perceived_stress_pss10": 22,
-        "gad7_score": 11,
+        "perceived_stress_rating": 7,
+        "gad7_item_1": 2, "gad7_item_2": 2, "gad7_item_3": 2, "gad7_item_4": 2, "gad7_item_5": 2, "gad7_item_6": 2, "gad7_item_7": 2,
     }
 
     norm1 = normalize_assessment_responses(raw)

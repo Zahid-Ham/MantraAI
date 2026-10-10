@@ -447,7 +447,7 @@ def test_valid_mental_wellness_report():
         reported_context=["Extended work hours reported (>10 hrs/day)"],
         relevant_factors=["Recovery intervals support cortisol normalization"],
         evidence_refs=[],
-        limitations=["PSS-10 screening indicator is a proxy, not a psychiatric evaluation."]
+        limitations=["Stress screening indicator is a proxy, not a psychiatric evaluation."]
     )
     assert sec.summary != ""
 

@@ -113,7 +113,7 @@ export default function SymptomAssessment({ onNavigateHome }) {
     try {
       const sess = await apiRequest('/api/v1/assessments', {
         method: "POST",
-        body: JSON.stringify({ assessment_version: "1.0" })
+        body: JSON.stringify({ assessment_version: "2.0" })
       });
       localStorage.setItem('mantra_active_assessment_id', sess.id);
       setAnswers({});
@@ -465,6 +465,11 @@ export default function SymptomAssessment({ onNavigateHome }) {
                   questionIndexInBlock={questionIndexInBlock}
                   totalQuestionsInBlock={totalQuestionsInBlock}
                 />
+                {(currentQuestion.group === 'phq9' || currentQuestion.group === 'gad7') && (
+                  <div className="mt-4 text-xs text-gray-500 text-center max-w-lg">
+                    {language === 'en' ? "PHQ-9 and GAD-7 are screening tools, not a diagnosis." : "PHQ-9 और GAD-7 स्क्रीनिंग उपकरण हैं, निदान नहीं।"}
+                  </div>
+                )}
 
                 <AssessmentNavigation
                   onBack={handleBack}

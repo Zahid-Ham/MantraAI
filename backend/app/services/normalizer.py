@@ -105,10 +105,25 @@ QUESTION_DOMAIN_MAP: dict[str, str] = {
 
     # ── Block 6: Mental Health & Stress ────────────────────────────────────
     "daily_work_hours":               "mental_health_stress",
-    "perceived_stress_pss10":         "mental_health_stress",
-    "gad7_score":                     "mental_health_stress",
-    "phq9_score":                     "mental_health_stress",
-    "sleep_quality_psqi_proxy":       "mental_health_stress",
+    "perceived_stress_rating":        "mental_health_stress",
+    "phq9_item_1":                  "mental_health_stress",
+    "phq9_item_2":                  "mental_health_stress",
+    "phq9_item_3":                  "mental_health_stress",
+    "phq9_item_4":                  "mental_health_stress",
+    "phq9_item_5":                  "mental_health_stress",
+    "phq9_item_6":                  "mental_health_stress",
+    "phq9_item_7":                  "mental_health_stress",
+    "phq9_item_8":                  "mental_health_stress",
+    "phq9_item_9":                  "mental_health_stress",
+    "gad7_item_1":                  "mental_health_stress",
+    "gad7_item_2":                  "mental_health_stress",
+    "gad7_item_3":                  "mental_health_stress",
+    "gad7_item_4":                  "mental_health_stress",
+    "gad7_item_5":                  "mental_health_stress",
+    "gad7_item_6":                  "mental_health_stress",
+    "gad7_item_7":                  "mental_health_stress",
+
+    "sleep_quality_screening":       "mental_health_stress",
 
     # ── Block 7: Reproductive History & Symptoms ───────────────────────────
     "prior_sti_history":              "reproductive_history_symptoms",
@@ -181,9 +196,24 @@ QUESTION_DOMAIN_MAP: dict[str, str] = {
 # ---------------------------------------------------------------------------
 NUMERIC_FIELDS: set[str] = {
     "age_years",           # slider: 18–50 (integer)
-    "perceived_stress_pss10",  # slider: 0–33 (integer)
-    "gad7_score",          # slider: 0–16 (integer)
-    "phq9_score",          # slider: 0–19 (integer)
+    "perceived_stress_rating",
+    "phq9_item_1",
+    "phq9_item_2",
+    "phq9_item_3",
+    "phq9_item_4",
+    "phq9_item_5",
+    "phq9_item_6",
+    "phq9_item_7",
+    "phq9_item_8",
+    "phq9_item_9",
+    "gad7_item_1",
+    "gad7_item_2",
+    "gad7_item_3",
+    "gad7_item_4",
+    "gad7_item_5",
+    "gad7_item_6",
+    "gad7_item_7",
+
 }
 
 # ---------------------------------------------------------------------------
@@ -240,6 +270,7 @@ class NormalizedAssessment(BaseModel):
     social_relational_context:      dict[str, Any] = Field(default_factory=dict)
     coping_mechanisms:              dict[str, Any] = Field(default_factory=dict)
     unmapped_fields:                dict[str, Any] = Field(default_factory=dict)
+    legacy_scores:                  dict[str, Any] = Field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------
@@ -310,7 +341,7 @@ def _normalize_value(question_id: str, raw_value: Any) -> Any:
 # Public API
 # ---------------------------------------------------------------------------
 
-def normalize_assessment_responses(raw_responses: dict[str, Any]) -> NormalizedAssessment:
+def normalize_assessment_responses(raw_responses: dict[str, Any], version: str = "2.0") -> NormalizedAssessment:
     """
     Normalize a raw questionnaire response dictionary into a structured
     NormalizedAssessment object.
@@ -348,7 +379,13 @@ def normalize_assessment_responses(raw_responses: dict[str, Any]) -> NormalizedA
         )
         return NormalizedAssessment()
 
+    legacy_scores = {}
     for question_id, raw_value in raw_responses.items():
+        if version == "1.0" and question_id in ["perceived_stress_pss10", "gad7_score", "phq9_score", "perceived_stress_rating"]:
+            # perceived_stress_pss10 alias handling
+            legacy_scores[question_id] = _to_int_safe(raw_value)
+            continue
+            
         domain = QUESTION_DOMAIN_MAP.get(question_id)
 
         if domain is None:
@@ -363,6 +400,20 @@ def normalize_assessment_responses(raw_responses: dict[str, Any]) -> NormalizedA
         else:
             normalized_value = _normalize_value(question_id, raw_value)
             domain_buckets[domain][question_id] = normalized_value
+
+    # Compute derived totals for phq9_score and gad7_score (v2 schema)
+    # Must happen BEFORE NormalizedAssessment is constructed so Pydantic copies the updated dict.
+    if version != "1.0":
+        mental = domain_buckets["mental_health_stress"]
+
+        phq9_items = [mental.get(f"phq9_item_{i}") for i in range(1, 10)]
+        # Only inject derived score when at least one item was answered
+        if any(x is not None for x in phq9_items):
+            mental["phq9_score"] = sum(x for x in phq9_items if x is not None) if all(x is not None for x in phq9_items) else None
+
+        gad7_items = [mental.get(f"gad7_item_{i}") for i in range(1, 8)]
+        if any(x is not None for x in gad7_items):
+            mental["gad7_score"] = sum(gad7_items) if all(x is not None for x in gad7_items) else None
 
     return NormalizedAssessment(
         demographics=domain_buckets["demographics"],
@@ -379,4 +430,5 @@ def normalize_assessment_responses(raw_responses: dict[str, Any]) -> NormalizedA
         social_relational_context=domain_buckets["social_relational_context"],
         coping_mechanisms=domain_buckets["coping_mechanisms"],
         unmapped_fields=unmapped,
+        legacy_scores=legacy_scores,
     )
