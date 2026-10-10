@@ -15,9 +15,23 @@ from app.routers import (
     evidence as evidence_router,
     health as health_router,
     goals as goals_router,
+    myth_fact as myth_fact_router,
+    companion as companion_router,
 )
 
-app = FastAPI(title="MantraAI Backend Clinical API", version="1.0.0")
+from contextlib import asynccontextmanager
+from app.database import engine, Base
+import app.models
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"Notice: automatic table creation on startup skipped or failed: {str(e)}")
+    yield
+
+app = FastAPI(title="MantraAI Backend Clinical API", version="1.0.0", lifespan=lifespan)
 
 # Configure dynamic CORS origins from configurations
 origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()]
@@ -29,12 +43,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include Authentication, Assessment, Evidence, Health, and Goals Routers
+# Include Authentication, Assessment, Evidence, Health, Goals, Myth vs Fact, and AI Companion Routers
 app.include_router(auth_router.router)
 app.include_router(assessment_router.router)
 app.include_router(evidence_router.router)
 app.include_router(health_router.router)
 app.include_router(goals_router.router)
+app.include_router(myth_fact_router.router)
+app.include_router(companion_router.router)
 
 class AnalyzeRequest(BaseModel):
     answers: dict

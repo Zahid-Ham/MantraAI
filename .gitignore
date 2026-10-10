@@ -69,6 +69,7 @@ venv.bak/
 # DATASETS & LARGE FILES  (use Git LFS or separate storage)
 # ──────────────────────────────────────────────────────────────
 *.csv
+!data/myth_fact/*.csv
 *.xlsx
 *.xls
 *.parquet

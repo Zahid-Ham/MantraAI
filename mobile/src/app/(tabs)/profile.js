@@ -117,6 +117,22 @@ export default function Profile() {
           </View>
         </View>
 
+        {/* Health Connect Bridge Section */}
+        <View style={styles.card}>
+          <Text style={styles.sectionHeader}>HEALTH CONNECT BRIDGE</Text>
+          <Text style={styles.privacyNote}>
+            Connect Android Health Connect to sync your daily activity, sleep, and heart metrics securely with MantraAI.
+          </Text>
+          <TouchableOpacity 
+            style={[styles.dataButton, { paddingVertical: SPACING.sm }]} 
+            activeOpacity={0.7}
+            onPress={() => router.push("/health-connect")}
+          >
+            <Feather name="activity" size={16} color="#2D5A43" style={styles.prefIcon} />
+            <Text style={[styles.dataButtonText, { color: "#2D5A43" }]}>Manage Health Connect Bridge →</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Security & Data Privacy */}
         <View style={styles.card}>
           <Text style={styles.sectionHeader}>{t("privacySecurity")}</Text>

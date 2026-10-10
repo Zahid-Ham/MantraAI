@@ -22,3 +22,16 @@ from app.schemas.report import (
     new_report_to_legacy_view,
     legacy_report_to_new_schema,
 )
+from app.schemas.myth_fact import (
+    MythFactClassification,
+    ReviewStatusEnum,
+    MatchTypeEnum,
+    MythFactSourceOut,
+    MythFactClaimOut,
+    MythFactClaimSummary,
+    MythFactQueryRequest,
+    MythFactQueryResponse,
+    SynthesizedMythFactLLMOutput,
+    MythFactQueryHistoryOut,
+    MythFactStatsOut,
+)

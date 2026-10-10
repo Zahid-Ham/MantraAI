@@ -410,6 +410,43 @@ def test_action_plan_goal_integration():
     assert "aerobic movement" in action_goal.title.lower()
 
 
+def test_health_connect_client_payload_sync():
+    global active_user_id
+    active_user_id = USER_1_ID
+
+    # Sync custom Health Connect payload from mobile bridge
+    payload = {
+        "source": "health_connect",
+        "metrics": [
+            {
+                "source": "health_connect",
+                "date": "2026-10-04",
+                "steps": 5320,
+                "active_minutes": 31,
+                "workout_minutes": 20,
+                "sleep_duration_minutes": 421,
+                "resting_heart_rate": 68,
+                "active_calories": 412,
+            }
+        ],
+    }
+
+    res = client.post("/api/v1/health/sync", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["source"] == "health_connect"
+    assert data["records_received"] == 1
+    assert data["records_inserted"] == 1
+
+    # Verify latest metric returns the synced health connect data
+    latest = client.get("/api/v1/health/daily/latest")
+    assert latest.status_code == 200
+    latest_data = latest.json()
+    assert latest_data["steps"] == 5320
+    assert latest_data["active_minutes"] == 31
+    assert latest_data["source"] == "health_connect"
+
+
 def test_unauthenticated_requests_return_401():
     global active_user_id
     active_user_id = None
@@ -418,3 +455,4 @@ def test_unauthenticated_requests_return_401():
     assert client.get("/api/v1/health/daily").status_code == 401
     assert client.post("/api/v1/health/sync").status_code == 401
     assert client.get("/api/v1/goals/today").status_code == 401
+

@@ -26,6 +26,7 @@ class HealthSyncService:
         provider_name: str = "mock",
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
+        metrics: Optional[list] = None,
     ) -> HealthSyncResponse:
         today = date.today()
         if end_date is None:
@@ -36,8 +37,19 @@ class HealthSyncService:
         if start_date > end_date:
             start_date, end_date = end_date, start_date
 
-        provider = get_health_provider(provider_name)
-        source_name = provider.get_provider_name()
+        if metrics is not None and len(metrics) > 0:
+            first_item = metrics[0]
+            if isinstance(first_item, NormalizedDailyHealthData):
+                source_name = first_item.source
+            elif isinstance(first_item, dict) and "source" in first_item:
+                source_name = first_item["source"]
+            else:
+                source_name = provider_name
+            raw_metrics = metrics
+        else:
+            provider = get_health_provider(provider_name)
+            source_name = provider.get_provider_name()
+            raw_metrics = provider.fetch_daily_metrics(user.id, start_date, end_date)
 
         # 1. Ensure user connection record exists
         connection = (
@@ -50,7 +62,7 @@ class HealthSyncService:
         )
 
         if not connection:
-            display_title = "Mock Health Provider" if source_name == "mock" else "Health Connect"
+            display_title = "Mock Health Provider" if source_name == "mock" else "Android Health Connect"
             connection = HealthConnection(
                 user_id=user.id,
                 provider=source_name,
@@ -63,9 +75,6 @@ class HealthSyncService:
         else:
             connection.status = "connected"
             connection.last_sync_at = datetime.utcnow()
-
-        # 2. Fetch normalized metrics from the provider adapter
-        raw_metrics = provider.fetch_daily_metrics(user.id, start_date, end_date)
 
         records_inserted = 0
         records_updated = 0

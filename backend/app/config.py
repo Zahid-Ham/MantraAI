@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     FIREBASE_CLIENT_EMAIL: str = ""
     FIREBASE_PRIVATE_KEY: str = ""
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
+    ADMIN_API_KEY: str = ""
+    ADMIN_EMAILS: str = ""
 
     class Config:
         env_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")

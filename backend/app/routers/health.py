@@ -111,6 +111,7 @@ def sync_health_data(
             provider_name=payload.provider,
             start_date=payload.start_date,
             end_date=payload.end_date,
+            metrics=payload.metrics,
         )
         return result
     except ValueError as ve:

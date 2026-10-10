@@ -72,6 +72,7 @@ class HealthSyncRequest(BaseModel):
     provider: str = Field("mock", description="Provider to synchronize from (e.g. 'mock', 'health_connect')")
     start_date: Optional[dt.date] = Field(None, description="Start date for range sync (defaults to 7 days ago)")
     end_date: Optional[dt.date] = Field(None, description="End date for range sync (defaults to today)")
+    metrics: Optional[List[NormalizedDailyHealthData]] = Field(None, description="Optional direct normalized health data payload from mobile Health Connect bridge")
 
 
 class HealthSyncResponse(BaseModel):

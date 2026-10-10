@@ -24,6 +24,8 @@ import History from './pages/History';
 import ReportViewer from './pages/ReportViewer';
 import Dashboard from './pages/Dashboard';
 import MyProgress from './pages/MyProgress';
+import MythVsFact from './pages/MythVsFact';
+import AICompanion from './pages/AICompanion';
 import { getAuthenticatedEntryRoute } from './utils/navigation';
 
 function AppContent() {
@@ -40,7 +42,12 @@ function AppContent() {
       const cleanHash = hash.split('?')[0];
 
       // Define routes requiring authentication
-      const protectedHashes = ['#assess', '#dashboard', '#profile', '#settings', '#history', '#report', '#reports', '#progress', '#resources', '#resource', '#support'];
+      const protectedHashes = [
+        '#assess', '#dashboard', '#profile', '#settings', '#history', '#report',
+        '#reports', '#progress', '#resources', '#resource', '#support',
+        '#myth-fact', '#myth-vs-fact', '#myths',
+        '#companion', '#ai-companion'
+      ];
       const isProtected = protectedHashes.some(h => cleanHash.startsWith(h));
 
       if (isProtected && !isAuthenticated) {
@@ -57,6 +64,10 @@ function AppContent() {
         setPage('resources');
       } else if (cleanHash === '#support' || cleanHash.startsWith('#support')) {
         setPage('support');
+      } else if (cleanHash === '#myth-fact' || cleanHash.startsWith('#myth-fact') || cleanHash === '#myth-vs-fact' || cleanHash.startsWith('#myth-vs-fact') || cleanHash === '#myths') {
+        setPage('myth-fact');
+      } else if (cleanHash === '#companion' || cleanHash.startsWith('#companion') || cleanHash === '#ai-companion' || cleanHash.startsWith('#ai-companion')) {
+        setPage('companion');
       } else if (cleanHash === '#settings' || cleanHash.startsWith('#settings') || cleanHash === '#profile') {
         setPage('settings');
       } else if (hash === '#login' || hash === '#signup') {
@@ -111,6 +122,10 @@ function AppContent() {
         <Resources onNavigateHome={handleNavigateHome} />
       ) : page === 'support' ? (
         <Support onNavigateHome={handleNavigateHome} />
+      ) : page === 'myth-fact' ? (
+        <MythVsFact onNavigateHome={handleNavigateHome} />
+      ) : page === 'companion' ? (
+        <AICompanion onNavigateHome={handleNavigateHome} />
       ) : page === 'login' ? (
         <Login />
       ) : page === 'signup' ? (

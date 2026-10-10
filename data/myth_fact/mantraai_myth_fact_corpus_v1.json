@@ -1,0 +1,1351 @@
+{
+  "corpus_name": "MantraAI Myth vs Fact Corpus",
+  "version": "1.0",
+  "status": "curated draft; clinician review required before production medical use",
+  "classification_values": [
+    "FACT",
+    "MYTH",
+    "MISLEADING",
+    "CONTEXT_DEPENDENT",
+    "INSUFFICIENT_EVIDENCE"
+  ],
+  "claims": [
+    {
+      "claim_id": "MF-001",
+      "canonical_claim": "Infertility is only a female health problem.",
+      "classification": "MYTH",
+      "domain": "reproductive_health",
+      "explanation": "Infertility may involve male factors, female factors, combined factors, or remain unexplained.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-002",
+      "canonical_claim": "A man is infertile if pregnancy has not happened after a few months of trying.",
+      "classification": "MISLEADING",
+      "domain": "reproductive_health",
+      "explanation": "Clinical infertility is generally assessed after 12 months of regular unprotected intercourse, with earlier evaluation in some circumstances.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-003",
+      "canonical_claim": "A normal semen analysis proves that a man is fertile.",
+      "classification": "MYTH",
+      "domain": "reproductive_health",
+      "explanation": "Semen analysis is important but cannot by itself confirm individual fertility.",
+      "evidence_source_ids": "WHO_SEMEN_2021",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-004",
+      "canonical_claim": "A low sperm count automatically means a man cannot father a child.",
+      "classification": "MISLEADING",
+      "domain": "reproductive_health",
+      "explanation": "Sperm count is one factor among several in fertility assessment.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;WHO_SEMEN_2021",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-005",
+      "canonical_claim": "Sperm count is the only semen parameter that matters.",
+      "classification": "MYTH",
+      "domain": "reproductive_health",
+      "explanation": "Count, concentration, motility, morphology and other findings all contribute to interpretation.",
+      "evidence_source_ids": "WHO_SEMEN_2021",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-006",
+      "canonical_claim": "Semen appearance alone can tell whether sperm are healthy.",
+      "classification": "MYTH",
+      "domain": "reproductive_health",
+      "explanation": "Appearance cannot establish sperm count, motility or morphology.",
+      "evidence_source_ids": "WHO_SEMEN_2021",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-007",
+      "canonical_claim": "More semen volume always means better fertility.",
+      "classification": "MYTH",
+      "domain": "reproductive_health",
+      "explanation": "Semen volume alone does not determine fertility.",
+      "evidence_source_ids": "WHO_SEMEN_2021",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-008",
+      "canonical_claim": "Semen analysis can diagnose every cause of male infertility.",
+      "classification": "MYTH",
+      "domain": "reproductive_health",
+      "explanation": "Evaluation may also require history, examination and additional investigations.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;AUA_ASRM_I_2020",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-009",
+      "canonical_claim": "Male infertility can sometimes be related to hormonal disorders.",
+      "classification": "FACT",
+      "domain": "reproductive_health",
+      "explanation": "Hormonal disorders can contribute to abnormal sperm production and infertility.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-010",
+      "canonical_claim": "Male infertility can sometimes be related to obstruction of the reproductive tract.",
+      "classification": "FACT",
+      "domain": "reproductive_health",
+      "explanation": "Reproductive-tract obstruction can interfere with semen transport.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-011",
+      "canonical_claim": "Masturbation automatically causes infertility.",
+      "classification": "MISLEADING",
+      "domain": "sexual_health",
+      "explanation": "A blanket causal claim is not supported; ejaculation frequency can change individual semen samples without establishing infertility.",
+      "evidence_source_ids": "EAU_EJACULATION_2022;EJACULATION_REVIEW_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-012",
+      "canonical_claim": "Ejaculating more often permanently depletes sperm.",
+      "classification": "MYTH",
+      "domain": "sexual_health",
+      "explanation": "Ejaculation changes an individual sample but does not permanently exhaust sperm production.",
+      "evidence_source_ids": "WHO_SEMEN_2021;EJACULATION_REVIEW_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-013",
+      "canonical_claim": "Longer sexual abstinence always produces better fertility.",
+      "classification": "MISLEADING",
+      "domain": "sexual_health",
+      "explanation": "Longer abstinence may increase volume and count but can also be associated with poorer motility or higher DNA fragmentation.",
+      "evidence_source_ids": "ABSTINENCE_REVIEW_2018;EJACULATION_REVIEW_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-014",
+      "canonical_claim": "Daily ejaculation necessarily makes a man infertile.",
+      "classification": "MYTH",
+      "domain": "sexual_health",
+      "explanation": "Frequent ejaculation can alter semen parameters per sample but is not equivalent to infertility.",
+      "evidence_source_ids": "EJACULATION_REVIEW_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-015",
+      "canonical_claim": "Ejaculation frequency alone can diagnose fertility.",
+      "classification": "MYTH",
+      "domain": "sexual_health",
+      "explanation": "Frequency alone cannot diagnose male fertility or infertility.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;WHO_SEMEN_2021",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-016",
+      "canonical_claim": "Masturbation frequency alone proves a sexual disorder.",
+      "classification": "MYTH",
+      "domain": "sexual_health",
+      "explanation": "Frequency alone is insufficient; distress, loss of control and impairment matter.",
+      "evidence_source_ids": "EAU_EJACULATION_2022",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-017",
+      "canonical_claim": "Very long abstinence is guaranteed to improve sperm quality.",
+      "classification": "MYTH",
+      "domain": "sexual_health",
+      "explanation": "Evidence does not support a universal rule that longer abstinence always improves sperm function.",
+      "evidence_source_ids": "ABSTINENCE_REVIEW_2018;EJACULATION_REVIEW_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-018",
+      "canonical_claim": "Semen collected by masturbation can be used for clinical semen analysis.",
+      "classification": "FACT",
+      "domain": "reproductive_health",
+      "explanation": "Masturbation is a standard method for obtaining semen samples for laboratory analysis.",
+      "evidence_source_ids": "WHO_SEMEN_2021",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-019",
+      "canonical_claim": "Taking testosterone is a reliable way to improve fertility.",
+      "classification": "MYTH",
+      "domain": "hormones",
+      "explanation": "Exogenous testosterone can suppress sperm production and should not be used as fertility treatment for men seeking fertility.",
+      "evidence_source_ids": "AUA_ASRM_II_2020;EAU_HYPOGONADISM_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-020",
+      "canonical_claim": "Exogenous testosterone can suppress sperm production.",
+      "classification": "FACT",
+      "domain": "hormones",
+      "explanation": "External testosterone can inhibit reproductive signaling and impair spermatogenesis.",
+      "evidence_source_ids": "AUA_ASRM_II_2020;EAU_HYPOGONADISM_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-021",
+      "canonical_claim": "Higher testosterone automatically means higher fertility.",
+      "classification": "MYTH",
+      "domain": "hormones",
+      "explanation": "Fertility depends on sperm production and reproductive function, not simply a higher testosterone value.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;EAU_HYPOGONADISM_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-022",
+      "canonical_claim": "Low testosterone always means infertility.",
+      "classification": "MYTH",
+      "domain": "hormones",
+      "explanation": "Low testosterone and infertility are distinct clinical issues with multiple possible causes.",
+      "evidence_source_ids": "EAU_HYPOGONADISM_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-023",
+      "canonical_claim": "Anabolic steroid use can impair sperm production.",
+      "classification": "FACT",
+      "domain": "hormones",
+      "explanation": "Anabolic-androgenic steroids can suppress reproductive signaling and impair spermatogenesis.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-024",
+      "canonical_claim": "Stopping prescribed testosterone on your own is the correct way to restore fertility.",
+      "classification": "MYTH",
+      "domain": "hormones",
+      "explanation": "Fertility management after testosterone exposure should be individualized with a clinician.",
+      "evidence_source_ids": "AUA_ASRM_II_2020;EAU_HYPOGONADISM_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-025",
+      "canonical_claim": "Every man with low testosterone should automatically receive testosterone therapy.",
+      "classification": "MYTH",
+      "domain": "hormones",
+      "explanation": "Diagnosis and treatment require clinical assessment and fertility goals affect treatment choices.",
+      "evidence_source_ids": "EAU_HYPOGONADISM_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-026",
+      "canonical_claim": "Hormone levels alone can determine whether a man is fertile.",
+      "classification": "MYTH",
+      "domain": "hormones",
+      "explanation": "Fertility assessment considers reproductive history, semen parameters and other factors.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;WHO_SEMEN_2021",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-027",
+      "canonical_claim": "Smoking has no relationship with male reproductive health.",
+      "classification": "MYTH",
+      "domain": "lifestyle",
+      "explanation": "Smoking is associated with poorer semen parameters and is a modifiable reproductive-health risk factor.",
+      "evidence_source_ids": "ASRM_TOBACCO_MARIJUANA_2024;EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-028",
+      "canonical_claim": "Quitting smoking is a fertility-supportive lifestyle step.",
+      "classification": "FACT",
+      "domain": "lifestyle",
+      "explanation": "Guidelines support discouraging tobacco use as part of reproductive-health prevention.",
+      "evidence_source_ids": "WHO_TOBACCO_2026;ASRM_TOBACCO_MARIJUANA_2024",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-029",
+      "canonical_claim": "Heavy alcohol intake can affect male reproductive health.",
+      "classification": "FACT",
+      "domain": "lifestyle",
+      "explanation": "High alcohol intake is associated with adverse effects on semen quality and chronic heavy use can reduce testosterone.",
+      "evidence_source_ids": "EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-030",
+      "canonical_claim": "Any amount of alcohol makes a man infertile.",
+      "classification": "MYTH",
+      "domain": "lifestyle",
+      "explanation": "Evidence does not support an all-or-none claim; amount and individual context matter.",
+      "evidence_source_ids": "EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-031",
+      "canonical_claim": "Obesity can be associated with poorer male reproductive health.",
+      "classification": "FACT",
+      "domain": "lifestyle",
+      "explanation": "Obesity is associated with male infertility and abnormal semen parameters.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-032",
+      "canonical_claim": "Losing weight guarantees that fertility will return to normal.",
+      "classification": "MYTH",
+      "domain": "lifestyle",
+      "explanation": "Weight loss may improve some reproductive parameters but is not a guaranteed fertility treatment.",
+      "evidence_source_ids": "EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-033",
+      "canonical_claim": "Regular physical activity can be associated with better semen parameters.",
+      "classification": "FACT",
+      "domain": "lifestyle",
+      "explanation": "Guideline evidence supports associations between recreational physical activity and semen parameters.",
+      "evidence_source_ids": "EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-034",
+      "canonical_claim": "More exercise always means better fertility.",
+      "classification": "MYTH",
+      "domain": "lifestyle",
+      "explanation": "The relationship depends on intensity, health status and context.",
+      "evidence_source_ids": "EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-035",
+      "canonical_claim": "A single lifestyle factor can explain every case of male infertility.",
+      "classification": "MYTH",
+      "domain": "lifestyle",
+      "explanation": "Male infertility has multiple possible causes including reproductive, hormonal, genetic, medical and environmental factors.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;AUA_ASRM_I_2020",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-036",
+      "canonical_claim": "Healthy lifestyle changes can support sexual health and erectile function.",
+      "classification": "FACT",
+      "domain": "sexual_health",
+      "explanation": "Physical activity, weight management and cardiovascular-risk reduction may improve erectile function.",
+      "evidence_source_ids": "EAU_ED_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-037",
+      "canonical_claim": "Erectile dysfunction is always caused by psychological problems.",
+      "classification": "MYTH",
+      "domain": "sexual_health",
+      "explanation": "ED can have organic, psychogenic or mixed causes.",
+      "evidence_source_ids": "EAU_ED_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-038",
+      "canonical_claim": "Erectile dysfunction can be associated with cardiovascular and metabolic risk factors.",
+      "classification": "FACT",
+      "domain": "sexual_health",
+      "explanation": "ED is associated with diabetes, hypertension, cardiovascular disease, obesity and metabolic syndrome.",
+      "evidence_source_ids": "EAU_ED_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-039",
+      "canonical_claim": "Erectile dysfunction automatically means infertility.",
+      "classification": "MYTH",
+      "domain": "sexual_health",
+      "explanation": "Erectile function and sperm production are different aspects of reproductive health.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;EAU_ED_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-040",
+      "canonical_claim": "Erectile dysfunction automatically means low testosterone.",
+      "classification": "MYTH",
+      "domain": "sexual_health",
+      "explanation": "ED has multiple possible causes and is not synonymous with hypogonadism.",
+      "evidence_source_ids": "EAU_ED_2026;EAU_HYPOGONADISM_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-041",
+      "canonical_claim": "High testicular heat exposure can affect sperm production or semen quality.",
+      "classification": "CONTEXT_DEPENDENT",
+      "domain": "environment_heat",
+      "explanation": "Heat exposure is biologically relevant to spermatogenesis, but magnitude and clinical importance depend on exposure and context.",
+      "evidence_source_ids": "EAU_MALE_INFERTILITY_2026;HEAT_REVIEW_2007",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-042",
+      "canonical_claim": "One hot bath permanently causes infertility.",
+      "classification": "MYTH",
+      "domain": "environment_heat",
+      "explanation": "A single heat exposure should not be described as causing permanent infertility.",
+      "evidence_source_ids": "HEAT_COHORT_2022;HEAT_REVIEW_2007",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-043",
+      "canonical_claim": "Hot tubs permanently sterilize men.",
+      "classification": "MYTH",
+      "domain": "environment_heat",
+      "explanation": "Permanent sterility is an unsupported overstatement; evidence on heat exposure is more nuanced.",
+      "evidence_source_ids": "HEAT_COHORT_2022",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-044",
+      "canonical_claim": "A laptop on the lap has been proven to cause male infertility.",
+      "classification": "INSUFFICIENT_EVIDENCE",
+      "domain": "environment_heat",
+      "explanation": "Human evidence does not establish a clear causal infertility effect from ordinary laptop-on-lap exposure.",
+      "evidence_source_ids": "HEAT_COHORT_2022",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-045",
+      "canonical_claim": "Tight underwear permanently causes infertility.",
+      "classification": "MYTH",
+      "domain": "environment_heat",
+      "explanation": "Findings are mixed and current evidence does not support a claim that underwear alone causes permanent infertility.",
+      "evidence_source_ids": "UNDERWEAR_REVIEW_2026;HEAT_REVIEW_2007",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-046",
+      "canonical_claim": "Underwear choice may influence scrotal temperature.",
+      "classification": "FACT",
+      "domain": "environment_heat",
+      "explanation": "Physiologic studies indicate tighter garments can be associated with higher scrotal temperature, while clinical relevance is uncertain.",
+      "evidence_source_ids": "UNDERWEAR_REVIEW_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-047",
+      "canonical_claim": "Any increase in scrotal temperature automatically means infertility.",
+      "classification": "MYTH",
+      "domain": "environment_heat",
+      "explanation": "Temperature is one factor in spermatogenesis and does not by itself diagnose infertility.",
+      "evidence_source_ids": "HEAT_REVIEW_2007;WHO_INFERTILITY_2025",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-048",
+      "canonical_claim": "Fever can temporarily affect semen quality.",
+      "classification": "CONTEXT_DEPENDENT",
+      "domain": "environment_heat",
+      "explanation": "Febrile illness has been associated with temporary semen changes, but effects vary and do not equal permanent infertility.",
+      "evidence_source_ids": "HEAT_COHORT_2022",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-049",
+      "canonical_claim": "Radiation exposure and ordinary phone use are the same thing.",
+      "classification": "MYTH",
+      "domain": "environment_heat",
+      "explanation": "Ionizing radiation and radiofrequency exposure are different exposure categories.",
+      "evidence_source_ids": "AUA_ASRM_I_2020;EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-050",
+      "canonical_claim": "Environmental pollutants can contribute to reproductive risk.",
+      "classification": "FACT",
+      "domain": "environment_heat",
+      "explanation": "Guidelines identify environmental toxins and pollutants as potential reproductive risk factors.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-051",
+      "canonical_claim": "One specific food can guarantee higher sperm count.",
+      "classification": "MYTH",
+      "domain": "diet_nutrition",
+      "explanation": "No single food is established as a guaranteed fertility treatment.",
+      "evidence_source_ids": "AUA_ASRM_II_2020;EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-052",
+      "canonical_claim": "Fertility supplements are proven to work for every man.",
+      "classification": "MYTH",
+      "domain": "diet_nutrition",
+      "explanation": "Guidelines describe the clinical utility of supplements and antioxidants as uncertain or insufficient for routine treatment.",
+      "evidence_source_ids": "AUA_ASRM_II_2020;EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-053",
+      "canonical_claim": "Antioxidant supplements have conclusively been shown to improve male fertility outcomes.",
+      "classification": "MISLEADING",
+      "domain": "diet_nutrition",
+      "explanation": "Evidence is conflicting and major trials have not established consistent benefit.",
+      "evidence_source_ids": "AUA_ASRM_II_2020;EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-054",
+      "canonical_claim": "Taking extra vitamins above nutritional need is guaranteed to improve fertility.",
+      "classification": "MISLEADING",
+      "domain": "diet_nutrition",
+      "explanation": "Correcting deficiency may be appropriate, but excess supplementation is not a universal fertility treatment.",
+      "evidence_source_ids": "AUA_ASRM_II_2020",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-055",
+      "canonical_claim": "Soy foods automatically lower male fertility because of phytoestrogens.",
+      "classification": "MYTH",
+      "domain": "diet_nutrition",
+      "explanation": "A blanket claim that ordinary soy intake causes male infertility is not supported by the evidence base used here.",
+      "evidence_source_ids": "AUA_ASRM_I_2020;EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-056",
+      "canonical_claim": "Drinking more water directly increases sperm count.",
+      "classification": "INSUFFICIENT_EVIDENCE",
+      "domain": "diet_nutrition",
+      "explanation": "Adequate hydration supports general health, but a direct sperm-count increase from simply drinking more water is not established.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;AUA_ASRM_II_2020",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-057",
+      "canonical_claim": "Caffeine automatically causes male infertility.",
+      "classification": "MYTH",
+      "domain": "diet_nutrition",
+      "explanation": "Moderate caffeine intake is not established as a universal cause of male infertility.",
+      "evidence_source_ids": "ASRM_NATURAL_FERTILITY_2022",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-058",
+      "canonical_claim": "More protein automatically means better sperm quality.",
+      "classification": "MYTH",
+      "domain": "diet_nutrition",
+      "explanation": "High protein intake is not established as a guaranteed sperm-quality intervention.",
+      "evidence_source_ids": "EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-059",
+      "canonical_claim": "A balanced diet is preferable to relying on a single fertility food or supplement.",
+      "classification": "FACT",
+      "domain": "diet_nutrition",
+      "explanation": "Overall health and lifestyle are more appropriate targets than a single guaranteed fertility food.",
+      "evidence_source_ids": "EAU_MALE_INFERTILITY_2026;AUA_ASRM_II_2020",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-060",
+      "canonical_claim": "Over-the-counter fertility supplements are automatically harmless.",
+      "classification": "MYTH",
+      "domain": "diet_nutrition",
+      "explanation": "OTC availability does not establish benefit or universal safety.",
+      "evidence_source_ids": "AUA_ASRM_II_2020",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-061",
+      "canonical_claim": "Marijuana definitely causes male infertility in every user.",
+      "classification": "MYTH",
+      "domain": "substance_use",
+      "explanation": "Evidence on marijuana and male fertility is incomplete and conflicting.",
+      "evidence_source_ids": "ASRM_TOBACCO_MARIJUANA_2024",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-062",
+      "canonical_claim": "Marijuana has no possible reproductive-health relevance.",
+      "classification": "MYTH",
+      "domain": "substance_use",
+      "explanation": "Evidence is mixed, but reproductive-health guidance supports discussing and reducing potentially harmful exposure when trying to conceive.",
+      "evidence_source_ids": "ASRM_TOBACCO_MARIJUANA_2024",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-063",
+      "canonical_claim": "Vaping is proven to be completely safe for reproductive health.",
+      "classification": "MYTH",
+      "domain": "substance_use",
+      "explanation": "Current evidence does not support treating electronic nicotine delivery systems as proven safe for reproductive health.",
+      "evidence_source_ids": "ASRM_TOBACCO_MARIJUANA_2024",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-064",
+      "canonical_claim": "Smoking and secondhand tobacco exposure can have reproductive consequences.",
+      "classification": "FACT",
+      "domain": "substance_use",
+      "explanation": "Evidence supports reproductive-health risks associated with tobacco use and exposure to tobacco smoke.",
+      "evidence_source_ids": "ASRM_TOBACCO_MARIJUANA_2024;WHO_TOBACCO_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-065",
+      "canonical_claim": "Anabolic steroid use can negatively affect sperm production.",
+      "classification": "FACT",
+      "domain": "substance_use",
+      "explanation": "Anabolic-androgenic steroids can suppress reproductive signaling and impair spermatogenesis.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-066",
+      "canonical_claim": "Recreational drug use is irrelevant to male reproductive history.",
+      "classification": "MYTH",
+      "domain": "substance_use",
+      "explanation": "Infertility histories commonly consider recreational drugs and potentially gonadotoxic exposures.",
+      "evidence_source_ids": "EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-067",
+      "canonical_claim": "Alcohol affects every man's fertility in exactly the same way.",
+      "classification": "MYTH",
+      "domain": "substance_use",
+      "explanation": "Effects depend on amount, pattern, health status and individual factors.",
+      "evidence_source_ids": "EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-068",
+      "canonical_claim": "Heavy chronic alcohol use can reduce testosterone.",
+      "classification": "FACT",
+      "domain": "substance_use",
+      "explanation": "Guideline evidence indicates heavy chronic alcohol use can reduce testosterone.",
+      "evidence_source_ids": "EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-069",
+      "canonical_claim": "You can always tell if someone has an STI by looking at them.",
+      "classification": "MYTH",
+      "domain": "sexual_health",
+      "explanation": "Many STIs can be asymptomatic, so appearance cannot determine infection status.",
+      "evidence_source_ids": "CDC_STI_PREVENTION_2024",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-070",
+      "canonical_claim": "Most STIs always cause obvious symptoms.",
+      "classification": "MYTH",
+      "domain": "sexual_health",
+      "explanation": "Many STIs may have no symptoms.",
+      "evidence_source_ids": "CDC_STI_PREVENTION_2024",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-071",
+      "canonical_claim": "Using condoms correctly reduces STI risk.",
+      "classification": "FACT",
+      "domain": "sexual_health",
+      "explanation": "Correct and consistent condom use reduces the risk of many STIs.",
+      "evidence_source_ids": "CDC_CONDOM_2024;CDC_STI_PREVENTION_2024",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-072",
+      "canonical_claim": "Condoms eliminate all STI risk.",
+      "classification": "MYTH",
+      "domain": "sexual_health",
+      "explanation": "Condoms reduce risk but do not eliminate infections spread by uncovered skin contact.",
+      "evidence_source_ids": "CDC_CONDOM_2024",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-073",
+      "canonical_claim": "Condoms cause infertility.",
+      "classification": "MYTH",
+      "domain": "sexual_health",
+      "explanation": "Condoms are barrier methods for STI and pregnancy prevention and are not established causes of infertility.",
+      "evidence_source_ids": "CDC_CONDOM_2024",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-074",
+      "canonical_claim": "Having no STI symptoms proves that you are STI-free.",
+      "classification": "MYTH",
+      "domain": "sexual_health",
+      "explanation": "Many STIs are asymptomatic; testing is needed to determine status.",
+      "evidence_source_ids": "CDC_STI_PREVENTION_2024",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-075",
+      "canonical_claim": "Some untreated genital infections can contribute to reproductive problems.",
+      "classification": "FACT",
+      "domain": "sexual_health",
+      "explanation": "Genitourinary infections can contribute to reproductive-tract problems and infertility in some circumstances.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-076",
+      "canonical_claim": "Every STI causes infertility.",
+      "classification": "MYTH",
+      "domain": "sexual_health",
+      "explanation": "Different infections have different complications; an STI diagnosis does not automatically mean infertility.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;CDC_STI_PREVENTION_2024",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-077",
+      "canonical_claim": "Oral sex can transmit some STIs.",
+      "classification": "FACT",
+      "domain": "sexual_health",
+      "explanation": "STIs can be transmitted through oral sexual contact.",
+      "evidence_source_ids": "CDC_STI_ORAL_SEX_2024",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-078",
+      "canonical_claim": "Only people with many sexual partners can get an STI.",
+      "classification": "MYTH",
+      "domain": "sexual_health",
+      "explanation": "Any sexually active person can acquire an STI depending on exposure and partner infection status.",
+      "evidence_source_ids": "CDC_STI_PREVENTION_2024",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-079",
+      "canonical_claim": "HPV vaccination has relevance for males as well as females.",
+      "classification": "FACT",
+      "domain": "sexual_health",
+      "explanation": "CDC prevention guidance includes HPV vaccination as an STI prevention strategy for eligible people.",
+      "evidence_source_ids": "CDC_STI_PREVENTION_2024",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-080",
+      "canonical_claim": "Alcohol or drugs can increase sexual-risk behavior by lowering inhibitions.",
+      "classification": "FACT",
+      "domain": "sexual_health",
+      "explanation": "CDC notes that alcohol or drug use can lower inhibitions and contribute to higher-risk sexual behavior.",
+      "evidence_source_ids": "CDC_STI_PREVENTION_2024",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-081",
+      "canonical_claim": "A semen analysis is one of the key tests used when evaluating male fertility.",
+      "classification": "FACT",
+      "domain": "reproductive_health",
+      "explanation": "Semen analysis is a central laboratory assessment in male fertility evaluation.",
+      "evidence_source_ids": "WHO_SEMEN_2021;WHO_INFERTILITY_2025",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-082",
+      "canonical_claim": "One semen sample always gives the complete picture of male fertility.",
+      "classification": "MYTH",
+      "domain": "reproductive_health",
+      "explanation": "Semen parameters can vary and fertility evaluation is broader than one laboratory result.",
+      "evidence_source_ids": "WHO_SEMEN_2021;AUA_ASRM_I_2020",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-083",
+      "canonical_claim": "Semen analysis results should be interpreted in clinical context.",
+      "classification": "FACT",
+      "domain": "reproductive_health",
+      "explanation": "Laboratory findings are interpreted alongside history, examination and other relevant factors.",
+      "evidence_source_ids": "WHO_SEMEN_2021;AUA_ASRM_I_2020",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-084",
+      "canonical_claim": "Sperm morphology alone determines whether a man can father a child.",
+      "classification": "MYTH",
+      "domain": "reproductive_health",
+      "explanation": "Morphology is one parameter and does not independently determine fertility.",
+      "evidence_source_ids": "WHO_SEMEN_2021",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-085",
+      "canonical_claim": "Sperm motility is relevant to semen assessment.",
+      "classification": "FACT",
+      "domain": "reproductive_health",
+      "explanation": "Motility is a standard semen characteristic assessed in laboratory evaluation.",
+      "evidence_source_ids": "WHO_SEMEN_2021",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-086",
+      "canonical_claim": "A home visual semen check can replace laboratory semen analysis.",
+      "classification": "MYTH",
+      "domain": "reproductive_health",
+      "explanation": "Visual inspection cannot replace standardized laboratory assessment.",
+      "evidence_source_ids": "WHO_SEMEN_2021",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-087",
+      "canonical_claim": "Infertility can be unexplained even after evaluation.",
+      "classification": "FACT",
+      "domain": "reproductive_health",
+      "explanation": "WHO notes that infertility can remain unexplained in some couples.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-088",
+      "canonical_claim": "Male infertility is always permanent.",
+      "classification": "MYTH",
+      "domain": "reproductive_health",
+      "explanation": "Causes vary; some are treatable, modifiable or reversible.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;AUA_ASRM_I_2020",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-089",
+      "canonical_claim": "Performance anxiety can never affect sexual function.",
+      "classification": "MYTH",
+      "domain": "mental_behavioral",
+      "explanation": "Psychological factors can contribute to sexual dysfunction.",
+      "evidence_source_ids": "EAU_ED_2026;EAU_EJACULATION_2022",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-090",
+      "canonical_claim": "Sexual performance concerns are always evidence of a physical disease.",
+      "classification": "MYTH",
+      "domain": "mental_behavioral",
+      "explanation": "Sexual dysfunction can have psychological, organic or mixed contributors.",
+      "evidence_source_ids": "EAU_ED_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-091",
+      "canonical_claim": "Stress automatically causes infertility.",
+      "classification": "MYTH",
+      "domain": "mental_behavioral",
+      "explanation": "Stress may interact with health and behavior, but stress alone should not be treated as proof of infertility.",
+      "evidence_source_ids": "AUA_ASRM_I_2020;EAU_MALE_INFERTILITY_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-092",
+      "canonical_claim": "Mental health and sexual health can interact.",
+      "classification": "FACT",
+      "domain": "mental_behavioral",
+      "explanation": "Psychological health and sexual function can influence one another.",
+      "evidence_source_ids": "EAU_ED_2026;EAU_EJACULATION_2022",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-093",
+      "canonical_claim": "Pornography frequency alone is enough to diagnose problematic pornography use.",
+      "classification": "MYTH",
+      "domain": "mental_behavioral",
+      "explanation": "Frequency alone does not establish a disorder; distress, loss of control and impairment require consideration.",
+      "evidence_source_ids": "EAU_EJACULATION_2022",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-094",
+      "canonical_claim": "Sexual confidence can be affected by anxiety even without a proven physical disorder.",
+      "classification": "FACT",
+      "domain": "mental_behavioral",
+      "explanation": "Psychological and sexual-function factors can interact, including anxiety-related sexual difficulties.",
+      "evidence_source_ids": "EAU_ED_2026;EAU_EJACULATION_2022",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-095",
+      "canonical_claim": "Sexual dysfunction should always be treated as purely psychological.",
+      "classification": "MYTH",
+      "domain": "mental_behavioral",
+      "explanation": "Organic, psychological and mixed causes are all possible.",
+      "evidence_source_ids": "EAU_ED_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-096",
+      "canonical_claim": "A single symptom can prove infertility.",
+      "classification": "MYTH",
+      "domain": "reproductive_health",
+      "explanation": "Infertility requires appropriate clinical evaluation; isolated symptoms do not prove it.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;AUA_ASRM_I_2020",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-097",
+      "canonical_claim": "A chatbot can diagnose infertility from a questionnaire alone.",
+      "classification": "MYTH",
+      "domain": "general_health",
+      "explanation": "Self-reported information can support education and triage but does not replace clinical evaluation and testing.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;AUA_ASRM_I_2020",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-098",
+      "canonical_claim": "A health app should give a precise percentage probability of fertility from lifestyle questions alone.",
+      "classification": "MYTH",
+      "domain": "general_health",
+      "explanation": "A precise individual fertility probability requires validated predictive evidence and should not be invented from questionnaire data.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;WHO_SEMEN_2021",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-099",
+      "canonical_claim": "Evidence can be insufficient even when a health claim is popular online.",
+      "classification": "FACT",
+      "domain": "general_health",
+      "explanation": "A safe evidence system should be able to return an insufficient-evidence state instead of forcing a binary answer.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;AUA_ASRM_I_2020",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    },
+    {
+      "claim_id": "MF-100",
+      "canonical_claim": "Medical claims should be updated when high-quality evidence or guidelines change.",
+      "classification": "FACT",
+      "domain": "general_health",
+      "explanation": "A medical knowledge base needs provenance, versioning and periodic review as evidence evolves.",
+      "evidence_source_ids": "WHO_INFERTILITY_2025;EAU_2026",
+      "review_status": "CURATED_DRAFT_REQUIRES_CLINICIAN_REVIEW",
+      "version": "1.0",
+      "notes": "Canonical knowledge unit; not a diagnosis, prevalence estimate, or individual risk prediction."
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "WHO_INFERTILITY_2025",
+      "source_title": "WHO Guideline for the prevention, diagnosis and treatment of infertility (2025)",
+      "source_url": "https://www.who.int/publications/i/item/9789240115774"
+    },
+    {
+      "source_id": "WHO_SEMEN_2021",
+      "source_title": "WHO laboratory manual for the examination and processing of human semen, 6th ed.",
+      "source_url": "https://www.who.int/publications/i/item/9789240030787"
+    },
+    {
+      "source_id": "WHO_TOBACCO_2026",
+      "source_title": "WHO Tobacco and infertility knowledge summary (2026)",
+      "source_url": "https://www.who.int/publications/i/item/B09819"
+    },
+    {
+      "source_id": "AUA_ASRM_I_2020",
+      "source_title": "AUA/ASRM Diagnosis and treatment of infertility in men: Guideline Part I",
+      "source_url": "https://integration.asrm.org/practice-guidance/practice-committee-documents/diagnosis-and-treatment-of-infertility-in-men-auaasrm-guideline-part-i-2020/"
+    },
+    {
+      "source_id": "AUA_ASRM_II_2020",
+      "source_title": "AUA/ASRM Diagnosis and treatment of infertility in men: Guideline Part II",
+      "source_url": "https://www.asrm.org/practice-guidance/practice-committee-documents/diagnosis-and-treatment-of-infertility-in-men-aua-asrm-guideline-part2/"
+    },
+    {
+      "source_id": "EAU_MALE_INFERTILITY_2026",
+      "source_title": "EAU Sexual and Reproductive Health Guidelines — Male Infertility",
+      "source_url": "https://uroweb.org/guidelines/sexual-and-reproductive-health/chapter/male-infertility"
+    },
+    {
+      "source_id": "EAU_ED_2026",
+      "source_title": "EAU Sexual and Reproductive Health Guidelines — Erectile Dysfunction",
+      "source_url": "https://uroweb.org/guidelines/sexual-and-reproductive-health/chapter/management-of-erectile-dysfunction"
+    },
+    {
+      "source_id": "EAU_HYPOGONADISM_2026",
+      "source_title": "EAU Sexual and Reproductive Health Guidelines — Male Hypogonadism",
+      "source_url": "https://uroweb.org/guidelines/sexual-and-reproductive-health/chapter/male-hypogonadism"
+    },
+    {
+      "source_id": "EAU_EJACULATION_2022",
+      "source_title": "EAU Guidelines — Disorders of Ejaculation",
+      "source_url": "https://uroweb.org/guidelines/sexual-and-reproductive-health-2022/chapter/disorders-of-ejaculation"
+    },
+    {
+      "source_id": "EAU_2026",
+      "source_title": "EAU Sexual and Reproductive Health Guidelines — 2026",
+      "source_url": "https://uroweb.org/guidelines/sexual-and-reproductive-health"
+    },
+    {
+      "source_id": "ASRM_TOBACCO_MARIJUANA_2024",
+      "source_title": "ASRM Committee Opinion — Tobacco or marijuana use and infertility",
+      "source_url": "https://www.asrm.org/practice-guidance/practice-committee-documents/tobacco-or-marijuana-use/"
+    },
+    {
+      "source_id": "ASRM_NATURAL_FERTILITY_2022",
+      "source_title": "ASRM Committee Opinion — Optimizing natural fertility",
+      "source_url": "https://www.asrm.org/practice-guidance/practice-committee-documents/optimizing-natural-fertility-a-committee-opinion-2021/"
+    },
+    {
+      "source_id": "CDC_STI_PREVENTION_2024",
+      "source_title": "CDC — How to Prevent STIs",
+      "source_url": "https://www.cdc.gov/sti/prevention/index.html"
+    },
+    {
+      "source_id": "CDC_CONDOM_2024",
+      "source_title": "CDC — Condom Use: An Overview",
+      "source_url": "https://www.cdc.gov/condom-use/"
+    },
+    {
+      "source_id": "CDC_STI_ORAL_SEX_2024",
+      "source_title": "CDC — About STI Risk and Oral Sex",
+      "source_url": "https://www.cdc.gov/sti/about/about-sti-risk-and-oral-sex.html"
+    },
+    {
+      "source_id": "HEAT_COHORT_2022",
+      "source_title": "Male personal heat exposures and fecundability: a preconception cohort study",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/35924639/"
+    },
+    {
+      "source_id": "HEAT_REVIEW_2007",
+      "source_title": "Influence of genital heat stress on semen quality in humans",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/18076419/"
+    },
+    {
+      "source_id": "UNDERWEAR_REVIEW_2026",
+      "source_title": "Garment fit, scrotal thermoregulation, and male fertility outcomes: narrative review",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/42293842/"
+    },
+    {
+      "source_id": "ABSTINENCE_REVIEW_2018",
+      "source_title": "The impact of ejaculatory abstinence on semen analysis parameters: systematic review",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/29143943/"
+    },
+    {
+      "source_id": "EJACULATION_REVIEW_2026",
+      "source_title": "Ejaculatory frequency and male fertility: literature review",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/41809803/"
+    }
+  ],
+  "seed_aliases": [
+    {
+      "claim_id": "MF-001",
+      "alias": "Is infertility only a woman’s problem?"
+    },
+    {
+      "claim_id": "MF-001",
+      "alias": "Can men be infertile?"
+    },
+    {
+      "claim_id": "MF-003",
+      "alias": "Does a normal semen test prove fertility?"
+    },
+    {
+      "claim_id": "MF-003",
+      "alias": "Can semen analysis tell if I am fertile?"
+    },
+    {
+      "claim_id": "MF-011",
+      "alias": "Does masturbation cause infertility?"
+    },
+    {
+      "claim_id": "MF-011",
+      "alias": "Can masturbation make me infertile?"
+    },
+    {
+      "claim_id": "MF-011",
+      "alias": "Does masturbating reduce fertility?"
+    },
+    {
+      "claim_id": "MF-019",
+      "alias": "Does testosterone improve fertility?"
+    },
+    {
+      "claim_id": "MF-019",
+      "alias": "Can testosterone injections increase sperm?"
+    },
+    {
+      "claim_id": "MF-027",
+      "alias": "Does smoking affect sperm?"
+    },
+    {
+      "claim_id": "MF-027",
+      "alias": "Can smoking reduce male fertility?"
+    },
+    {
+      "claim_id": "MF-031",
+      "alias": "Does obesity affect male fertility?"
+    },
+    {
+      "claim_id": "MF-031",
+      "alias": "Can being overweight affect sperm?"
+    },
+    {
+      "claim_id": "MF-042",
+      "alias": "Can one hot bath make me infertile?"
+    },
+    {
+      "claim_id": "MF-042",
+      "alias": "Does a hot bath permanently damage sperm?"
+    },
+    {
+      "claim_id": "MF-045",
+      "alias": "Do tight underwear cause infertility?"
+    },
+    {
+      "claim_id": "MF-045",
+      "alias": "Are boxers better for fertility?"
+    },
+    {
+      "claim_id": "MF-052",
+      "alias": "Do fertility supplements actually work?"
+    },
+    {
+      "claim_id": "MF-052",
+      "alias": "Are sperm supplements proven?"
+    },
+    {
+      "claim_id": "MF-061",
+      "alias": "Does marijuana cause male infertility?"
+    },
+    {
+      "claim_id": "MF-061",
+      "alias": "Does weed reduce sperm?"
+    },
+    {
+      "claim_id": "MF-069",
+      "alias": "Can you tell if someone has an STI by looking?"
+    },
+    {
+      "claim_id": "MF-069",
+      "alias": "Do STIs always show symptoms?"
+    },
+    {
+      "claim_id": "MF-071",
+      "alias": "Do condoms prevent STIs?"
+    },
+    {
+      "claim_id": "MF-071",
+      "alias": "How much do condoms reduce STI risk?"
+    },
+    {
+      "claim_id": "MF-074",
+      "alias": "Can I have an STI without symptoms?"
+    },
+    {
+      "claim_id": "MF-074",
+      "alias": "If I have no symptoms am I STI-free?"
+    },
+    {
+      "claim_id": "MF-081",
+      "alias": "Is semen analysis the main male fertility test?"
+    },
+    {
+      "claim_id": "MF-081",
+      "alias": "How is male fertility tested?"
+    },
+    {
+      "claim_id": "MF-089",
+      "alias": "Can anxiety affect sexual performance?"
+    },
+    {
+      "claim_id": "MF-089",
+      "alias": "Can performance anxiety cause erection problems?"
+    },
+    {
+      "claim_id": "MF-097",
+      "alias": "Can an AI diagnose infertility from my answers?"
+    },
+    {
+      "claim_id": "MF-097",
+      "alias": "Can a chatbot tell if I am infertile?"
+    }
+  ],
+  "design_note": "Canonical claims are the knowledge units. Unknown claims should use evidence retrieval and LLM synthesis; generated answers must not automatically become verified knowledge."
+}
