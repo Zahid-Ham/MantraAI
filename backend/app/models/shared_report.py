@@ -3,7 +3,7 @@
 import uuid
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, func
 from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from app.database import Base
 
 
@@ -27,5 +27,5 @@ class SharedReport(Base):
     included_sections = Column(JSONB, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    user = relationship("User", backref="shared_reports")
+    user = relationship("User", backref=backref("shared_reports", passive_deletes=True))
     assessment_session = relationship("AssessmentSession", backref="shared_reports")

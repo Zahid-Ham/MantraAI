@@ -1,7 +1,7 @@
 import uuid
 from sqlalchemy import Column, String, DateTime, ForeignKey, func, Integer, Text
 from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from app.database import Base
 
 class AssessmentSession(Base):
@@ -11,12 +11,14 @@ class AssessmentSession(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     assessment_version = Column(String, nullable=False, default="2.0")
     status = Column(String, nullable=False, index=True)  # IN_PROGRESS, COMPLETED, ABANDONED
+    report_status = Column(String, nullable=False, default="ready", server_default="ready", index=True)  # pending, ready, failed
+    report_error_class = Column(String, nullable=True)
     started_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     completed_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
-    user = relationship("User", backref="assessment_sessions")
+    user = relationship("User", backref=backref("assessment_sessions", passive_deletes=True))
 
 class AssessmentResponse(Base):
     __tablename__ = "assessment_responses"

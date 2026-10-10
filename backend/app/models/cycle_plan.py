@@ -3,7 +3,7 @@
 import uuid
 from sqlalchemy import Column, String, Integer, DateTime, Date, ForeignKey, func
 from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from app.database import Base
 
 
@@ -25,7 +25,7 @@ class CyclePlan(Base):
     retest_prompted_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    user = relationship("User", backref="cycle_plans")
+    user = relationship("User", backref=backref("cycle_plans", passive_deletes=True))
     assessment_session = relationship("AssessmentSession", backref="cycle_plans")
     checkins = relationship("CycleCheckin", backref="plan", cascade="all, delete-orphan")
 

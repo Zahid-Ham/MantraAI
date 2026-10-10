@@ -1,7 +1,7 @@
 import uuid
 from sqlalchemy import Column, String, DateTime, ForeignKey, func
 from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from app.database import Base
 
 class AuditEvent(Base):
@@ -13,4 +13,4 @@ class AuditEvent(Base):
     event_metadata = Column(JSONB, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    user = relationship("User", backref="audit_events")
+    user = relationship("User", backref=backref("audit_events", passive_deletes=True))

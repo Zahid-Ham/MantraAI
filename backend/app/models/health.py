@@ -1,7 +1,7 @@
 import uuid
 from sqlalchemy import Column, String, Integer, Float, Date, DateTime, ForeignKey, func, UniqueConstraint, Text
 from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from app.database import Base
 
 class HealthConnection(Base):
@@ -21,7 +21,7 @@ class HealthConnection(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
-    user = relationship("User", backref="health_connections")
+    user = relationship("User", backref=backref("health_connections", passive_deletes=True))
 
 
 class HealthDailyMetrics(Base):
@@ -61,7 +61,7 @@ class HealthDailyMetrics(Base):
         UniqueConstraint("user_id", "date", "source", name="uq_user_date_source_health_metrics"),
     )
 
-    user = relationship("User", backref="health_daily_metrics")
+    user = relationship("User", backref=backref("health_daily_metrics", passive_deletes=True))
     connection = relationship("HealthConnection", backref="daily_metrics")
 
 
@@ -91,4 +91,4 @@ class AdaptiveGoal(Base):
         UniqueConstraint("user_id", "date", "goal_type", name="uq_user_date_goal_type"),
     )
 
-    user = relationship("User", backref="adaptive_goals")
+    user = relationship("User", backref=backref("adaptive_goals", passive_deletes=True))
