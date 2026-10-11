@@ -19,6 +19,7 @@ from app.routers import (
     shared_report as shared_report_router,
     cycle_plan as cycle_plan_router,
     semen_report as semen_report_router,
+    users as users_router,
 )
 
 app = FastAPI(title="MantraAI Backend Clinical API", version="1.0.0")
@@ -35,6 +36,7 @@ app.add_middleware(
 
 # Include Authentication, Assessment, Evidence, Health, and Goals Routers
 app.include_router(auth_router.router)
+app.include_router(users_router.router)
 app.include_router(assessment_router.router)
 app.include_router(evidence_router.router)
 app.include_router(health_router.router)
@@ -43,6 +45,34 @@ app.include_router(triage_router.router)
 app.include_router(shared_report_router.router)
 app.include_router(cycle_plan_router.router)
 app.include_router(semen_report_router.router)
+
+@app.on_event("startup")
+def resolve_pending_assessment_sessions():
+    """
+    Ensure no assessment sessions are left permanently pending across server restarts.
+    Any sessions interrupted while 'pending' are marked as 'failed' with 'ServerRestartInterrupted'.
+    Users or clients can then trigger retry via POST /api/v1/assessments/{id}/report/retry.
+    """
+    from app.database import SessionLocal
+    from app.models.assessment import AssessmentSession
+    import logging
+    startup_logger = logging.getLogger("app.startup")
+    try:
+        db = SessionLocal()
+        try:
+            interrupted = db.query(AssessmentSession).filter(
+                AssessmentSession.report_status == "pending"
+            ).all()
+            if interrupted:
+                startup_logger.warning("Found %d pending sessions on server startup; resolving them.", len(interrupted))
+                for sess in interrupted:
+                    sess.report_status = "failed"
+                    sess.report_error_class = "ServerRestartInterrupted"
+                db.commit()
+        finally:
+            db.close()
+    except Exception as exc:
+        startup_logger.warning("Failed to resolve pending assessment sessions on startup: %s", exc)
 
 class AnalyzeRequest(BaseModel):
     answers: dict
