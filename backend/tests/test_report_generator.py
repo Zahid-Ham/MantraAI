@@ -609,12 +609,15 @@ def test_successful_persistence_via_complete_endpoint(valid_report_dict):
         with patch("app.database.get_db", return_value=mock_db):
             with patch("urllib.request.urlopen", return_value=mock_groq_resp):
                 # We can call complete_assessment logic directly
+                from fastapi import BackgroundTasks
                 from app.routers.assessment import complete_assessment
-                result = complete_assessment(assessment_id=session_id, db=mock_db, current_user=mock_user)
+                bg_tasks = BackgroundTasks()
+                result = complete_assessment(assessment_id=session_id, background_tasks=bg_tasks, db=mock_db, current_user=mock_user)
 
     assert result is not None
     assert mock_session.status == "COMPLETED"
-    assert mock_db.add.call_count >= 2  # Result, Report, Audit
+    assert mock_session.report_status == "pending"
+    assert mock_db.add.call_count >= 2  # Result, Audit
 
 
 # ===========================================================================

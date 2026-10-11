@@ -295,15 +295,18 @@ def test_trends_calculated_with_data():
     res = client.get("/api/v1/health/trends?days=7")
     assert res.status_code == 200
     data = res.json()
-    assert len(data["trends"]) == 4
+    assert len(data["trends"]) == 5
     metrics = {t["metric"]: t for t in data["trends"]}
 
     assert "steps" in metrics
     assert "active_minutes" in metrics
     assert "sleep_duration_minutes" in metrics
     assert "resting_heart_rate" in metrics
+    assert "bedtime_variability" in metrics
     assert metrics["steps"]["direction"] in {"improving", "maintaining", "declining"}
+    assert metrics["bedtime_variability"]["direction"] in {"improving", "maintaining", "declining", "insufficient_data"}
     assert len(metrics["steps"]["data"]) == 7
+    assert len(metrics["bedtime_variability"]["data"]) == 7
 
 
 # ── 6. ADAPTIVE GOAL ENGINE TESTS ────────────────────────────────────────────

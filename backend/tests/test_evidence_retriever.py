@@ -328,3 +328,28 @@ def test_all_corpus_items_have_full_provenance():
         assert len(doc.evidence_tags) >= 1
         assert len(doc.chunks) >= 1
         assert len(doc.limitations) >= 1
+
+
+# ===========================================================================
+# 21. Retrieval verification for expanded tags (Phase 4.6)
+# ===========================================================================
+def test_new_evidence_tags_and_corpus_expansion():
+    """Verifies that newly added evidence tags from new.md retrieve their corresponding literature."""
+    # Test paternal age and DNA fragmentation
+    paternal_res = retrieve_evidence(["paternal_age", "dna_fragmentation"], top_k=3)
+    assert paternal_res.matched_count >= 2
+    matched_doc_ids = {item.document_id for item in paternal_res.items}
+    assert "age-decline-meta-2015" in matched_doc_ids or "paternal-age-dna-frag-2021" in matched_doc_ids
+
+    # Test SSRI and finasteride tags
+    med_res = retrieve_evidence(["finasteride", "ssri"], top_k=5)
+    assert med_res.matched_count >= 2
+    med_docs = {item.document_id for item in med_res.items}
+    assert "finasteride-semen-trial-2007" in med_docs or "ssri-semen-quality-meta-2022" in med_docs
+
+    # Test GAD-7 and PHQ-9 validation retrieval
+    psych_res = retrieve_evidence(["anxiety", "mood_screening"], top_k=5)
+    assert psych_res.matched_count >= 2
+    psych_docs = {item.document_id for item in psych_res.items}
+    assert "gad7-validation-2006" in psych_docs or "phq9-validation-2001" in psych_docs
+
