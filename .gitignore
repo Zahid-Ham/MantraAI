@@ -130,3 +130,5 @@ context.md
 .cache/
 coverage/
 .nyc_output/
+last_run.json
+backend/tests/eval/last_run.json

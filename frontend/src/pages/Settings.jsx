@@ -257,29 +257,12 @@ export default function Settings({ onNavigateHome: _onNavigateHome }) {
     }
   };
 
-  // Download User Health Data
+  // Download User Health Data — calls the Phase 4 comprehensive export endpoint
   const handleDownloadData = async () => {
     setExportingData(true);
     setExportSuccessMsg('');
     try {
-      const sessions = await apiRequest('/api/v1/assessments');
-      const exportPayload = {
-        exportedAt: new Date().toISOString(),
-        user: {
-          email: user?.email || 'authenticated_user',
-          displayName: user?.displayName || 'User',
-        },
-        profileMetadata: {
-          gender,
-          location: location || 'Not provided',
-        },
-        preferences: {
-          theme,
-          language,
-          units,
-        },
-        assessments: Array.isArray(sessions) ? sessions : [],
-      };
+      const exportPayload = await apiRequest('/api/v1/users/me/export');
 
       const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportPayload, null, 2));
       const downloadAnchor = document.createElement('a');
@@ -1620,13 +1603,25 @@ function DeleteAccountDialog({ onClose, onConfirm }) {
 
     setDeleting(true);
     try {
-      // Clear client session and execute callback
+      // 1. Call backend to cascade-delete all user data and revoke Firebase session
+      const { apiRequest: apiReq } = await import('../config/api');
+      await apiReq('/api/v1/users/me', {
+        method: 'DELETE',
+        body: JSON.stringify({ confirmation: 'DELETE' }),
+      });
+    } catch (err) {
+      // Log but continue — local cleanup and logout should still proceed
+      console.warn('Backend account deletion error (proceeding with local cleanup):', err);
+    }
+
+    try {
+      // 2. Clear all local/session storage and sign out of Firebase
       localStorage.clear();
       sessionStorage.clear();
       await onConfirm();
     } catch (err) {
       console.error('Account deletion error:', err);
-      alert('Unable to complete request. Please try again.');
+      alert('Unable to complete sign-out. Please refresh and try again.');
     } finally {
       setDeleting(false);
     }

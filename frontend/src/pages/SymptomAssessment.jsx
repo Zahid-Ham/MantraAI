@@ -260,10 +260,33 @@ export default function SymptomAssessment({ onNavigateHome }) {
           body: JSON.stringify({ responses: answers })
         });
 
-        // 2. Complete session & generate report
+        // 2. Complete session & trigger background report generation
         await apiRequest(`/api/v1/assessments/${activeId}/complete`, {
           method: "POST"
         });
+
+        // 3. Poll with progressive backoff for report status
+        let pollDelay = 800;
+        const maxAttempts = 20;
+        let isReady = false;
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          await new Promise(res => setTimeout(res, pollDelay));
+          try {
+            const statusRes = await apiRequest(`/api/v1/assessments/${activeId}/report/status`);
+            if (statusRes && statusRes.status === 'ready') {
+              isReady = true;
+              break;
+            } else if (statusRes && statusRes.status === 'failed') {
+              throw new Error(`Report generation failed: ${statusRes.error_class || 'unknown'}`);
+            }
+          } catch (statusErr) {
+            if (statusErr.message && statusErr.message.includes('failed')) {
+              throw statusErr;
+            }
+            // Transient status poll error, continue polling
+          }
+          pollDelay = Math.min(pollDelay * 1.35, 3000);
+        }
 
         clearInterval(stageInterval);
         
