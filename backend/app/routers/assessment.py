@@ -1,12 +1,13 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from uuid import UUID
+import uuid
 from datetime import datetime
 from typing import List, Dict, Any
 
-from app.database import get_db
+from app.database import get_db, SessionLocal
 from app.auth.firebase_auth import get_current_user
 from app.models.user import User
 from app.models.assessment import AssessmentSession, AssessmentResponse, AssessmentResult, Report
@@ -17,12 +18,14 @@ from app.schemas.assessment import (
     AssessmentResponseSave,
     AssessmentResultOut,
     ReportOut,
+    ReportStatusOut,
+    ReportRetryOut,
 )
 from app.services.normalizer import normalize_assessment_responses
 from app.services.context_engine import build_health_context
 from app.services.evidence_retriever import retrieve_evidence_for_health_context
-from app.services.report_generator import generate_mantra_report
-from app.schemas.report import new_report_to_legacy_view
+from app.services.report_generator import generate_mantra_report, build_fallback_report
+from app.schemas.report import new_report_to_legacy_view, ReportMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -194,9 +197,111 @@ def generate_report_via_groq(answers: dict) -> dict:
     legacy_dict = new_report_to_legacy_view(rep)
     return {**rep_dict, **legacy_dict}
 
+def generate_report_background(assessment_id: UUID) -> None:
+    """
+    Background worker executing context normalization, clinical evidence retrieval,
+    and structured report generation off the main request thread.
+    Guarantees deterministic fallback on any LLM or network failure.
+    """
+    db = SessionLocal()
+    try:
+        session = db.query(AssessmentSession).filter(
+            AssessmentSession.id == assessment_id
+        ).first()
+        if not session:
+            logger.error("Session %s not found in background worker", assessment_id)
+            return
+
+        # Check if a report was already persisted
+        existing = db.query(Report).filter(
+            Report.assessment_session_id == assessment_id
+        ).first()
+        if existing:
+            session.report_status = "ready"
+            session.report_error_class = None
+            db.commit()
+            return
+
+        responses_list = db.query(AssessmentResponse).filter(
+            AssessmentResponse.assessment_session_id == assessment_id
+        ).all()
+        answers = {r.question_id: r.response_value for r in responses_list}
+
+        normalized_context = normalize_assessment_responses(answers)
+        health_context = build_health_context(normalized_context)
+        evidence_context = retrieve_evidence_for_health_context(health_context)
+
+        phq9_item_9_val = answers.get("phq9_item_9")
+        crisis_flag = False
+        if phq9_item_9_val is not None:
+            try:
+                crisis_flag = int(phq9_item_9_val) > 0
+            except (ValueError, TypeError):
+                crisis_flag = False
+
+        error_class = None
+        try:
+            mantra_report = generate_mantra_report(
+                normalized_assessment=normalized_context,
+                health_context=health_context,
+                evidence_context=evidence_context,
+                crisis_flag=crisis_flag,
+            )
+            if mantra_report.report_metadata.model_provider == "deterministic_fallback":
+                error_class = "LLMFallback"
+        except Exception as exc:
+            logger.exception("LLM generation exception for session %s; falling back to deterministic report: %s", assessment_id, exc)
+            error_class = exc.__class__.__name__
+            mantra_report = build_fallback_report(
+                normalized_assessment=normalized_context,
+                health_context=health_context,
+                evidence_context=evidence_context,
+                metadata=ReportMetadata(
+                    report_id=str(uuid.uuid4()),
+                    model_provider="deterministic_fallback",
+                    model_name="deterministic_rule_engine",
+                    generation_notes=f"Exception caught in background worker: {str(exc)}",
+                ),
+                error_note=str(exc),
+                crisis_flag=crisis_flag,
+            )
+
+        report_dict = mantra_report.model_dump(mode="json")
+        legacy_view = new_report_to_legacy_view(mantra_report)
+        persisted_content = {**legacy_view, **report_dict}
+
+        report = Report(
+            assessment_session_id=assessment_id,
+            report_version=mantra_report.report_metadata.report_version,
+            model_provider=mantra_report.report_metadata.model_provider,
+            model_name=mantra_report.report_metadata.model_name,
+            report_content=persisted_content,
+            structured_findings=[f.model_dump() for f in mantra_report.priority_factors]
+        )
+        db.add(report)
+        session.report_status = "ready"
+        session.report_error_class = error_class
+        session.updated_at = datetime.utcnow()
+        db.commit()
+    except Exception as exc:
+        logger.exception("Catastrophic background generation failure for session %s: %s", assessment_id, exc)
+        db.rollback()
+        try:
+            sess = db.query(AssessmentSession).filter(AssessmentSession.id == assessment_id).first()
+            if sess:
+                sess.report_status = "failed"
+                sess.report_error_class = exc.__class__.__name__
+                sess.updated_at = datetime.utcnow()
+                db.commit()
+        except Exception:
+            pass
+    finally:
+        db.close()
+
 @router.post("/{assessment_id}/complete", response_model=AssessmentResultOut)
 def complete_assessment(
     assessment_id: UUID,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -231,14 +336,6 @@ def complete_assessment(
 
     # 2. Build structured, deterministic health context
     health_context = build_health_context(normalized_context)
-
-    # 3. Retrieve matching authoritative clinical evidence
-    evidence_context = retrieve_evidence_for_health_context(health_context)
-    logger.debug(
-        "Assessment %s evidence retrieved: %d guidelines/reviews matched across query tags.",
-        str(assessment_id),
-        evidence_context.matched_count,
-    )
 
     # 3. Derive crisis safety flag (server is source of truth from stored responses)
     phq9_item_9_val = answers.get("phq9_item_9")
@@ -325,30 +422,10 @@ def complete_assessment(
     )
     db.add(result)
 
-    # 6. Generate & store validated MantraAIReport
-    mantra_report = generate_mantra_report(
-        normalized_assessment=normalized_context,
-        health_context=health_context,
-        evidence_context=evidence_context,
-        crisis_flag=crisis_flag,
-    )
-
-    report_dict = mantra_report.model_dump(mode="json")
-    legacy_view = new_report_to_legacy_view(mantra_report)
-    persisted_content = {**legacy_view, **report_dict}
-
-    report = Report(
-        assessment_session_id=assessment_id,
-        report_version=mantra_report.report_metadata.report_version,
-        model_provider=mantra_report.report_metadata.model_provider,
-        model_name=mantra_report.report_metadata.model_name,
-        report_content=persisted_content,
-        structured_findings=[f.model_dump() for f in mantra_report.priority_factors]
-    )
-    db.add(report)
-
-    # 5. Mark session status as completed
+    # 6. Mark session status as completed and report_status as pending
     session.status = "COMPLETED"
+    session.report_status = "pending"
+    session.report_error_class = None
     session.completed_at = datetime.utcnow()
     session.updated_at = datetime.utcnow()
 
@@ -362,6 +439,10 @@ def complete_assessment(
 
     db.commit()
     db.refresh(result)
+
+    # 7. Offload generation to background task
+    background_tasks.add_task(generate_report_background, assessment_id)
+
     return result
 
 @router.get("/{assessment_id}/results", response_model=AssessmentResultOut)
@@ -414,3 +495,65 @@ def get_assessment_report(
 
     # Return report content dictionary
     return report.report_content
+
+@router.get("/{assessment_id}/report/status", response_model=ReportStatusOut)
+def get_report_status(
+    assessment_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    session = db.query(AssessmentSession).filter(
+        AssessmentSession.id == assessment_id
+    ).first()
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Assessment session not found.")
+    
+    if session.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access unauthorized.")
+
+    report = db.query(Report).filter(
+        Report.assessment_session_id == assessment_id
+    ).first()
+
+    return ReportStatusOut(
+        assessment_session_id=session.id,
+        status=session.report_status or ("ready" if report else "pending"),
+        error_class=session.report_error_class,
+        report_id=report.id if report else None
+    )
+
+@router.post("/{assessment_id}/report/retry", response_model=ReportRetryOut)
+def retry_report_generation(
+    assessment_id: UUID,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    session = db.query(AssessmentSession).filter(
+        AssessmentSession.id == assessment_id
+    ).first()
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Assessment session not found.")
+    
+    if session.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access unauthorized.")
+
+    if session.status != "COMPLETED":
+        raise HTTPException(status_code=400, detail="Cannot generate report for an incomplete assessment.")
+
+    # Reset status to pending and re-dispatch background task
+    session.report_status = "pending"
+    session.report_error_class = None
+    session.updated_at = datetime.utcnow()
+    db.commit()
+
+    background_tasks.add_task(generate_report_background, assessment_id)
+
+    return ReportRetryOut(
+        assessment_session_id=session.id,
+        status="pending",
+        message="Report generation retried in background."
+    )
+

@@ -1318,10 +1318,25 @@ def execute_groq_request(
         {"role": "user", "content": effective_user_prompt},
     ]
 
+    # Task 4.2: Attempt structured outputs via Pydantic model_json_schema
+    try:
+        json_schema = MantraAIReport.model_json_schema()
+        structured_format = {
+            "type": "json_schema",
+            "json_schema": {
+                "name": "MantraAIReport",
+                "strict": True,
+                "schema": json_schema,
+            },
+        }
+    except Exception as schema_err:
+        logger.warning("Could not derive MantraAIReport json_schema (%s); using json_object", schema_err)
+        structured_format = {"type": "json_object"}
+
     payload = {
         "model": model,
         "messages": messages,
-        "response_format": {"type": "json_object"},
+        "response_format": structured_format,
         "temperature": 0.2,
         "max_tokens": 4000,
     }
@@ -1346,6 +1361,34 @@ def execute_groq_request(
 
     except urllib.error.HTTPError as e:
         status_code = e.code
+
+        # Task 4.2: Fallback to json_object on HTTP 400 if model rejects json_schema
+        if status_code == 400 and payload.get("response_format", {}).get("type") == "json_schema":
+            logger.warning(
+                "Groq rejected json_schema with HTTP 400 (%s). Retrying with json_object fallback.",
+                e.reason,
+            )
+            payload["response_format"] = {"type": "json_object"}
+            fallback_req = urllib.request.Request(
+                GROQ_COMPLETIONS_URL,
+                data=json.dumps(payload).encode("utf-8"),
+                headers=headers,
+                method="POST"
+            )
+            try:
+                with urllib.request.urlopen(fallback_req, timeout=timeout_seconds) as fb_response:
+                    fb_body = fb_response.read().decode("utf-8")
+                    fb_json = json.loads(fb_body)
+                    fb_choices = fb_json.get("choices", [])
+                    if not fb_choices:
+                        raise ReportConnectionError("Groq fallback response contained no completion choices.")
+                    return fb_choices[0].get("message", {}).get("content", "")
+            except urllib.error.HTTPError as fb_http_err:
+                status_code = fb_http_err.code
+                e = fb_http_err
+            except Exception as fb_err:
+                raise ReportConnectionError(f"Groq API json_object fallback failed: {str(fb_err)}") from fb_err
+
         if status_code in (401, 403):
             raise ReportAuthError(f"Groq API authentication failed (HTTP {status_code}).") from e
         elif status_code == 429:

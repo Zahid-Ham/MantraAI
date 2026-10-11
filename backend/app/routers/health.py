@@ -19,6 +19,11 @@ from app.schemas.health import (
     HealthTrendDataPoint,
 )
 from app.services.health_sync_service import HealthSyncService
+from app.services.trend_analysis import (
+    classify_health_trend,
+    calculate_sleep_midpoint_minutes,
+    calculate_bedtime_variability_minutes,
+)
 
 router = APIRouter(prefix="/api/v1/health", tags=["health"])
 
@@ -210,30 +215,83 @@ def get_health_trends(
                 description="Insufficient data recorded to calculate a trend.",
             )
 
-        mid_idx = len(valid_values) // 2
-        prev_slice = valid_values[:mid_idx] if mid_idx > 0 else valid_values[:1]
-        recent_slice = valid_values[mid_idx:]
+        trend_res = classify_health_trend(valid_values, higher_is_better=higher_is_better)
+        direction = trend_res["direction"]
+        avg_rec = trend_res["avg_rec"]
+        avg_prev = trend_res["avg_prev"]
+        pct_diff = trend_res["pct_diff"]
 
-        avg_prev = statistics.mean(prev_slice)
-        avg_rec = statistics.mean(recent_slice)
-        pct_diff = round(((avg_rec - avg_prev) / avg_prev) * 100, 1) if avg_prev > 0 else 0.0
-
-        if abs(pct_diff) < 5.0:
-            direction = "maintaining"
+        if direction == "maintaining":
             desc = "Activity levels are consistent with your baseline pattern."
-        elif (pct_diff >= 5.0 and higher_is_better) or (pct_diff <= -5.0 and not higher_is_better):
-            direction = "improving"
-            desc = f"Showing a positive trend with a {abs(pct_diff)}% progression."
+        elif direction == "improving":
+            desc = f"Showing an improving trend with a {abs(pct_diff)}% progression."
         else:
-            direction = "declining"
             desc = f"Observed a {abs(pct_diff)}% variation compared to earlier in the period."
 
         return HealthTrendMetric(
             metric=metric_key,
             direction=direction,
-            average_recent=round(avg_rec, 1),
-            average_previous=round(avg_prev, 1),
+            average_recent=avg_rec,
+            average_previous=avg_prev,
             change_pct=pct_diff,
+            data=data_points,
+            description=desc,
+        )
+
+    # Bedtime variability metric (standard deviation of sleep midpoint)
+    def evaluate_bedtime_variability() -> HealthTrendMetric:
+        data_points: List[HealthTrendDataPoint] = []
+        valid_midpoints: List[float] = []
+
+        curr = start_d
+        while curr <= end_d:
+            record = metric_map.get(curr)
+            midpoint = None
+            if record and record.sleep_start and record.sleep_end:
+                midpoint = calculate_sleep_midpoint_minutes(record.sleep_start, record.sleep_end)
+            data_points.append(HealthTrendDataPoint(date=curr, value=round(midpoint, 1) if midpoint is not None else None))
+            if midpoint is not None:
+                valid_midpoints.append(midpoint)
+            curr += timedelta(days=1)
+
+        if len(valid_midpoints) < 3:
+            return HealthTrendMetric(
+                metric="bedtime_variability",
+                direction="insufficient_data",
+                average_recent=None,
+                average_previous=None,
+                change_pct=None,
+                data=data_points,
+                description="Insufficient sleep timing records to evaluate bedtime variability.",
+            )
+
+        stdev_total = calculate_bedtime_variability_minutes(valid_midpoints)
+        mid_mean = statistics.mean(valid_midpoints)
+        # Higher variability represents more erratic sleep schedule (lower is better)
+        deviations = [abs(m - mid_mean) for m in valid_midpoints]
+        var_trend = classify_health_trend(deviations, higher_is_better=False)
+
+        mid_idx = len(valid_midpoints) // 2
+        prev_slice = valid_midpoints[:mid_idx] if mid_idx >= 2 else valid_midpoints
+        rec_slice = valid_midpoints[mid_idx:] if len(valid_midpoints[mid_idx:]) >= 2 else valid_midpoints
+        prev_stdev = calculate_bedtime_variability_minutes(prev_slice) if len(prev_slice) >= 2 else stdev_total
+        rec_stdev = calculate_bedtime_variability_minutes(rec_slice) if len(rec_slice) >= 2 else stdev_total
+
+        pct_change = round(((rec_stdev - prev_stdev) / prev_stdev) * 100, 1) if prev_stdev and prev_stdev > 0 else 0.0
+
+        if var_trend["direction"] == "improving":
+            desc = f"Bedtime regularity is improving (variability reduced to {rec_stdev} min)."
+        elif var_trend["direction"] == "declining":
+            desc = f"Bedtime schedule showed variability of {stdev_total} min across nights."
+        else:
+            desc = f"Bedtime variability is steady at ~{stdev_total} min."
+
+        return HealthTrendMetric(
+            metric="bedtime_variability",
+            direction=var_trend["direction"],
+            average_recent=rec_stdev,
+            average_previous=prev_stdev,
+            change_pct=pct_change,
             data=data_points,
             description=desc,
         )
@@ -243,6 +301,7 @@ def get_health_trends(
         evaluate_metric("active_minutes", higher_is_better=True),
         evaluate_metric("sleep_duration_minutes", higher_is_better=True),
         evaluate_metric("resting_heart_rate", higher_is_better=False),  # lower/stable RHR is generally preferred
+        evaluate_bedtime_variability(),
     ]
 
     return HealthTrendsOut(
