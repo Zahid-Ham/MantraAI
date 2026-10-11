@@ -1,0 +1,119 @@
+Phase 3: Care-connected features
+Build each on the deterministic, authored-copy pattern from section 1. All new endpoints
+use Depends(get_current_user) , enforce per-user isolation (403 on others' resources, as
+in routers/assessment.py ), and have tests, including a cross-user access test.
+3.1 Red-flag triage (before the 86 questions)
+backend/app/services/triage.py plus authored copy in
+backend/app/constants/triage_copy.py ( CLINICIAN_REVIEW_REQUIRED = True ).
+Screen of 6 to 7 yes/no questions:
+1. Sudden, severe testicular or scrotal pain (especially with nausea or vomiting) →
+emergency, today
+2. Painful, swollen, red or hot scrotum with fever → urgent, today
+3. New lump or hardness in a testicle → see a doctor this week
+4. Blood in semen or urine → this week
+5. Swelling or severe pain after an injury → urgent, today
+6. Pain lasting more than 2 to 3 weeks → this week
+7. Thoughts of self-harm → crisis resources (reuse 2.2)
+Output a tier using the existing UrgencyLevel (read it; add tiers only if missing) and
+the authored message. Emergency copy tells the user to go to the nearest emergency
+department now (112), states that this is not a diagnosis, and never offers a differential.
+Endpoint POST /api/v1/triage returns {tier, message_key} . Persist only the tier
+in audit_events (no answers).
+UI (web and mobile): a short screen shown before starting a new assessment, with a
+one-tap "None of these apply" path. For emergency or urgent tiers, show the message
+prominently and let the user continue afterward.
+Tests: each red flag maps to the intended tier; "none" proceeds; answers are never
+logged.
+3.2 Clinician-ready one-pager (expiring share link)
+Table shared_reports (migration): id , user_id , assessment_session_id ,
+token_hash (SHA-256 of a secrets.token_urlsafe(32) token; store only the
+hash), expires_at (default 72h, max 7 days), max_views (default 10), view_count ,
+revoked_at , included_sections (JSONB), created_at .
+
+=== PAGE 10 ===
+POST /api/v1/assessments/{id}/share → returns the URL token once. DELETE
+/api/v1/shares/{share_id} revokes. GET /api/v1/shared/{token} is
+unauthenticated by design, so it must: return only a sanitized summary, send Cache-
+Control: no-store and X-Robots-Tag: noindex , be rate limited, and return an
+identical 404 for unknown, expired, revoked, or over-limit tokens.
+Sanitized payload: assessment date, reported symptoms and history, medications and
+substances reported, follow-up flags, "questions to discuss with a clinician", limitations
+and disclaimer. No name or email. The digital sexual behavior block is excluded by
+default and included only if the user toggles it on at share time.
+Web: a print-friendly page (CSS @media print , "Print / Save as PDF" button; no
+server-side PDF library). Add a "Share with my doctor" action in ReportViewer.jsx ,
+showing expiry and a revoke control.
+Tests: expired, revoked, and over-limit tokens return 404; hash-only storage; the
+excluded block never appears unless toggled.
+3.3 The 90-day cycle plan
+Tables (migration): cycle_plans ( id , user_id , assessment_session_id ,
+start_date , end_date = start + 90 days, status active/completed/abandoned,
+focus_factors JSONB of 3 factor ids, retest_prompted_at ) and cycle_checkins
+( plan_id , week_index , factor_id , status done/partial/skipped, created_at ).
+Deterministic focus selection: from the latest completed assessment's modifiable
+factors, pick the top 3 by evidence grade (A > B > C; ignore anything with
+counts_toward_attention false), breaking ties with a fixed priority table (tobacco,
+alcohol, anabolic steroid disclosure routes to a clinician instead of a plan item, sleep,
+heat exposure, activity, BMI). Put this in backend/app/services/cycle_plan.py . No
+LLM.
+Authored action library backend/app/constants/plan_actions.py : for each focus
+factor, a 12-week ladder of small weekly steps (en and hi). Smoking items may
+reference the National Tobacco Quitline; verify the number from an official source
+before including it, as with the helplines.
+Endpoints: POST /api/v1/plans (one active plan per user), GET
+/api/v1/plans/active , POST /api/v1/plans/{id}/checkins , PATCH
+/api/v1/plans/{id} (pause/abandon).
+Integrate with AdaptiveGoalEngine._derive_action_plan_goal : replace the md5-
+seeded pick with the current week's step of the active plan (fall back to the existing
+behavior when there is no plan). Keep the uq_user_date_goal_type constraint.
+At day 90: prompt an optional semen-analysis retest (see 3.4) and a repeat
+assessment, and show before/after using the existing longitudinal comparison.
+Copy rules: explain that the sperm production cycle takes roughly 2.5 months, which
+is why the plan runs 90 days. Never promise outcomes or improved fertility.
+
+=== PAGE 11 ===
+UI: a card on Dashboard.jsx , a section in MyProgress.jsx , and a card on mobile
+home.js .
+3.4 Semen report interpreter (manual entry first)
+Table semen_reports (migration): user_id , collection_date , abstinence_days ,
+volume_ml , concentration_m_per_ml , total_count_m , total_motility_pct ,
+progressive_motility_pct , vitality_pct , normal_morphology_pct , ph ,
+lab_name (free text, length-limited and sanitized), created_at . All value fields
+nullable; validate plausible ranges.
+backend/app/constants/who_semen_reference.py : WHO 6th edition (2021) lower
+reference limits, with the citation in the module docstring. Values I recall (you must
+verify each against the WHO manual before shipping and record the source):
+volume 1.4 mL; total sperm number 39 million per ejaculate; concentration 16
+million/mL; total motility 42%; progressive motility 30%; vitality 54%; normal
+morphology 4%; pH ≥ 7.2.
+Rules ( backend/app/services/semen_interpreter.py ): for each provided value,
+report "below the WHO lower reference limit" or "at or above it". No diagnostic labels
+(no "oligozoospermia" and similar as a verdict). Always attach authored caveats: a
+single result is not diagnostic; results vary between samples and labs; abstinence
+outside 2 to 7 days limits interpretation (WHO); incomplete collection or sample
+delays affect results; discuss with a urologist or andrologist, especially if any value is
+below the limits. Suggest repeat testing after about 3 months or as the clinician
+advises, and store retest_due_date = collection_date + 90 days .
+Endpoints: POST /api/v1/semen-reports , GET /api/v1/semen-reports (list, plus a
+simple per-parameter trend table), GET /api/v1/semen-reports/{id} , DELETE .
+UI: a web page SemenReport.jsx with a guided entry form (units shown, an "I don't
+have this value" option) and an explanation view; add a mobile screen if time allows.
+Show the retest date on the dashboard and in the 90-day plan.
+No LLM and no photo/OCR in this pass. (Backlog.)
+Tests: each parameter at the boundary (just below, equal, above); abstinence caveat;
+null handling; trend ordering; cross-user isolation.
+3.5 Discreet mode
+Mobile: add expo-local-authentication , expo-secure-store , expo-screen-
+capture . App-lock toggle in Settings (device biometrics or passcode, with an in-app
+PIN fallback stored hashed in secure store), re-lock after 30s in the background, and
+screenshot/app-switcher protection on report and assessment screens.
+Web: a "Quick hide" button (also double-press Esc ) that immediately swaps the view
+to a neutral screen, plus an optional neutral browser tab title. Add a toggle in
+Settings.jsx .
+
+=== PAGE 12 ===
+Do not attempt app-icon or app-name disguising (store-policy issue). Mention it in
+your report as a manual decision.
+Phase 3 done when: all new endpoints have isolation tests, authored copy lives in constants
+modules marked for clinician review, and every TODO(verify) is listed in your report.
+8. 

@@ -1,0 +1,29 @@
+Phase 4: Technical depth (still no CI or Docker)
+
+4.1 Evaluation harness (local)
+backend/tests/eval/ with a seeded generator of 100+ synthetic personas (varied answers, including edge cases: all-null, v1 legacy, PHQ item 9 > 0, red-flag combinations).
+Default run is offline: normalizer -> context -> evidence -> build_fallback_report.
+With RUN_LLM_EVAL=1, also call the Groq path.
+Assertions per report: no FORBIDDEN_FIELDS; no diagnostic phrases ("you have", "diagnosed", "infertile", fertility percentages); no snake_case identifiers leaked; every cited evidence_id exists in the retrieved EvidenceContext; every source_question_ids entry exists in the input; none of the shaming words banned in the system prompt; the crisis section is present iff crisis_flag; no raw item-9 value in any prompt.
+Print a summary table and write backend/tests/eval/last_run.json (gitignored).
+The suite must fail on violations.
+Free-text surface (for example lab_name): add prompt-injection tests proving that text never reaches an LLM prompt unsanitized.
+
+4.2 Structured outputs
+Check the Groq documentation for whether the configured model supports response_format: json_schema. If yes, use it with the Pydantic-derived schema in execute_groq_request, keeping the existing validation and repair loop as a backstop and a fallback to json_object on a 400. If unsupported, do nothing and report.
+
+4.3 Report generation off the request thread (no new infra)
+Add report_status (pending|ready|failed) and report_error_class to the session or report record (migration). /complete marks the session completed, returns quickly, and runs generation via FastAPI BackgroundTasks. The deterministic fallback guarantees a report is always produced; a failed LLM call falls back rather than failing.
+Add GET /api/v1/assessments/{id}/report/status, and update SymptomAssessment.jsx and the mobile complete.js to poll with backoff. On server start, nothing may leave a session permanently pending: add a retry endpoint for stuck jobs.
+
+4.4 Better trends
+In routers/health.py::get_health_trends, replace the first-half-vs-second-half comparison with a Theil-Sen slope and a Mann-Kendall trend test implemented in pure Python (small, unit-tested, no scipy). Keep the existing response shape and the "insufficient_data" behavior. Add a "bedtime variability" metric (standard deviation of sleep midpoint) from sleep_start and sleep_end. This is an honest simplification, not a full sleep regularity index. Do not touch the mock provider.
+
+4.5 One source of truth for the questionnaire
+Create shared/assessment_schema.json (convert once from the JS with a node script) and a scripts/sync-schema.mjs that generates frontend/src/data/assessmentSchema.js and mobile/src/data/assessmentSchema.js. Make the backend derive canonical question IDs from the same JSON so QUESTION_DOMAIN_MAP can never drift. Add a backend test that fails when the generated copies are stale.
+
+4.6 Grow the evidence corpus
+Extend evidence_corpus.py from 7 documents toward the roughly 40 references in new.md, in batches of about 10. Each document needs: real title, organization, year, URL, and identifier copied from new.md only, tags from evidence_taxonomy.py (extend the taxonomy when needed), and explicit limitations. Excerpts must summarize what new.md states, with no added claims. Keep test_evidence_retriever.py green and add tests for new tags. If an identifier is missing in new.md, leave the field as TODO(verify) and list it.
+
+4.7 User data controls
+GET /api/v1/users/me/export (JSON of the user's own data) and DELETE /api/v1/users/me (deletes the user row, relying on the existing ondelete="CASCADE" foreign keys; audit events keep SET NULL; also delete the Firebase user via the Admin SDK). Require a confirmation field in the body. Test the cascade, including the new tables. Do not change the README's privacy text.

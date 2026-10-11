@@ -1005,6 +1005,69 @@ export default function Dashboard({ onNavigateHome }) {
 
             </div>
 
+            {/* ===================================================================== */}
+            {/* PHASE 3: 90-DAY CYCLE PLAN + SEMEN REPORT SHORTCUTS                  */}
+            {/* ===================================================================== */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+              {/* 90-Day Cycle Plan Card */}
+              <div
+                onClick={() => window.location.hash = '#progress'}
+                className="bg-gradient-to-br from-[#1E3A2B] to-[#2D5A3C] text-white rounded-2xl p-5 sm:p-6 shadow-xs cursor-pointer hover:shadow-md transition-all group"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-white/70">90-Day Plan</span>
+                  </div>
+                  <svg className="w-4 h-4 text-white/60 group-hover:text-white group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+                <h3 className="text-base sm:text-lg font-bold leading-snug mb-1">Your 90-Day Cycle Plan</h3>
+                <p className="text-xs text-white/75 leading-relaxed mb-4">
+                  Spermatogenesis takes ~2.5 months. Your personalized plan selects 3 focus factors and builds week-by-week habits. Check in on My Progress.
+                </p>
+                <div className="flex items-center gap-2 text-[11px] font-semibold text-white/80">
+                  <span className="w-2 h-2 rounded-full bg-[#A7F3D0] inline-block" />
+                  View active plan & weekly steps
+                </div>
+              </div>
+
+              {/* Semen Report Shortcut Card */}
+              <div
+                onClick={() => window.location.hash = '#semen-report'}
+                className="bg-white border border-[#E8E5DF] rounded-2xl p-5 sm:p-6 shadow-2xs cursor-pointer hover:border-[#C8E6D2] hover:shadow-xs transition-all group"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-[#EBF5EE] text-[#1E3A2B] flex items-center justify-center">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#78716C]">Lab Results</span>
+                  </div>
+                  <svg className="w-4 h-4 text-[#78716C] group-hover:text-[#1E3A2B] group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-[#1C1917] leading-snug mb-1">Semen Analysis Report</h3>
+                <p className="text-xs text-[#57534E] leading-relaxed mb-4">
+                  Log your semen analysis values and see how each parameter compares to WHO 6th edition lower reference limits with authored caveats.
+                </p>
+                <div className="flex items-center gap-2 text-[11px] font-semibold text-[#1E3A2B]">
+                  <span className="w-2 h-2 rounded-full bg-[#059669] inline-block" />
+                  Enter or view lab results
+                </div>
+              </div>
+
+            </div>
+
           </>
         )}
 

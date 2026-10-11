@@ -45,6 +45,11 @@ export default function SymptomAssessment({ onNavigateHome }) {
   const [showCrisisInterstitial, setShowCrisisInterstitial] = useState(false);
   const [recoverySession, setRecoverySession] = useState(null);
 
+  // Red-flag triage state
+  const [triageAnswers, setTriageAnswers] = useState({});
+  const [triageResult, setTriageResult] = useState(null);
+  const [triageLoading, setTriageLoading] = useState(false);
+
   const { questions, blocks } = assessmentSchema;
 
   // Sync state variables to browser storage (as backup/scratchpad)
@@ -145,6 +150,54 @@ export default function SymptomAssessment({ onNavigateHome }) {
       console.error("Failed to resume session answers:", e);
     } finally {
       setShowResumePrompt(false);
+    }
+  };
+
+  const handleStart = () => {
+    setTriageAnswers({});
+    setTriageResult(null);
+    setStep('triage');
+  };
+
+  const handleTriageToggle = (qId) => {
+    setTriageAnswers(prev => ({
+      ...prev,
+      [qId]: !prev[qId]
+    }));
+  };
+
+  const handleTriageNone = async () => {
+    try {
+      setTriageLoading(true);
+      await apiRequest('/api/v1/triage', {
+        method: 'POST',
+        body: JSON.stringify({ answers: {} })
+      });
+    } catch (err) {
+      console.warn("Triage background record:", err);
+    } finally {
+      setTriageLoading(false);
+      setStep('questions');
+    }
+  };
+
+  const handleTriageSubmit = async () => {
+    try {
+      setTriageLoading(true);
+      const res = await apiRequest('/api/v1/triage', {
+        method: 'POST',
+        body: JSON.stringify({ answers: triageAnswers })
+      });
+      if (res && res.tier === 'routine') {
+        setStep('questions');
+      } else {
+        setTriageResult(res);
+      }
+    } catch (err) {
+      console.error("Triage evaluation error:", err);
+      setStep('questions');
+    } finally {
+      setTriageLoading(false);
     }
   };
 
@@ -321,10 +374,6 @@ export default function SymptomAssessment({ onNavigateHome }) {
     }
   };
 
-  const handleStart = () => {
-    setStep('questions');
-  };
-
   const handleNext = async () => {
     // Progressive save answers before moving forward
     const activeId = localStorage.getItem('mantra_active_assessment_id');
@@ -438,6 +487,144 @@ export default function SymptomAssessment({ onNavigateHome }) {
         {/* Step 1: Welcome / Intro */}
         {step === 'intro' && (
           <AssessmentWelcome onStart={handleStart} />
+        )}
+
+        {/* Step 1.5: Red-Flag Triage Safety Check */}
+        {step === 'triage' && (
+          <div className="max-w-2xl mx-auto font-sans bg-white border border-[#EAE5DD] rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
+            {!triageResult ? (
+              <>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-[#FEF3C7] border border-[#FDE68A] text-[#D97706] flex items-center justify-center shrink-0">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-[#1C1917]">
+                      Pre-Assessment Safety Check
+                    </h2>
+                    <p className="text-xs sm:text-sm text-[#78716C] mt-1 leading-relaxed">
+                      Before beginning the questionnaire, please let us know if you are currently experiencing any of the following acute symptoms.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  {[
+                    { id: "sudden_severe_pain", text: "Sudden, severe testicular or scrotal pain (especially with nausea or vomiting)" },
+                    { id: "swollen_scrotum_fever", text: "Painful, swollen, red or hot scrotum accompanied by fever or chills" },
+                    { id: "testicular_lump", text: "A new lump, firmness, or hardness in a testicle" },
+                    { id: "blood_in_fluid", text: "Visible blood in semen (hematospermia) or blood in urine (hematuria)" },
+                    { id: "severe_pain_injury", text: "Rapid swelling or severe pain following physical trauma or injury to the groin" },
+                    { id: "chronic_pain_weeks", text: "Testicular, pelvic, or groin pain persisting for more than 2 to 3 weeks" },
+                    { id: "self_harm_thoughts", text: "Thoughts of hurting yourself or that you would be better off dead" },
+                  ].map((q) => {
+                    const isChecked = Boolean(triageAnswers[q.id]);
+                    return (
+                      <label
+                        key={q.id}
+                        onClick={() => handleTriageToggle(q.id)}
+                        className={`flex items-start gap-3.5 p-3.5 rounded-xl border text-xs sm:text-sm cursor-pointer transition-all ${
+                          isChecked
+                            ? "bg-[#FEF2F2] border-[#FCA5A5] text-[#991B1B] font-medium"
+                            : "bg-[#FAFAF9] border-[#E7E5E4] text-[#44403C] hover:bg-[#F5F5F4]"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {}}
+                          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#DC2626] focus:ring-0 cursor-pointer"
+                        />
+                        <span className="leading-snug">{q.text}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+
+                <div className="pt-4 border-t border-[#F5F5F4] flex flex-col sm:flex-row gap-3 items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={handleTriageNone}
+                    disabled={triageLoading}
+                    className="w-full sm:w-auto px-6 py-3 bg-[#1E3A2B] hover:bg-[#14281D] text-white font-semibold text-xs sm:text-sm rounded-xl cursor-pointer shadow-xs transition-colors flex items-center justify-center gap-2"
+                  >
+                    {triageLoading ? "Recording..." : "None of these apply — Continue"}
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </button>
+
+                  {Object.values(triageAnswers).some(Boolean) && (
+                    <button
+                      type="button"
+                      onClick={handleTriageSubmit}
+                      disabled={triageLoading}
+                      className="w-full sm:w-auto px-5 py-3 border border-[#DC2626] bg-[#FEF2F2] hover:bg-[#FEE2E2] text-[#DC2626] font-semibold text-xs sm:text-sm rounded-xl cursor-pointer transition-colors"
+                    >
+                      {triageLoading ? "Evaluating..." : "Check Reported Symptoms"}
+                    </button>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="space-y-5">
+                <div className="flex items-start gap-4">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${
+                    triageResult.tier === 'emergency' || triageResult.tier === 'crisis'
+                      ? 'bg-[#FEF2F2] border-[#FCA5A5] text-[#DC2626]'
+                      : 'bg-[#FFFBEB] border-[#FDE68A] text-[#D97706]'
+                  }`}>
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#F3F4F6] text-[#374151]">
+                      Urgency: {triageResult.tier}
+                    </span>
+                    <h3 className="text-lg sm:text-xl font-bold text-[#1C1917] mt-1">
+                      {triageResult.title}
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#FAFAF9] border border-[#E7E5E4] text-xs sm:text-sm text-[#44403C] leading-relaxed space-y-2">
+                  <p>{triageResult.message}</p>
+                  {triageResult.helpline && (
+                    <div className="mt-3 p-3 rounded-xl bg-white border border-[#D1D5DB] font-medium text-[#111827]">
+                      📞 {triageResult.helpline}
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-[11px] text-[#78716C] italic">
+                  Note: This safety check is not a clinical diagnosis or emergency dispatch. If in doubt, visit an emergency facility immediately.
+                </p>
+
+                <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTriageResult(null);
+                      setStep('questions');
+                    }}
+                    className="flex-1 px-5 py-3 bg-[#1E3A2B] hover:bg-[#14281D] text-white font-semibold text-xs sm:text-sm rounded-xl cursor-pointer transition-colors text-center"
+                  >
+                    I understand — Continue to Assessment
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleHomeClear}
+                    className="px-5 py-3 border border-[#D1D5DB] text-[#4B5563] hover:bg-[#F9FAFB] font-semibold text-xs sm:text-sm rounded-xl cursor-pointer transition-colors text-center"
+                  >
+                    Exit Assessment
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Step 2: Interactive Questions */}

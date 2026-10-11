@@ -174,6 +174,14 @@ export default function ReportViewer({ onNavigateHome }) {
   const [activeTab, setActiveTab] = useState('report-overview');
   const isNavigatingRef = useRef(false);
 
+  // Share with doctor modal state
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareData, setShareData] = useState(null);
+  const [shareExpiryHours, setShareExpiryHours] = useState(72);
+  const [shareIncludeDigitalSex, setShareIncludeDigitalSex] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+
   // Extract session ID from hash query parameters (#report?id=...)
   const getSessionId = () => {
     try {
@@ -441,6 +449,46 @@ export default function ReportViewer({ onNavigateHome }) {
     };
   }, [loading, report]);
 
+  const handleCreateShare = async () => {
+    try {
+      setShareLoading(true);
+      const res = await apiRequest(`/api/v1/assessments/${sessId}/share`, {
+        method: 'POST',
+        body: JSON.stringify({
+          expires_in_hours: shareExpiryHours,
+          max_views: 10,
+          include_digital_sexual: shareIncludeDigitalSex,
+        }),
+      });
+      setShareData(res);
+    } catch (err) {
+      console.error('Error creating share link:', err);
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const handleRevokeShare = async () => {
+    if (!shareData?.share_id) return;
+    try {
+      setShareLoading(true);
+      await apiRequest(`/api/v1/shares/${shareData.share_id}`, { method: 'DELETE' });
+      setShareData(null);
+    } catch (err) {
+      console.error('Error revoking share link:', err);
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const handleCopyShare = () => {
+    if (!shareData?.token) return;
+    const url = `${window.location.origin}/#shared/${shareData.token}`;
+    navigator.clipboard.writeText(url);
+    setShareCopied(true);
+    setTimeout(() => setShareCopied(false), 2500);
+  };
+
   const handleDownloadPdf = () => {
     window.print();
   };
@@ -615,8 +663,19 @@ export default function ReportViewer({ onNavigateHome }) {
                 </div>
               </div>
 
-              {/* Download PDF Action */}
-              <div className="shrink-0 no-print">
+              {/* Action Buttons: Share with Doctor & Download PDF */}
+              <div className="shrink-0 no-print flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowShareModal(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#1E3A2B] hover:bg-[#14281D] text-white text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1E3A2B]"
+                >
+                  <svg className="w-4 h-4 text-[#D1E7DD]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                  <span>Share with my doctor</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={handleDownloadPdf}
@@ -1801,6 +1860,147 @@ export default function ReportViewer({ onNavigateHome }) {
         )}
 
       </div>
+
+      {/* Share with Doctor Modal Dialog */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs font-sans">
+          <div className="bg-white border border-[#E8E5DF] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-lg space-y-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-start justify-between gap-4 border-b border-[#F5F5F4] pb-4">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#D25619]">
+                  Secure Link Sharing
+                </span>
+                <h3 className="text-lg sm:text-xl font-bold text-[#1C1917] mt-0.5">
+                  Share with your Clinician
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowShareModal(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[#78716C] hover:bg-[#F5F5F4] cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {!shareData ? (
+              <div className="space-y-5">
+                <p className="text-xs text-[#57534E] leading-relaxed">
+                  Generate an expiring link to a clinician-ready, sanitized one-pager summary. Personal identifiers (name, email) are never included.
+                </p>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-[#1C1917]">Link Expiration</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { hours: 24, label: "24 Hours" },
+                      { hours: 72, label: "72 Hours (Default)" },
+                      { hours: 168, label: "7 Days (Max)" },
+                    ].map(opt => (
+                      <button
+                        key={opt.hours}
+                        type="button"
+                        onClick={() => setShareExpiryHours(opt.hours)}
+                        className={`p-2.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
+                          shareExpiryHours === opt.hours
+                            ? "bg-[#1E3A2B] text-white border-[#1E3A2B]"
+                            : "bg-[#FAFAF9] text-[#57534E] border-[#E7E5E4] hover:bg-[#F5F5F4]"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-[#FAFAF9] border border-[#E7E5E4] space-y-2">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={shareIncludeDigitalSex}
+                      onChange={e => setShareIncludeDigitalSex(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#1E3A2B] focus:ring-0 cursor-pointer"
+                    />
+                    <div>
+                      <div className="text-xs font-bold text-[#1C1917]">Include Digital Sexual Behavior Block</div>
+                      <div className="text-[11px] text-[#78716C] leading-snug mt-0.5">
+                        By default, sensitive digital sexual questions are excluded from clinician view for privacy. Check to include if desired for clinical review.
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="pt-2 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCreateShare}
+                    disabled={shareLoading}
+                    className="flex-1 px-5 py-3 bg-[#1E3A2B] hover:bg-[#14281D] text-white font-semibold text-xs sm:text-sm rounded-xl cursor-pointer transition-colors text-center"
+                  >
+                    {shareLoading ? "Generating Link..." : "Create Secure Share Link"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowShareModal(false)}
+                    className="px-5 py-3 border border-[#D1D5DB] text-[#57534E] hover:bg-[#F9FAFB] font-semibold text-xs sm:text-sm rounded-xl cursor-pointer transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                <div className="p-3.5 bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl text-xs text-[#065F46] font-medium flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+                  Secure clinician link created successfully.
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-[#1C1917]">Share URL</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={`${window.location.origin}/#shared/${shareData.token}`}
+                      className="flex-1 bg-[#F5F5F4] border border-[#E5E7EB] rounded-xl px-3 py-2 text-xs font-mono text-[#374151] select-all outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCopyShare}
+                      className="px-4 py-2 bg-[#1E3A2B] hover:bg-[#14281D] text-white font-semibold text-xs rounded-xl cursor-pointer transition-colors shrink-0"
+                    >
+                      {shareCopied ? "Copied!" : "Copy"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-[#FAFAF9] border border-[#E7E5E4] rounded-xl text-[11px] text-[#78716C] space-y-1">
+                  <div><strong>Expires:</strong> {new Date(shareData.expires_at).toLocaleString()}</div>
+                  <div><strong>Max views:</strong> {shareData.max_views} (single patient-authorized link)</div>
+                </div>
+
+                <div className="pt-2 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleRevokeShare}
+                    disabled={shareLoading}
+                    className="px-4 py-2.5 border border-[#DC2626] bg-[#FEF2F2] hover:bg-[#FEE2E2] text-[#DC2626] font-semibold text-xs rounded-xl cursor-pointer transition-colors"
+                  >
+                    {shareLoading ? "Revoking..." : "Revoke Access Link"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowShareModal(false)}
+                    className="flex-1 px-4 py-2.5 bg-[#F5F5F4] hover:bg-[#E5E5E5] text-[#1C1917] font-semibold text-xs rounded-xl cursor-pointer transition-colors text-center"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

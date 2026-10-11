@@ -459,3 +459,7 @@ def get_factor_metadata(factor_id: str) -> Dict[str, Any]:
         "counts_toward_attention": False,
         "description": "Uncategorized contextual factor",
     }
+
+
+# Alias for backwards-compatibility with cycle_plan.py scaffolding
+QUESTION_EVIDENCE_MAP = FACTOR_EVIDENCE_GRADES

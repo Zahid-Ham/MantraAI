@@ -24,11 +24,15 @@ import History from './pages/History';
 import ReportViewer from './pages/ReportViewer';
 import Dashboard from './pages/Dashboard';
 import MyProgress from './pages/MyProgress';
+import SharedReportViewer from './pages/SharedReportViewer';
+import SemenReport from './pages/SemenReport';
 import { getAuthenticatedEntryRoute } from './utils/navigation';
 
 function AppContent() {
   const { isAuthenticated, loading } = useAuth();
   const [page, setPage] = useState('landing');
+  const [sharedToken, setSharedToken] = useState(null);
+  const [discreetHidden, setDiscreetHidden] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -40,8 +44,10 @@ function AppContent() {
       const cleanHash = hash.split('?')[0];
 
       // Define routes requiring authentication
-      const protectedHashes = ['#assess', '#dashboard', '#profile', '#settings', '#history', '#report', '#reports', '#progress', '#resources', '#resource', '#support'];
+      const protectedHashes = ['#assess', '#dashboard', '#profile', '#settings', '#history', '#report', '#reports', '#progress', '#resources', '#resource', '#support', '#semen-report'];
       const isProtected = protectedHashes.some(h => cleanHash.startsWith(h));
+      // Reset discreet mode on page change
+      setDiscreetHidden(false);
 
       if (isProtected && !isAuthenticated) {
         sessionStorage.setItem('mantra_auth_redirect', hash);
@@ -74,6 +80,12 @@ function AppContent() {
         setPage('history');
       } else if (hash === '#progress' || hash.startsWith('#progress')) {
         setPage('progress');
+      } else if (hash === '#semen-report' || hash.startsWith('#semen-report')) {
+        setPage('semen-report');
+      } else if (cleanHash.startsWith('#shared')) {
+        const token = hash.includes('/') ? hash.split('/')[1] : hash.replace('#shared', '');
+        setSharedToken(token);
+        setPage('shared');
       } else if (hash.startsWith('#report')) {
         setPage('report');
       } else {
@@ -85,9 +97,31 @@ function AppContent() {
     handleHashChange();
 
     window.addEventListener('hashchange', handleHashChange);
+
+    // Discreet Mode: double-Escape key to show neutral screen or custom event
+    let escPresses = 0;
+    let escTimer = null;
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        escPresses += 1;
+        clearTimeout(escTimer);
+        escTimer = setTimeout(() => { escPresses = 0; }, 500);
+        if (escPresses >= 2) {
+          setDiscreetHidden(true);
+          escPresses = 0;
+        }
+      }
+    };
+    const handleQuickHideTrigger = () => setDiscreetHidden(true);
+    window.addEventListener('keydown', handleEsc);
+    window.addEventListener('mantra-quick-hide', handleQuickHideTrigger);
+
     return () => {
       isSubscribed = false;
       window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('keydown', handleEsc);
+      window.removeEventListener('mantra-quick-hide', handleQuickHideTrigger);
+      clearTimeout(escTimer);
     };
   }, [isAuthenticated, loading]);
 
@@ -97,6 +131,36 @@ function AppContent() {
     return (
       <div className="bg-[#FAF8F5] dark:bg-[#0E121A] min-h-screen flex flex-col items-center justify-center font-sans text-[#D25619] uppercase tracking-widest text-xs font-bold">
         <span>MantraAI Secure Gateway...</span>
+      </div>
+    );
+  }
+
+  // ── Discreet Mode Neutral Screen ──────────────────────────────────────────
+  if (discreetHidden) {
+    return (
+      <div
+        id="discreet-overlay"
+        className="min-h-screen bg-gray-100 flex flex-col items-center justify-center gap-4 select-none"
+        style={{ fontFamily: 'sans-serif' }}
+      >
+        <h1 style={{ fontSize: 22, color: '#374151', fontWeight: 600 }}>New Tab</h1>
+        <p style={{ fontSize: 13, color: '#6B7280' }}>Press any key or click below to return.</p>
+        <button
+          id="discreet-return-btn"
+          onClick={() => setDiscreetHidden(false)}
+          style={{
+            marginTop: 8,
+            padding: '8px 20px',
+            background: '#374151',
+            color: 'white',
+            borderRadius: 8,
+            border: 'none',
+            fontSize: 13,
+            cursor: 'pointer',
+          }}
+        >
+          Return to MantraAI
+        </button>
       </div>
     );
   }
@@ -123,8 +187,12 @@ function AppContent() {
         <History onNavigateHome={handleNavigateHome} />
       ) : page === 'progress' ? (
         <MyProgress onNavigateHome={handleNavigateHome} />
+      ) : page === 'semen-report' ? (
+        <SemenReport onNavigateHome={handleNavigateHome} />
       ) : page === 'report' ? (
-        <ReportViewer onNavigateHome={handleNavigateHome} />
+        <ReportViewer onNavigateHome={handleNavigateHome} onQuickHide={() => setDiscreetHidden(true)} />
+      ) : page === 'shared' ? (
+        <SharedReportViewer token={sharedToken} onNavigateHome={handleNavigateHome} />
       ) : (
         <div className="flex flex-col min-h-screen">
           <Navbar />

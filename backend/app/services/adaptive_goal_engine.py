@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 from app.models.user import User
 from app.models.health import HealthDailyMetrics, AdaptiveGoal
 from app.models.assessment import AssessmentSession, Report
+from app.models.cycle_plan import CyclePlan
+from app.services.cycle_plan import get_plan_step_for_week
 
 
 class AdaptiveGoalEngine:
@@ -187,9 +189,33 @@ class AdaptiveGoalEngine:
     @classmethod
     def _derive_action_plan_goal(cls, user: User, target_date: date, db: Session) -> Optional[AdaptiveGoal]:
         """
-        Integrates ONE relevant action plan habit from the user's latest assessment report.
-        Maintains strict determinism without altering the report schema.
+        Integrates ONE relevant action plan habit from the user's active 90-day cycle plan
+        or latest assessment report. Maintains strict determinism and uq_user_date_goal_type constraint.
         """
+        # 1. Prefer current week's habit from user's active 90-day cycle plan
+        active_plan = (
+            db.query(CyclePlan)
+            .filter(CyclePlan.user_id == user.id, CyclePlan.status == "active")
+            .first()
+        )
+        if active_plan and active_plan.focus_factors:
+            days_elapsed = (target_date - active_plan.start_date).days
+            week_idx = min(12, max(1, (days_elapsed // 7) + 1))
+            factors = active_plan.focus_factors
+            chosen_factor = factors[(target_date.toordinal()) % len(factors)]
+            step_info = get_plan_step_for_week(chosen_factor, week_idx, lang="en")
+            
+            return AdaptiveGoal(
+                user_id=user.id,
+                date=target_date,
+                goal_type="action_plan",
+                title=f"Action Plan: {step_info['action_text'][:90]}",
+                target_value=1.0,
+                unit="completion",
+                rationale=f"Week {week_idx} habit for {step_info['factor_title']} from your 90-day cycle plan.",
+            )
+
+        # 2. Fall back to existing behavior when there is no active cycle plan
         latest_report = (
             db.query(Report)
             .join(AssessmentSession, Report.assessment_session_id == AssessmentSession.id)
