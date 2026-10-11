@@ -118,7 +118,7 @@ export default function Landing() {
 
           {/* Revolutionary Mission Slogan Statement */}
           <Text style={styles.revolutionTagline}>
-            A healthcare social impact revolution breaking the silence on male reproductive wellness in Bharat. Secure, HIPAA-aware, 100% stigma-free clinical screening.
+            A healthcare social impact revolution breaking the silence on male reproductive wellness in Bharat. Secure, privacy-conscious, stigma-free clinical screening.
           </Text>
 
           {/* Core Pillars of the Revolution */}
@@ -128,7 +128,7 @@ export default function Landing() {
                 <Feather name="shield" size={18} color="#FF9933" />
               </Animated.View>
               <Text style={styles.pillarTitle}>STIGMA-FREE PRIVACY</Text>
-              <Text style={styles.pillarDesc}>100% anonymous screening.</Text>
+              <Text style={styles.pillarDesc}>Private, scoped screening.</Text>
             </View>
             <View style={styles.pillarCard}>
               <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>

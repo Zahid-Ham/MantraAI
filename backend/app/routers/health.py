@@ -128,6 +128,8 @@ def get_daily_metrics(
     start_date: Optional[date] = Query(None, description="Start date filter"),
     end_date: Optional[date] = Query(None, description="End date filter"),
     source: Optional[str] = Query(None, description="Source provider filter"),
+    include_synthetic: bool = Query(True, description="Whether to include synthetic demo records"),
+    is_synthetic: Optional[bool] = Query(None, description="Explicit filter for synthetic vs genuine records"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -140,48 +142,55 @@ def get_daily_metrics(
         query = query.filter(HealthDailyMetrics.date <= end_date)
     if source:
         query = query.filter(HealthDailyMetrics.source == source)
+    if is_synthetic is not None:
+        query = query.filter(HealthDailyMetrics.is_synthetic == is_synthetic)
+    elif not include_synthetic:
+        query = query.filter(HealthDailyMetrics.is_synthetic == False)
 
     return query.order_by(HealthDailyMetrics.date.asc()).all()
 
 
 @router.get("/daily/latest", response_model=Optional[HealthDailyMetricsOut])
 def get_latest_daily_metric(
+    include_synthetic: bool = Query(True, description="Whether to include synthetic demo records"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Returns the most recent daily health metric record for the authenticated user."""
-    return (
-        db.query(HealthDailyMetrics)
-        .filter(HealthDailyMetrics.user_id == current_user.id)
-        .order_by(HealthDailyMetrics.date.desc())
-        .first()
-    )
+    query = db.query(HealthDailyMetrics).filter(HealthDailyMetrics.user_id == current_user.id)
+    if not include_synthetic:
+        query = query.filter(HealthDailyMetrics.is_synthetic == False)
+
+    return query.order_by(HealthDailyMetrics.date.desc()).first()
 
 
 @router.get("/trends", response_model=HealthTrendsOut)
 def get_health_trends(
     days: int = Query(7, ge=3, le=90, description="Number of days to evaluate"),
+    include_synthetic: bool = Query(False, description="Whether to include synthetic demo records in trend calculations"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
     Computes a transparent deterministic summary of observational health trends.
     Uses descriptive classifications (improving, maintaining, declining, insufficient_data).
-    Strictly non-clinical and non-diagnostic.
+    Strictly non-clinical and non-diagnostic. Excludes synthetic records by default.
     """
     end_d = date.today()
     start_d = end_d - timedelta(days=days - 1)
 
-    metrics = (
+    query = (
         db.query(HealthDailyMetrics)
         .filter(
             HealthDailyMetrics.user_id == current_user.id,
             HealthDailyMetrics.date >= start_d,
             HealthDailyMetrics.date <= end_d,
         )
-        .order_by(HealthDailyMetrics.date.asc())
-        .all()
     )
+    if not include_synthetic:
+        query = query.filter(HealthDailyMetrics.is_synthetic == False)
+
+    metrics = query.order_by(HealthDailyMetrics.date.asc()).all()
 
     metric_map = {m.date: m for m in metrics}
 

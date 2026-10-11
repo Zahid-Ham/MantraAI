@@ -11,7 +11,7 @@ const faqs = [
     id: 'faq-2',
     question: 'Is my data private and secure?',
     answer:
-      'MantraAI is designed with privacy as a core principle. Sensitive health information should be handled with appropriate authentication, access controls, secure storage and explicit user consent. Do not describe the platform as completely anonymous or 100% secure unless the implemented architecture actually supports that claim.',
+      'Yes. MantraAI enforces authenticated user isolation, strict access boundaries, and zero third-party commercial data monetization. You retain full control over your records at all times — you can download a complete portable copy of your data in JSON format, selectively delete individual assessments, or permanently erase your entire account and all associated health history directly from Settings.',
   },
   {
     id: 'faq-3',

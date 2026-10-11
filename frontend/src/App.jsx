@@ -26,6 +26,7 @@ import Dashboard from './pages/Dashboard';
 import MyProgress from './pages/MyProgress';
 import MythVsFact from './pages/MythVsFact';
 import AICompanion from './pages/AICompanion';
+import WellnessPlanner from './pages/WellnessPlanner';
 import { getAuthenticatedEntryRoute } from './utils/navigation';
 
 function AppContent() {
@@ -44,7 +45,7 @@ function AppContent() {
       // Define routes requiring authentication
       const protectedHashes = [
         '#assess', '#dashboard', '#profile', '#settings', '#history', '#report',
-        '#reports', '#progress', '#resources', '#resource', '#support',
+        '#reports', '#progress', '#planner', '#wellness-planner', '#resources', '#resource', '#support',
         '#myth-fact', '#myth-vs-fact', '#myths',
         '#companion', '#ai-companion'
       ];
@@ -64,6 +65,8 @@ function AppContent() {
         setPage('resources');
       } else if (cleanHash === '#support' || cleanHash.startsWith('#support')) {
         setPage('support');
+      } else if (cleanHash === '#planner' || cleanHash.startsWith('#planner') || cleanHash === '#wellness-planner' || cleanHash.startsWith('#wellness-planner')) {
+        setPage('planner');
       } else if (cleanHash === '#myth-fact' || cleanHash.startsWith('#myth-fact') || cleanHash === '#myth-vs-fact' || cleanHash.startsWith('#myth-vs-fact') || cleanHash === '#myths') {
         setPage('myth-fact');
       } else if (cleanHash === '#companion' || cleanHash.startsWith('#companion') || cleanHash === '#ai-companion' || cleanHash.startsWith('#ai-companion')) {
@@ -122,6 +125,8 @@ function AppContent() {
         <Resources onNavigateHome={handleNavigateHome} />
       ) : page === 'support' ? (
         <Support onNavigateHome={handleNavigateHome} />
+      ) : page === 'planner' ? (
+        <WellnessPlanner onNavigateHome={handleNavigateHome} />
       ) : page === 'myth-fact' ? (
         <MythVsFact onNavigateHome={handleNavigateHome} />
       ) : page === 'companion' ? (

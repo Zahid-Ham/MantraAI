@@ -164,6 +164,10 @@ def setup_db_and_auth():
             db.add(User(firebase_uid=uid, email=f"{uid}@mantraai.test"))
     db.commit()
 
+    # Clear generated cache so tests do not inherit stale error responses
+    db.query(MythFactGeneratedCache).delete()
+    db.commit()
+
     # Ensure corpus is seeded
     if db.query(MythFactClaim).count() < 100:
         import_myth_fact_corpus(db=db, verify_json=True)
@@ -304,7 +308,9 @@ def test_unknown_claim_with_evidence_synthesis():
     db = TestingSessionLocal()
     # Unindexed query matching existing evidence in EVIDENCE_CORPUS (heat exposure / laptops)
     req = MythFactQueryRequest(query="Is using a laptop on your lap bad for sperm temperature?")
-    res = process_myth_fact_query(req, db)
+    mock_llm_json = '{"classification": "CONTEXT_DEPENDENT", "domain": "lifestyle", "explanation": "Scrotal hyperthermia from laptop heat can reversibly affect spermatogenesis according to thermal physiology guidelines.", "cited_evidence_ids": ["who-infertility-lifestyle"], "reasoning": "Grounded in heat guidelines", "limitations": ["Observational physiology"]}'
+    with patch("app.services.myth_fact_service.execute_groq_request", return_value=mock_llm_json):
+        res = process_myth_fact_query(req, db)
 
     assert res.match_type == MatchTypeEnum.SYNTHESIZED_EVIDENCE
     assert res.classification in [MythFactClassification.FACT, MythFactClassification.CONTEXT_DEPENDENT, MythFactClassification.MISLEADING]

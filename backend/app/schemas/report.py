@@ -69,6 +69,7 @@ UrgencyLevel = Literal[
     "routine",
     "timely",
     "prompt",
+    "emergency",
 ]
 
 WellnessStatus = Literal[

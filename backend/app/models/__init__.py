@@ -14,3 +14,10 @@ from app.models.companion import (
     CompanionConversation,
     CompanionMessage,
 )
+from app.models.wellness_plan import (
+    WellnessPlan,
+    WellnessActionItem,
+    WellnessActionLog,
+)
+from app.models.consent import UserConsent
+from app.models.deletion import AccountDeletionRecord

@@ -120,7 +120,7 @@ export default function ModulePreview() {
         m1: {
           tag: '01 / Autonomous',
           title: 'AI Companion',
-          desc: "An intelligent, context-aware interface designed to discuss sensitive questions, provide behavioral guidance, and translate clinical jargon. Instant, anonymous responses.",
+          desc: "An intelligent, context-aware interface designed to discuss sensitive questions, provide behavioral guidance, and translate clinical jargon. Instant, evidence-grounded responses.",
           q: '"What factors in an urban lifestyle typically impact cardiovascular health and energy levels for men over 30?"',
           a: '"Sedentary routines, high cortisol from stress, and irregular sleep patterns. Let\'s analyze your parameters..."',
         },

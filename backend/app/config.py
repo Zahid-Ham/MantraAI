@@ -12,6 +12,18 @@ class Settings(BaseSettings):
     ADMIN_API_KEY: str = ""
     ADMIN_EMAILS: str = ""
 
+    # Rate Limiting & DoS Protection
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_REDIS_URL: str = ""
+    RATE_LIMIT_AI_PER_MINUTE: int = 20
+    RATE_LIMIT_ASSESSMENT_PER_MINUTE: int = 10
+    RATE_LIMIT_DEFAULT_PER_MINUTE: int = 60
+    MAX_REQUEST_BODY_BYTES: int = 524288  # 512 KB
+    # Privacy, Consent & Retention Settings
+    CURRENT_PRIVACY_POLICY_VERSION: str = "1.0"
+    ENFORCE_USER_CONSENT: bool = True
+    MAX_AUTH_AGE_SECONDS_FOR_DELETION: int = 900  # 15 minutes recent auth window
+
     class Config:
         env_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
         env_file_encoding = 'utf-8'

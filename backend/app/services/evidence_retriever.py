@@ -118,10 +118,26 @@ def retrieve_evidence(
             chunk_tag_set = {t.lower() for t in chunk.evidence_tags}
             matched = sorted(list(query_tag_set.intersection(chunk_tag_set)))
 
+            # Also check compound tags where individual parts match query tags
+            if not matched:
+                compound_matches = [
+                    t for t in chunk_tag_set
+                    if "_" in t and all(part in query_tag_set for part in t.split("_"))
+                ]
+                if compound_matches:
+                    matched = sorted(compound_matches)
+
             if not matched:
                 # Fallback: check if parent document tags match
                 doc_tag_set = {t.lower() for t in doc.evidence_tags}
                 doc_matched = sorted(list(query_tag_set.intersection(doc_tag_set)))
+                if not doc_matched:
+                    compound_doc = [
+                        t for t in doc_tag_set
+                        if "_" in t and all(part in query_tag_set for part in t.split("_"))
+                    ]
+                    if compound_doc:
+                        doc_matched = sorted(compound_doc)
                 if not doc_matched:
                     continue
                 matched = doc_matched

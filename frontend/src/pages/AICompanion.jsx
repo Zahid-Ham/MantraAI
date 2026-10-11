@@ -3,6 +3,7 @@ import AppShell from '../components/layout/AppShell';
 import { apiRequest } from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import MarkdownRenderer from '../components/common/MarkdownRenderer';
+import EmergencyContactsCard from '../components/common/EmergencyContactsCard';
 
 // Default initial question suggestions
 const SUGGESTED_QUESTIONS = [
@@ -674,22 +675,7 @@ export default function AICompanion({ onNavigateHome }) {
             </div>
 
             {/* Emergency & Support Helplines Card */}
-            <div className="bg-[#FAF9F6] border border-[#E8E5DF] rounded-2xl p-4 md:p-5 shadow-xs space-y-2.5 text-xs">
-              <div className="font-bold text-[#1C1917] flex items-center gap-1.5">
-                <svg className="w-4 h-4 text-[#DC2626]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                Emergency Helplines (India)
-              </div>
-              <p className="text-[#57534E] leading-relaxed">
-                If you are experiencing acute physical distress or a mental health crisis:
-              </p>
-              <ul className="space-y-1 text-[#78716C]">
-                <li>• <strong>Tele-MANAS:</strong> 14416 (24/7 National Mental Health)</li>
-                <li>• <strong>Vandrevala:</strong> +91 9999 666 555</li>
-                <li>• <strong>Emergency Medical:</strong> 112 / 108</li>
-              </ul>
-            </div>
+            <EmergencyContactsCard variant="compact" />
 
           </aside>
 

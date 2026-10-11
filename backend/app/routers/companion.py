@@ -20,12 +20,14 @@ SECURITY & PRIVACY
 import logging
 from typing import List
 from uuid import UUID
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.auth.firebase_auth import get_current_user
 from app.models.user import User
+from app.config import settings
+from app.security.rate_limiter import check_rate_limit
 from app.schemas.companion import (
     ChatRequest,
     ChatResponse,
@@ -53,9 +55,33 @@ router = APIRouter(prefix="/api/v1/companion", tags=["AI Health Companion"])
 )
 def chat_turn(
     payload: ChatRequest,
+    request: Request = None,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> ChatResponse:
+    if request:
+        check_rate_limit(
+            request=request,
+            key=f"companion:{user.id}",
+            max_requests=settings.RATE_LIMIT_AI_PER_MINUTE,
+            window_seconds=60,
+        )
+
+    # Deterministic Emergency Pre-Screening:
+    # Life-critical emergency and crisis escalation must NEVER be blocked by missing or revoked AI consent.
+    # If the user is reporting acute red-flag symptoms or crisis ideation, bypass the consent gate so
+    # immediate deterministic emergency directives and verified helplines are provided with zero LLM exposure.
+    from app.services.companion_service import check_urgent_symptoms
+    is_emergency = bool(check_urgent_symptoms(payload.message))
+
+    if not is_emergency and settings.ENFORCE_USER_CONSENT:
+        from app.services import user_data_service
+        user_data_service.require_consent_for_operation(
+            db=db,
+            user=user,
+            consent_types=["THIRD_PARTY_AI_ANALYSIS"],
+        )
+
     return process_chat_message(request=payload, user=user, db=db)
 
 

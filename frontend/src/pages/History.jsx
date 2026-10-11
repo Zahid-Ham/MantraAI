@@ -8,6 +8,25 @@ export default function History({ onNavigateHome }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [pdfToast, setPdfToast] = useState('');
+  const [deleteModalSession, setDeleteModalSession] = useState(null);
+  const [deletingSessionId, setDeletingSessionId] = useState(null);
+  const [deleteToast, setDeleteToast] = useState('');
+
+  const handleDeleteAssessment = async (sessionId) => {
+    try {
+      setDeletingSessionId(sessionId);
+      await apiRequest(`/api/v1/assessments/${sessionId}`, { method: 'DELETE' });
+      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+      setDeleteModalSession(null);
+      setDeleteToast('Assessment session and report permanently deleted.');
+      setTimeout(() => setDeleteToast(''), 4500);
+    } catch (err) {
+      console.error('Failed to delete assessment:', err);
+      alert('Unable to delete assessment. Please try again.');
+    } finally {
+      setDeletingSessionId(null);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -174,6 +193,16 @@ export default function History({ onNavigateHome }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>{pdfToast}</span>
+          </div>
+        )}
+
+        {/* Delete Toast Notification */}
+        {deleteToast && (
+          <div className="fixed bottom-6 right-6 z-50 bg-[#1E3A2B] text-white px-5 py-3 rounded-xl shadow-lg text-xs font-medium flex items-center gap-3 animate-fade-in">
+            <svg className="w-4 h-4 text-[#A7F3D0]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <span>{deleteToast}</span>
           </div>
         )}
 
@@ -404,6 +433,16 @@ export default function History({ onNavigateHome }) {
                     </svg>
                     <span>Download PDF</span>
                   </button>
+
+                  <button
+                    onClick={() => setDeleteModalSession(latestSession)}
+                    title="Delete Assessment"
+                    className="inline-flex items-center justify-center p-3 rounded-xl border border-[#FEE2E2] bg-white text-[#DC2626] hover:bg-[#FEF2F2] transition-colors cursor-pointer shrink-0"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
 
               </div>
@@ -544,16 +583,27 @@ export default function History({ onNavigateHome }) {
 
                     </div>
 
-                    {/* View Report Button */}
-                    <button
-                      onClick={() => handleViewReport(sess.id)}
-                      className="w-full py-2.5 px-4 bg-white border border-[#E8E5DF] hover:border-[#1E3A2B] hover:bg-[#F9FAFB] text-[#1C1917] font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                    >
-                      <span>View Report</span>
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    </button>
+                    {/* View Report & Delete Buttons */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleViewReport(sess.id)}
+                        className="flex-1 py-2.5 px-4 bg-white border border-[#E8E5DF] hover:border-[#1E3A2B] hover:bg-[#F9FAFB] text-[#1C1917] font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                      >
+                        <span>View Report</span>
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setDeleteModalSession(sess)}
+                        title="Delete assessment"
+                        className="p-2.5 rounded-xl border border-[#FEE2E2] bg-white text-[#DC2626] hover:bg-[#FEF2F2] transition-colors cursor-pointer shrink-0"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
 
                   </div>
                 );
@@ -596,6 +646,51 @@ export default function History({ onNavigateHome }) {
 
           </div>
         </section>
+
+        {/* Delete Confirmation Modal */}
+        {deleteModalSession && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+            onClick={() => setDeleteModalSession(null)}
+          >
+            <div
+              className="bg-white border border-[#FEE2E2] rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 text-[#DC2626]">
+                <div className="w-10 h-10 rounded-xl bg-[#FEF2F2] flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[#991B1B]">Delete this assessment?</h3>
+                  <p className="text-[11px] text-[#DC2626]">This action cannot be undone.</p>
+                </div>
+              </div>
+              <p className="text-xs text-[#57534E] leading-relaxed">
+                This will permanently delete this assessment session, your questionnaire answers, and the generated AI report from your account.
+              </p>
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setDeleteModalSession(null)}
+                  className="px-4 py-2 border border-[#E8E5DF] text-xs font-semibold text-[#57534E] rounded-xl hover:bg-[#FAF9F6] transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={Boolean(deletingSessionId)}
+                  onClick={() => handleDeleteAssessment(deleteModalSession.id)}
+                  className="px-4 py-2 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {deletingSessionId ? 'Deleting...' : 'Delete Permanently'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </AppShell>

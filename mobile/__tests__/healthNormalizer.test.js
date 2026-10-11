@@ -139,7 +139,23 @@ describe('Health Data Normalizer', () => {
         sleep_duration_minutes: 421,
         resting_heart_rate: 68,
         active_calories: 412,
+        is_synthetic: false,
+        provenance: 'device_sensor',
       });
+    });
+
+    test('detects synthetic records and marks is_synthetic=true with provenance=synthetic_demo', () => {
+      const demoRaw = {
+        date: '2026-10-04',
+        steps: [{ count: 6842, metadata: { clientRecordId: 'mantraai-demo-steps-2026-10-04' } }],
+        activeCalories: [{ energy: { value: 412 }, metadata: { clientRecordId: 'mantraai-demo-calories-2026-10-04' } }],
+      };
+      const result = normalizeDailyHealthData(demoRaw);
+
+      expect(result.steps).toBe(6842);
+      expect(result.active_calories).toBe(412);
+      expect(result.is_synthetic).toBe(true);
+      expect(result.provenance).toBe('synthetic_demo');
     });
 
     test('strictly preserves nulls when metrics are missing (no zero coercion)', () => {

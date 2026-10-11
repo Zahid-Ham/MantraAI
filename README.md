@@ -1,21 +1,21 @@
 # MantraAI 🧬
 
-**Private, evidence-based men's health intelligence for India.**
+**Evidence-grounded, private men's health intelligence for India.**
 
-MantraAI is an anonymous, clinical-grade digital wellness platform designed specifically for the modern Indian man — addressing reproductive health, mental wellness, and lifestyle risk factors through AI-powered symptom assessment.
+MantraAI is an evidence-based digital health intelligence platform engineered specifically for the modern Indian man — addressing reproductive health, mental wellness, and lifestyle risk factors through clinical screening questionnaires, passive metric synchronization, and AI-assisted health guidance.
 
 ---
 
 ## ✨ Features
 
 ### 🔬 Symptom Assessment
-A structured, multi-block clinical questionnaire covering 13 health domains with 96+ data points — including demographics, lifestyle, mental health, reproductive health, sexual health, and more. Produces a personalized AI-generated clinical report with no account required.
+A structured, multi-block clinical questionnaire covering 13 health domains with 96+ data points — including demographics, lifestyle, mental health, reproductive health, sexual wellbeing, and environmental exposures. Produces a personalized, non-diagnostic wellness report securely linked to your authenticated profile.
 
-### 🤖 AI Report Generation (Groq API)
-Questionnaire responses are analyzed server-side by a large language model (Llama 3.3 70B via Groq) to produce a private, non-diagnostic wellness report with domain-specific insights.
+### 🤖 AI Report Generation & Health Companion (Groq API)
+Responses are synthesized server-side using large language models (Llama 3.3 70B via Groq) grounded strictly in peer-reviewed clinical guidelines (WHO, AUA/ASRM, EAU) to deliver educational risk factors and personalized lifestyle guidance.
 
 ### 🎨 Living Microscopic Visual Identity
-A unique "life at the microscopic level" visual language — custom biological Canvas-2D particle field, abstract sperm-like biological forms, Ashoka-inspired orbital mandala rings, custom biological cursor with click-burst physics, and a full page entry animation.
+A unique "life at the microscopic level" visual language — custom biological Canvas-2D particle field, abstract biological forms, Ashoka-inspired orbital mandala rings, custom biological cursor with click-burst physics, and a full page entry animation.
 
 ### 🇮🇳 India-First Design
 - Bilingual: English ↔ Hindi (हिन्दी)
@@ -23,11 +23,14 @@ A unique "life at the microscopic level" visual language — custom biological C
 - India data map with animated city nodes (Delhi, Mumbai, Bengaluru, Kolkata, Chennai, Pune)
 - Saffron (Marigold) primary accent with Ashoka-green identity markers
 
-### 🔒 Privacy-First
-- Zero PII collected
-- No account signup
-- No session tracking
-- Anonymous assessments by design
+### 🔒 Privacy, Consent & User Data Control
+- **Authenticated User Isolation**: All personal health records are strictly scoped to verified user IDs with enforced ownership checks.
+- **Data Subject Rights & Deletion**: Complete account and data graph deletion (`DELETE /api/v1/auth/account`) removes all PostgreSQL health records and deletes the Firebase account. Individual assessment deletion (`DELETE /api/v1/assessments/{id}`) allows selective removal.
+- **Portable Data Export**: One-click download of all user-associated records in portable JSON format (`GET /api/v1/auth/export`).
+- **Versioned Consent Tracking**: Minimal, auditable records of user consent actions and policy versions (`/api/v1/auth/consent`).
+- **Zero Commercial Monetization**: Self-reported answers and health metrics are never sold, rented, or traded to commercial advertisers.
+- **Third-Party Processing Transparency**: External processing is limited to Groq LLM inference for non-diagnostic report synthesis and chat turns.
+- **Privacy Contact**: Inquiries or data subject requests may be directed to privacy@mantraai.health.
 
 ---
 
@@ -290,5 +293,5 @@ MIT License. See [LICENSE](LICENSE) for details.
 
 <div align="center">
   <strong>MANTRA.AI</strong> — Private health intelligence for India 🇮🇳<br/>
-  <em>Shielded by design. Anonymous by default.</em>
+  <em>Evidence-grounded. Privacy-focused.</em>
 </div>

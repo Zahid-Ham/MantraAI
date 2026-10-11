@@ -7,3 +7,4 @@ psycopg[binary]
 alembic
 firebase-admin
 pydantic-settings
+redis

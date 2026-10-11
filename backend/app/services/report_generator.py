@@ -1329,6 +1329,7 @@ def generate_mantra_report(
     api_key: Optional[str] = None,
     model: Optional[str] = None,
     max_attempts: int = MAX_REPORT_ATTEMPTS,
+    allow_external_ai: bool = True,
 ) -> MantraAIReport:
     """
     High-level orchestrator that synthesizes a validated MantraAIReport.
@@ -1341,15 +1342,19 @@ def generate_mantra_report(
         metadata = ReportMetadata(
             report_version="2.0",
             generated_at=datetime.now(timezone.utc).isoformat(),
-            model_provider="groq",
-            model_name=resolved_model,
+            model_provider="groq" if allow_external_ai else "deterministic_fallback",
+            model_name=resolved_model if allow_external_ai else "deterministic_guideline_engine",
             questionnaire_version="1.0",
         )
 
-    # If no API key is configured, immediately return safe deterministic fallback
-    if not resolved_api_key or not resolved_api_key.strip():
+    # If external AI is not allowed (e.g. no THIRD_PARTY_AI_ANALYSIS consent) or no API key is configured,
+    # immediately return safe deterministic fallback without transmitting health data to Groq.
+    if not allow_external_ai or not resolved_api_key or not resolved_api_key.strip():
         logger.info(
-            "Groq API key not configured. Generating deterministic fallback report (evidence matched: %d).",
+            "External AI synthesis disabled or not configured (allow_external_ai=%s, api_key_present=%s). "
+            "Generating deterministic fallback report (evidence matched: %d).",
+            allow_external_ai,
+            bool(resolved_api_key and resolved_api_key.strip()),
             evidence_context.matched_count,
         )
         fb = build_fallback_report(

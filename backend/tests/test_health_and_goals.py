@@ -292,7 +292,13 @@ def test_trends_calculated_with_data():
 
     client.post("/api/v1/health/sync", json={"provider": "mock"})
 
-    res = client.get("/api/v1/health/trends?days=7")
+    # Synthetic demo data is quarantined and excluded from trends by default
+    res_default = client.get("/api/v1/health/trends?days=7")
+    assert res_default.status_code == 200
+    assert all(t["direction"] == "insufficient_data" for t in res_default.json()["trends"])
+
+    # When include_synthetic=true is explicitly passed, trends are computed
+    res = client.get("/api/v1/health/trends?days=7&include_synthetic=true")
     assert res.status_code == 200
     data = res.json()
     assert len(data["trends"]) == 4

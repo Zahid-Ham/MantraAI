@@ -217,7 +217,7 @@ export function normalizeActiveCalories(rawCalories) {
       // Health Connect energy is in Calories or kilocalories object { inKilocalories, inCalories }
       let kcal = null;
       if (record.energy) {
-        kcal = Number(record.energy.inKilocalories ?? (record.energy.inCalories ? record.energy.inCalories / 1000 : null));
+        kcal = Number(record.energy.value ?? record.energy.inKilocalories ?? (record.energy.inCalories ? record.energy.inCalories / 1000 : null));
       } else if (record.inKilocalories !== undefined) {
         kcal = Number(record.inKilocalories);
       } else if (record.calories !== undefined) {
@@ -233,13 +233,43 @@ export function normalizeActiveCalories(rawCalories) {
   if (typeof rawCalories === 'object') {
     let kcal = null;
     if (rawCalories.energy) {
-      kcal = Number(rawCalories.energy.inKilocalories ?? rawCalories.energy.inCalories / 1000);
+      kcal = Number(rawCalories.energy.value ?? rawCalories.energy.inKilocalories ?? (rawCalories.energy.inCalories ? rawCalories.energy.inCalories / 1000 : null));
     } else {
       kcal = Number(rawCalories.inKilocalories ?? rawCalories.calories ?? rawCalories.active_calories);
     }
     return (kcal !== null && !isNaN(kcal) && kcal >= 0) ? Math.round(kcal) : null;
   }
   return null;
+}
+
+/**
+ * Detects whether a record, list of records, or object originated from synthetic/demo generation.
+ * @param {any} input 
+ * @returns {boolean}
+ */
+export function isSyntheticRecord(input) {
+  if (!input) return false;
+  if (Array.isArray(input)) {
+    return input.some((item) => isSyntheticRecord(item));
+  }
+  if (typeof input === 'object') {
+    if (input.is_synthetic === true || input.isDemo === true || input.provenance === 'synthetic_demo') {
+      return true;
+    }
+    const clientRecordId = input.metadata?.clientRecordId || input.clientRecordId || '';
+    if (typeof clientRecordId === 'string' && clientRecordId.startsWith('mantraai-demo-')) {
+      return true;
+    }
+    const notes = input.notes || '';
+    if (typeof notes === 'string' && notes.toLowerCase().includes('synthetic')) {
+      return true;
+    }
+    const title = input.title || '';
+    if (typeof title === 'string' && (title.includes('(Demo)') || title.toLowerCase().includes('demo workout'))) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -254,6 +284,8 @@ export function normalizeActiveCalories(rawCalories) {
  * @param {any} [rawData.workout_minutes] - Direct workout minutes if available
  * @param {any} [rawData.restingHeartRate] - Raw resting heart rate data
  * @param {any} [rawData.activeCalories] - Raw active calories data
+ * @param {boolean} [rawData.is_synthetic] - Explicit synthetic flag
+ * @param {string} [rawData.provenance] - Provenance tag
  * 
  * @returns {NormalizedDailyHealthData}
  */
@@ -289,8 +321,21 @@ export function normalizeDailyHealthData(rawData = {}) {
     rawData.activeCalories ?? rawData.active_calories
   );
 
+  const isSynthetic = Boolean(
+    rawData.is_synthetic === true ||
+    rawData.isDemo === true ||
+    rawData.provenance === 'synthetic_demo' ||
+    isSyntheticRecord(rawData.steps) ||
+    isSyntheticRecord(rawData.sleep) ||
+    isSyntheticRecord(rawData.exercise) ||
+    isSyntheticRecord(rawData.restingHeartRate) ||
+    isSyntheticRecord(rawData.activeCalories)
+  );
+
+  const provenance = isSynthetic ? 'synthetic_demo' : (rawData.provenance || 'device_sensor');
+
   return {
-    source: 'health_connect',
+    source: rawData.source || 'health_connect',
     date: dateStr,
     steps,
     active_minutes,
@@ -298,5 +343,7 @@ export function normalizeDailyHealthData(rawData = {}) {
     sleep_duration_minutes,
     resting_heart_rate,
     active_calories,
+    is_synthetic: isSynthetic,
+    provenance,
   };
 }

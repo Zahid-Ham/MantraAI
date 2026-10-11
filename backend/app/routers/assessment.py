@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from uuid import UUID
 from datetime import datetime
@@ -9,6 +9,8 @@ from typing import List, Dict, Any
 from app.database import get_db
 from app.auth.firebase_auth import get_current_user
 from app.models.user import User
+from app.config import settings
+from app.security.rate_limiter import check_rate_limit
 from app.models.assessment import AssessmentSession, AssessmentResponse, AssessmentResult, Report
 from app.models.audit import AuditEvent
 from app.schemas.assessment import (
@@ -17,16 +19,52 @@ from app.schemas.assessment import (
     AssessmentResponseSave,
     AssessmentResultOut,
     ReportOut,
+    AssessmentDeleteResponse,
+    TriageCheckRequest,
 )
+from app.services import user_data_service
 from app.services.normalizer import normalize_assessment_responses
 from app.services.context_engine import build_health_context
 from app.services.evidence_retriever import retrieve_evidence_for_health_context
 from app.services.report_generator import generate_mantra_report
 from app.schemas.report import new_report_to_legacy_view
+from app.services.triage_service import (
+    evaluate_pre_assessment_checklist,
+    evaluate_assessment_responses_triage,
+    evaluate_free_text_triage,
+    TriageResult,
+)
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/assessments", tags=["assessments"])
+
+@router.post("/triage-check", response_model=TriageResult)
+def check_clinical_triage(
+    payload: TriageCheckRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Deterministic clinical safety triage checkpoint.
+    Evaluates pre-assessment safety checklist, responses, or free text for red flags.
+    Returns structured 3-tier urgency triage with conservative immediate care directives.
+    """
+    if payload.checklist:
+        return evaluate_pre_assessment_checklist(payload.checklist)
+    if payload.checklist_items:
+        items_dict = {item: True for item in payload.checklist_items}
+        return evaluate_pre_assessment_checklist(items_dict)
+
+    query_text = payload.text or payload.free_text
+    if query_text:
+        res = evaluate_free_text_triage(query_text)
+        if res:
+            return res
+
+    if payload.responses:
+        return evaluate_assessment_responses_triage(payload.responses)
+
+    return evaluate_pre_assessment_checklist({})
 
 @router.post("", response_model=AssessmentSessionOut)
 def create_assessment_session(
@@ -182,7 +220,12 @@ def save_responses(
             db.add(new_resp)
             
     db.commit()
-    return {"status": "ok", "saved_count": len(payload.responses)}
+    triage_alert = evaluate_assessment_responses_triage(payload.responses)
+    return {
+        "status": "ok",
+        "saved_count": len(payload.responses),
+        "triage": triage_alert.model_dump() if triage_alert.is_emergency else None,
+    }
 
 # Backward-compatible helper executing the structured report generator pipeline
 def generate_report_via_groq(answers: dict) -> dict:
@@ -197,9 +240,26 @@ def generate_report_via_groq(answers: dict) -> dict:
 @router.post("/{assessment_id}/complete", response_model=AssessmentResultOut)
 def complete_assessment(
     assessment_id: UUID,
+    request: Request = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    if request:
+        check_rate_limit(
+            request=request,
+            key=f"assessment_complete:{current_user.id}",
+            max_requests=settings.RATE_LIMIT_ASSESSMENT_PER_MINUTE,
+            window_seconds=60,
+        )
+
+    if settings.ENFORCE_USER_CONSENT:
+        from app.services import user_data_service
+        user_data_service.require_consent_for_operation(
+            db=db,
+            user=current_user,
+            consent_types=["HEALTH_DATA_PROCESSING"],
+        )
+
     session = db.query(AssessmentSession).filter(
         AssessmentSession.id == assessment_id
     ).first()
@@ -278,10 +338,17 @@ def complete_assessment(
     db.add(result)
 
     # 4. Generate & store validated MantraAIReport
+    has_ai_consent = (
+        user_data_service.has_active_consent(db, current_user, "THIRD_PARTY_AI_ANALYSIS")
+        if settings.ENFORCE_USER_CONSENT
+        else True
+    )
+
     mantra_report = generate_mantra_report(
         normalized_assessment=normalized_context,
         health_context=health_context,
         evidence_context=evidence_context,
+        allow_external_ai=has_ai_consent,
     )
 
     report_dict = mantra_report.model_dump(mode="json")
@@ -365,3 +432,26 @@ def get_assessment_report(
 
     # Return report content dictionary
     return report.report_content
+
+
+@router.delete("/{assessment_id}", response_model=AssessmentDeleteResponse)
+def delete_assessment(
+    assessment_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Permanently deletes a single assessment session and its generated results and report.
+    Verifies user ownership before deletion.
+    """
+    res = user_data_service.delete_individual_assessment(db, current_user, assessment_id)
+    if not res["found"]:
+        raise HTTPException(status_code=404, detail="Assessment session not found.")
+    if not res["authorized"]:
+        raise HTTPException(status_code=403, detail="Access unauthorized.")
+
+    return AssessmentDeleteResponse(
+        status="deleted",
+        assessment_id=assessment_id,
+        message="Assessment session and associated report successfully deleted.",
+    )

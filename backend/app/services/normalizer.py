@@ -176,14 +176,17 @@ QUESTION_DOMAIN_MAP: dict[str, str] = {
 
 # ---------------------------------------------------------------------------
 # Fields that should be treated as numeric (slider responses).
-# These are the only fields where string → int/float coercion is applied.
-# All other categorical/boolean fields are kept as-is.
+# NOTE ON MENTAL HEALTH PROXY SCALES:
+# The fields perceived_stress_pss10 (slider 0-33), gad7_score (slider 0-16), and
+# phq9_score (slider 0-19) are single-slider exploratory proxy indicators, NOT the
+# validated clinical instruments (full 10-item PSS-10, 7-item GAD-7, 9-item PHQ-9).
+# They must never be presented as validated clinical diagnostic scores.
 # ---------------------------------------------------------------------------
 NUMERIC_FIELDS: set[str] = {
-    "age_years",           # slider: 18–50 (integer)
-    "perceived_stress_pss10",  # slider: 0–33 (integer)
-    "gad7_score",          # slider: 0–16 (integer)
-    "phq9_score",          # slider: 0–19 (integer)
+    "age_years",               # slider: 18–50 (integer)
+    "perceived_stress_pss10",  # non-validated proxy slider: 0–33 (integer)
+    "gad7_score",              # non-validated proxy slider: 0–16 (integer)
+    "phq9_score",              # non-validated proxy slider: 0–19 (integer)
 }
 
 # ---------------------------------------------------------------------------

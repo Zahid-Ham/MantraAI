@@ -290,7 +290,7 @@ export default function Awareness({ topicSlug, onNavigateHome }) {
       searchPlaceholder: "Search reproductive health topics...",
       allCategories: "All Topics",
       recommended: "Recommended For You",
-      recommendedSubtitle: "Based on your anonymous assessment parameters",
+      recommendedSubtitle: "Based on your health assessment parameters",
       mythsTitle: "Myths vs Facts",
       mythsSubtitle: "Interactive myth-busting around common misconceptions",
       glossaryTitle: "Interpret Semen Parameters",
@@ -321,7 +321,7 @@ export default function Awareness({ topicSlug, onNavigateHome }) {
       searchPlaceholder: "प्रजनन स्वास्थ्य विषयों की खोज करें...",
       allCategories: "सभी विषय",
       recommended: "आपके लिए अनुशंसित",
-      recommendedSubtitle: "आपके अनाम मूल्यांकन मापदंडों के आधार पर",
+      recommendedSubtitle: "आपके स्वास्थ्य मूल्यांकन मापदंडों के आधार पर",
       mythsTitle: "भ्रम बनाम तथ्य",
       mythsSubtitle: "आम भ्रांतियों के बारे में इंटरैक्टिव जानकारी",
       glossaryTitle: "वीर्य विश्लेषण शब्दावली",
@@ -889,7 +889,7 @@ export default function Awareness({ topicSlug, onNavigateHome }) {
               {content.learningProgress}
             </h4>
             <span className="text-xs text-night-blue/50 dark:text-cream/50">
-              Explore resources anonymously. Progress is saved locally.
+              Explore educational resources. Progress is saved locally.
             </span>
           </div>
           <div className="bg-cream dark:bg-night-blue border border-border-light dark:border-border-dark px-6 py-3 rounded-sm flex items-center gap-4 shadow-sm">

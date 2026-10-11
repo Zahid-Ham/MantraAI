@@ -41,7 +41,7 @@ export default function ProblemSection() {
       title: "A silent physiological shift, accelerated by modern environments.",
       para1: "The metrics indicate a global decline in reproductive health, but in India, the challenge is layered with rapid urbanization, high metabolic stress, and complete social silence. We endure these shifts alone, waiting until clinical escalation is inevitable.",
       reframe: "We exist to change the point of intervention. MantraAI converts vital anxiety into objective, actionable data—completely privately.",
-      para2: "Through anonymous risk screening, evidence-based dynamic guidance, and discreet clinical referral pathways, we bypass the friction of traditional medical systems. We put diagnostic rigor directly in your hands before symptoms become systemic issues."
+      para2: "Through private risk screening, evidence-based dynamic guidance, and discreet clinical referral pathways, we bypass the friction of traditional medical systems. We put diagnostic rigor directly in your hands before symptoms become systemic issues."
     },
     hi: {
       subtitle: "नैदानिक ​​आधार / महत्वपूर्ण शारीरिक गिरावट",
@@ -50,7 +50,7 @@ export default function ProblemSection() {
       title: "एक मौन शारीरिक बदलाव, जो आधुनिक जीवनशैली द्वारा त्वरित है।",
       para1: "आंकड़े प्रजनन स्वास्थ्य में वैश्विक गिरावट का संकेत देते हैं, लेकिन भारत में, यह चुनौती तीव्र शहरीकरण, उच्च मानसिक व चयापचय तनाव और सामाजिक चुप्पी की परतों से घिरी है। हम इन बदलावों को अकेले सहन करते हैं, और तब तक प्रतीक्षा करते हैं जब तक कि स्थिति गंभीर न हो जाए।",
       reframe: "हम हस्तक्षेप के समय को बदलने के लिए काम करते हैं। मंत्रएआई (MantraAI) स्वास्थ्य संबंधी चिंता को पूर्णतः व्यक्तिगत रूप से वस्तुनिष्ठ और कार्रवाई योग्य डेटा में परिवर्तित करता है।",
-      para2: "हम अज्ञात जोखिम जांच, साक्ष्य-आधारित गतिशील मार्गदर्शन, और गुप्त नैदानिक ​​रेफरल मार्गों के माध्यम से पारंपरिक चिकित्सा प्रणालियों की बाधाओं को दूर करते हैं। हम लक्षणों के गंभीर होने से पहले नैदानिक ​​कठोरता सीधे आपके हाथों में सौंपते हैं।"
+      para2: "हम निजी जोखिम जांच, साक्ष्य-आधारित गतिशील मार्गदर्शन, और गुप्त नैदानिक ​​रेफरल मार्गों के माध्यम से पारंपरिक चिकित्सा प्रणालियों की बाधाओं को दूर करते हैं। हम लक्षणों के गंभीर होने से पहले नैदानिक ​​कठोरता सीधे आपके हाथों में सौंपते हैं।"
     }
   }[language];
 

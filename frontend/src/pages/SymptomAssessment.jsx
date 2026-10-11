@@ -8,6 +8,8 @@ import AssessmentHeader from '../components/assessment/AssessmentHeader';
 import AssessmentSectionNavigator from '../components/assessment/AssessmentSectionNavigator';
 import QuestionCard from '../components/assessment/QuestionCard';
 import AssessmentNavigation from '../components/assessment/AssessmentNavigation';
+import PreAssessmentSafetyScreener from '../components/assessment/PreAssessmentSafetyScreener';
+import UrgentInterruptionView from '../components/assessment/UrgentInterruptionView';
 
 export default function SymptomAssessment({ onNavigateHome }) {
   const { language } = useLanguage();
@@ -43,6 +45,7 @@ export default function SymptomAssessment({ onNavigateHome }) {
   const [maxReachedBlockId, setMaxReachedBlockId] = useState(1);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
   const [recoverySession, setRecoverySession] = useState(null);
+  const [triageDetails, setTriageDetails] = useState(null);
 
   const { questions, blocks } = assessmentSchema;
 
@@ -314,7 +317,7 @@ export default function SymptomAssessment({ onNavigateHome }) {
   };
 
   const handleStart = () => {
-    setStep('questions');
+    setStep('safety_check');
   };
 
   const handleNext = async () => {
@@ -322,10 +325,15 @@ export default function SymptomAssessment({ onNavigateHome }) {
     const activeId = localStorage.getItem('mantra_active_assessment_id');
     if (activeId && activeId !== 'offline_session_fallback') {
       try {
-        await apiRequest(`/api/v1/assessments/${activeId}/responses`, {
+        const saveRes = await apiRequest(`/api/v1/assessments/${activeId}/responses`, {
           method: "POST",
           body: JSON.stringify({ responses: answers })
         });
+        if (saveRes && saveRes.triage && saveRes.triage.is_emergency) {
+          setTriageDetails(saveRes.triage);
+          setStep('urgent_interruption');
+          return;
+        }
       } catch (err) {
         console.error("Progressive save failed:", err);
       }
@@ -430,6 +438,34 @@ export default function SymptomAssessment({ onNavigateHome }) {
         {/* Step 1: Welcome / Intro */}
         {step === 'intro' && (
           <AssessmentWelcome onStart={handleStart} />
+        )}
+
+        {/* Step 1.5: Pre-Assessment Clinical Safety Checkpoint */}
+        {step === 'safety_check' && (
+          <PreAssessmentSafetyScreener
+            onSafeToProceed={() => setStep('questions')}
+            onEmergencyTriggered={async () => {
+              try {
+                const res = await apiRequest('/api/v1/assessments/triage-check', {
+                  method: 'POST',
+                  body: JSON.stringify({ checklist: { acute_testicular_pain: true } }),
+                });
+                setTriageDetails(res);
+              } catch {
+                setTriageDetails(null);
+              }
+              setStep('urgent_interruption');
+            }}
+            onNavigateHome={handleHomeClear}
+          />
+        )}
+
+        {/* Step 1.8: Urgent Clinical Safety Interruption */}
+        {step === 'urgent_interruption' && (
+          <UrgentInterruptionView
+            onReturnHome={handleHomeClear}
+            triageDetails={triageDetails}
+          />
         )}
 
         {/* Step 2: Interactive Questions */}

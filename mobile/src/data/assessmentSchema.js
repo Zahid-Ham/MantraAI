@@ -665,7 +665,7 @@ export const assessmentSchema = {
     {
       id: "perceived_stress_pss10",
       block: 6,
-      question: { en: "Rate your overall perceived stress level (corresponds to PSS-10 scale):", hi: "अपने कुल कथित तनाव स्तर को रेट करें (PSS-10 पैमाने के अनुसार):" },
+      question: { en: "Rate your overall perceived stress level over the past month (non-diagnostic wellness slider):", hi: "पिछले एक महीने में अपने कुल कथित तनाव स्तर को रेट करें (गैर-नैदानिक वेलनेस स्लाइडर):" },
       field: "perceived_stress_pss10",
       type: "slider",
       options: [
@@ -674,49 +674,49 @@ export const assessmentSchema = {
         { value: "33", label: { en: "Severe (33)", hi: "गंभीर (33)" } },
       ],
       required: true,
-      whyWeAsk: { en: "High perceived stress levels activate the hypothalamic-pituitary-adrenal axis, elevating cortisol.", hi: "उच्च तनाव का स्तर शरीर में कोर्टिसोल हार्मोन के स्राव को बढ़ाता है।" },
+      whyWeAsk: { en: "Perceived stress activates the hypothalamic-pituitary-adrenal axis. This single slider is an exploratory wellness indicator and not the validated 10-item PSS-10 instrument.", hi: "कथित तनाव शरीर में कोर्टिसोल के स्राव को प्रभावित करता है। यह एकल स्लाइडर एक सामान्य वेलनेस संकेतक है, न कि 10-प्रश्नों वाला नैदानिक PSS-10 पैमाना।" },
       relevance: "high",
       sensitivity: false,
-      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+      evidenceNote: { en: "Self-reported wellness proxy indicator (non-diagnostic).", hi: "स्व-रिपोर्ट किया गया वेलनेस प्रॉक्सी संकेतक (गैर-नैदानिक)।" }
     },
     {
       id: "gad7_score",
       block: 6,
-      question: { en: "Provide your Generalized Anxiety Scale score (GAD-7):", hi: "अपना सामान्यीकृत चिंता विकार स्कोर दर्ज करें (GAD-7):" },
+      question: { en: "Rate your general worry or anxiety level over the past 2 weeks (non-diagnostic wellness indicator):", hi: "पिछले 2 हफ्तों में अपने सामान्य तनाव या चिंता स्तर को रेट करें (गैर-नैदानिक वेलनेस संकेतक):" },
       field: "gad7_score",
       type: "slider",
       options: [
-        { value: "0", label: { en: "Minimal (0)", hi: "न्यूनतम (0)" } },
-        { value: "8", label: { en: "Moderate (8)", hi: "मध्यम (8)" } },
-        { value: "16", label: { en: "Severe (16)", hi: "गंभीर (16)" } },
+        { value: "0", label: { en: "Minimal worry (0)", hi: "न्यूनतम चिंता (0)" } },
+        { value: "8", label: { en: "Moderate worry (8)", hi: "मध्यम चिंता (8)" } },
+        { value: "16", label: { en: "High worry (16)", hi: "अधिक चिंता (16)" } },
       ],
       required: true,
-      whyWeAsk: { en: "Generalized anxiety triggers physiological sympathetic responses affecting vascular efficiency.", hi: "सामान्यीकृत चिंता शारीरिक तनाव को बढ़ाती है जो रक्त प्रवाह की दक्षता को प्रभावित करती है।" },
+      whyWeAsk: { en: "General worry influences autonomic balance. This single slider is an informal proxy indicator and not the validated 7-item GAD-7 clinical anxiety screening instrument.", hi: "सामान्य चिंता तंत्रिका संतुलन को प्रभावित करती है। यह एकल स्लाइडर एक सामान्य संकेतक है, न कि 7-प्रश्नों वाला आधिकारिक GAD-7 नैदानिक पैमाना।" },
       relevance: "high",
       sensitivity: false,
-      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+      evidenceNote: { en: "Self-reported wellness proxy indicator (non-diagnostic).", hi: "स्व-रिपोर्ट किया गया वेलनेस प्रॉक्सी संकेतक (गैर-नैदानिक)।" }
     },
     {
       id: "phq9_score",
       block: 6,
-      question: { en: "Provide your Patient Depression Scale score (PHQ-9):", hi: "अपना अवसाद रेटिंग स्कोर दर्ज करें (PHQ-9):" },
+      question: { en: "Rate your general mood or low-energy level over the past 2 weeks (non-diagnostic wellness indicator):", hi: "पिछले 2 हफ्तों में अपने सामान्य मूड या कम ऊर्जा के स्तर को रेट करें (गैर-नैदानिक वेलनेस संकेतक):" },
       field: "phq9_score",
       type: "slider",
       options: [
-        { value: "0", label: { en: "Minimal (0)", hi: "न्यूनतम (0)" } },
-        { value: "10", label: { en: "Moderate (10)", hi: "मध्यम (10)" } },
-        { value: "19", label: { en: "Severe (19)", hi: "गंभीर (19)" } },
+        { value: "0", label: { en: "Stable mood (0)", hi: "स्थिर मूड (0)" } },
+        { value: "10", label: { en: "Moderate low mood (10)", hi: "मध्यम कम मूड (10)" } },
+        { value: "19", label: { en: "Persistent low mood (19)", hi: "लगातार कम मूड (19)" } },
       ],
       required: true,
-      whyWeAsk: { en: "Somatic and mood parameters directly correlate with overall metabolic stability.", hi: "मनोदशा और शारीरिक मापदंड सीधे तौर पर समग्र चयापचय स्थिरता से संबंधित होते हैं।" },
+      whyWeAsk: { en: "Mood and vitality correlate with daily rest and lifestyle. This single slider is an informal proxy indicator and not the validated 9-item PHQ-9 clinical depression instrument.", hi: "मूड और ऊर्जा दैनिक दिनचर्या से जुड़े होते हैं। यह एकल स्लाइडर एक सामान्य संकेतक है, न कि 9-प्रश्नों वाला आधिकारिक PHQ-9 अवसाद पैमाना।" },
       relevance: "high",
       sensitivity: false,
-      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+      evidenceNote: { en: "Self-reported wellness proxy indicator (non-diagnostic).", hi: "स्व-रिपोर्ट किया गया वेलनेस प्रॉक्सी संकेतक (गैर-नैदानिक)।" }
     },
     {
       id: "sleep_quality_psqi_proxy",
       block: 6,
-      question: { en: "Which statement best describes your typical night's sleep quality?", hi: "कौन सा कथन आपकी रात की नींद की गुणवत्ता का सबसे अच्छा वर्णन करता है?" },
+      question: { en: "Which statement best describes your typical night's sleep quality (non-diagnostic indicator)?", hi: "कौन सा कथन आपकी रात की नींद की गुणवत्ता का सबसे अच्छा वर्णन करता है (गैर-नैदानिक संकेतक)?" },
       field: "sleep_quality_psqi_proxy",
       type: "radio",
       options: [
@@ -726,10 +726,10 @@ export const assessmentSchema = {
         { value: "Waking early", label: { en: "I wake up too early and cannot sleep again", hi: "मैं बहुत जल्दी जाग जाता हूँ और दोबारा नहीं सो पाता" } },
       ],
       required: true,
-      whyWeAsk: { en: "Sleep architecture anomalies influence hormone peaks and autonomic balance.", hi: "नींद की संरचना में गड़बड़ी हार्मोन के स्तर और तंत्रिका संतुलन को प्रभावित करती है।" },
+      whyWeAsk: { en: "Sleep continuity influences endocrine rhythms. This single multiple-choice question is an informal lifestyle indicator, not the validated 19-item Pittsburgh Sleep Quality Index (PSQI).", hi: "नींद की निरंतरता हार्मोन संतुलन को प्रभावित करती है। यह एकल प्रश्न एक सामान्य जीवनशैली संकेतक है, न कि 19-प्रश्नों वाला संपूर्ण PSQI पैमाना।" },
       relevance: "moderate",
       sensitivity: false,
-      evidenceNote: { en: "Clinical screening parameter.", hi: "नैदानिक ​​स्क्रीनिंग पैरामीटर।" }
+      evidenceNote: { en: "Self-reported wellness proxy indicator (non-diagnostic).", hi: "स्व-रिपोर्ट किया गया वेलनेस प्रॉक्सी संकेतक (गैर-नैदानिक)।" }
     },
     {
       id: "prior_sti_history",

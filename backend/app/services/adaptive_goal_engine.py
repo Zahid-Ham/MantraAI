@@ -35,12 +35,13 @@ class AdaptiveGoalEngine:
             .all()
         )
 
-        # 2. Look up today's observational metrics to sync progress
+        # 2. Look up today's observational metrics to sync progress (prefer genuine sensor data)
         today_metric = (
             db.query(HealthDailyMetrics)
             .filter(
                 HealthDailyMetrics.user_id == user.id,
                 HealthDailyMetrics.date == target_date,
+                HealthDailyMetrics.is_synthetic == False,
             )
             .order_by(HealthDailyMetrics.synced_at.desc())
             .first()
@@ -75,13 +76,14 @@ class AdaptiveGoalEngine:
     def _calculate_goals_for_date(
         cls, user: User, target_date: date, today_metric: Optional[HealthDailyMetrics], db: Session
     ) -> List[AdaptiveGoal]:
-        # Fetch up to 14 days of recent metrics prior to target_date
+        # Fetch up to 14 days of recent metrics prior to target_date (excluding synthetic records)
         past_metrics = (
             db.query(HealthDailyMetrics)
             .filter(
                 HealthDailyMetrics.user_id == user.id,
                 HealthDailyMetrics.date < target_date,
                 HealthDailyMetrics.date >= target_date - timedelta(days=14),
+                HealthDailyMetrics.is_synthetic == False,
             )
             .order_by(HealthDailyMetrics.date.desc())
             .all()

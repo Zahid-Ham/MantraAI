@@ -19,13 +19,15 @@ SECURITY & SAFETY RULES:
 
 import logging
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.database import get_db
 from app.auth.firebase_auth import get_current_user, get_optional_current_user, require_admin_user
 from app.models.user import User
+from app.config import settings
+from app.security.rate_limiter import check_rate_limit, get_client_ip
 from app.models.myth_fact import (
     MythFactSource,
     MythFactClaim,
@@ -69,9 +71,18 @@ router = APIRouter(prefix="/api/v1/myth-fact", tags=["myth-fact"])
 )
 def query_myth_vs_fact(
     request: MythFactQueryRequest,
+    http_request: Request = None,
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_optional_current_user),
 ):
+    if http_request:
+        rate_key = f"user:{current_user.id}" if current_user else f"ip:{get_client_ip(http_request)}"
+        check_rate_limit(
+            request=http_request,
+            key=f"myth_fact:{rate_key}",
+            max_requests=settings.RATE_LIMIT_AI_PER_MINUTE,
+            window_seconds=60,
+        )
     try:
         response = process_myth_fact_query(
             request=request,
@@ -79,6 +90,8 @@ def query_myth_vs_fact(
             user=current_user,
         )
         return response
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error("Myth vs Fact query processing failure: %s", str(e), exc_info=True)
         raise HTTPException(

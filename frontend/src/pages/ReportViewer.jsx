@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { apiRequest } from '../config/api';
 import AppShell from '../components/layout/AppShell';
+import EmergencyContactsCard from '../components/common/EmergencyContactsCard';
 
 export const FIELD_LABEL_MAP = {
   // Reproductive History & Symptoms
@@ -43,10 +44,10 @@ export const FIELD_LABEL_MAP = {
 
   // Mental Health & Stress Proxies
   daily_work_hours: 'Daily work duration',
-  perceived_stress_pss10: 'Brief perceived stress proxy indicator',
-  gad7_score: 'Brief anxiety questionnaire proxy indicator',
-  phq9_score: 'Brief depression questionnaire proxy indicator',
-  sleep_quality_psqi_proxy: 'Sleep quality indicator',
+  perceived_stress_pss10: 'Perceived stress indicator (single-item proxy, non-diagnostic)',
+  gad7_score: 'Anxiety indicator (single-item proxy, non-diagnostic)',
+  phq9_score: 'Mood indicator (single-item proxy, non-diagnostic)',
+  sleep_quality_psqi_proxy: 'Sleep quality indicator (single-item proxy, non-diagnostic)',
   sleep_quality: 'Sleep quality',
   sleep_duration_hours: 'Daily sleep duration',
   sleep_duration: 'Daily sleep duration',
@@ -140,13 +141,13 @@ export const formatReportedContextItem = (item) => {
     if (FIELD_LABEL_MAP[rawKey] || /^[a-z0-9_]+$/.test(rawKey)) {
       // Special handling for proxy scores
       if (rawKey === 'phq9_score') {
-        return `Brief depression questionnaire proxy indicator: ${rawVal}`;
+        return `Mood indicator (single-item proxy, non-diagnostic): ${rawVal}`;
       }
       if (rawKey === 'gad7_score') {
-        return `Brief anxiety questionnaire proxy indicator: ${rawVal}`;
+        return `Anxiety indicator (single-item proxy, non-diagnostic): ${rawVal}`;
       }
       if (rawKey === 'perceived_stress_pss10') {
-        return `Brief perceived stress questionnaire proxy indicator: ${rawVal}`;
+        return `Perceived stress indicator (single-item proxy, non-diagnostic): ${rawVal}`;
       }
 
       const humanLabel = FIELD_LABEL_MAP[rawKey] || rawKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -611,6 +612,25 @@ export default function ReportViewer({ onNavigateHome }) {
                 })}
               </nav>
             </div>
+
+            {/* Urgent Clinical Safety Advisory (surfaced prominently if red-flags or urgent guidance present) */}
+            {helpItems.some(item => typeof item === 'object' && (item.urgency === 'emergency' || item.urgency === 'prompt')) && (
+              <div className="bg-[#FEF2F2] border-2 border-[#DC2626] rounded-3xl p-5 sm:p-6 shadow-xs space-y-3 print-avoid-break">
+                <div className="flex items-center gap-2.5 text-[#991B1B]">
+                  <div className="w-6 h-6 shrink-0 text-[#DC2626]">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-base font-bold">Important Clinical Safety Advisory</h3>
+                </div>
+                <p className="text-xs sm:text-sm text-[#7F1D1D] leading-relaxed">
+                  One or more reported symptoms or history factors warrant in-person clinical evaluation by a healthcare professional or urologist. 
+                  MantraAI is an educational wellness screening platform and does not replace medical diagnosis, physical examinations, or emergency medical services.
+                </p>
+                <EmergencyContactsCard variant="inline" className="pt-2" />
+              </div>
+            )}
 
             {/* 3. Executive Summary Card */}
             <div id="report-overview" className="scroll-mt-32 bg-white border border-[#E8E5DF] rounded-3xl p-6 sm:p-8 shadow-xs print-card relative overflow-hidden">
@@ -1604,7 +1624,9 @@ export default function ReportViewer({ onNavigateHome }) {
                             </h4>
                           )}
                           <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                            urgency === 'prompt'
+                            urgency === 'emergency'
+                              ? 'bg-[#FEF2F2] text-[#B91C1C] border border-[#F87171] font-extrabold'
+                              : urgency === 'prompt'
                               ? 'bg-[#FEF2F2] text-[#DC2626] border border-[#FEE2E2]'
                               : urgency === 'timely'
                               ? 'bg-[#FFFBEB] text-[#D97706] border border-[#FEF3C7]'

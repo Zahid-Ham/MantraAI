@@ -56,6 +56,12 @@ from app.services.myth_fact_service import (
 )
 from app.services.report_generator import execute_groq_request
 
+from app.services.triage_service import (
+    evaluate_free_text_triage,
+    VERIFIED_EMERGENCY_CONTACTS,
+    TriageTier,
+)
+
 logger = logging.getLogger(__name__)
 
 DEFAULT_COMPANION_DISCLAIMER = (
@@ -68,12 +74,32 @@ MAX_BOUNDED_HISTORY_MESSAGES = 6  # Limit previous message turns sent to LLM
 
 # Urgent clinical symptom escalation triggers
 URGENT_ESCALATION_PATTERNS = [
-    (r"\b(severe|acute|sudden|extreme)\s+(testicular|testicle|scrotal|scrotum|groin)\s+pain\b", "acute_testicular_pain"),
+    (r"\b(severe|acute|sudden|extreme|agonizing|unbearable)\s+(testicular|testicle|scrotal|scrotum|groin)\s+pain\b", "acute_testicular_pain"),
     (r"\b(testicular|testicle)\s+torsion\b", "testicular_torsion"),
     (r"\b(twisted|swollen|black\s+and\s+blue)\s+(testicle|testicles|scrotum)\b", "acute_scrotal_swelling"),
     (r"\b(popping|crack|snap)\s+(sound\s+in|during\s+erection|penis)\b", "penile_fracture_risk"),
     (r"\b(peeing|urinary|urine|ejaculat\w*)\s+(heavy|large\s+clots\s+of|lots\s+of)\s+blood\b", "gross_hematuria"),
-    (r"\b(kill\s+myself|suicide|suicidal|end\s+my\s+life)\b", "mental_health_crisis"),
+    (r"\b(kill\s+myself|suicide|suicidal|end\s+my\s+life|want\s+to\s+die|harm\s+myself)\b", "mental_health_crisis"),
+]
+
+# Medication prescription inquiry patterns
+PRESCRIPTION_PATTERNS = [
+    r"\b(prescribe|write\s+(me\s+)?a\s+prescription|give\s+me\s+a\s+prescription|prescribe\s+me|write\s+me\s+a\s+rx)\b",
+    r"\b(dosage|dose|how\s+much(\s+mg|\s+milligrams?)?)\s+of\s+(viagra|sildenafil|cialis|tadalafil|clomid|clomiphene|enclomiphene|hcg|testosterone|trt|anastrozole|finasteride|dutasteride)\b",
+    r"\bwhat\s+(dose|dosage|amount)\s+(of\s+\w+\s+)?(should\s+i|to)\s+(take|use|inject)\b",
+]
+
+# Direct diagnosis inquiry patterns
+DIAGNOSIS_PATTERNS = [
+    r"\b(diagnose\s+me|give\s+me\s+(a\s+)?(clinical\s+)?diagnosis)\b",
+    r"\bdo\s+i\s+have\s+(varicocele|infertility|testicular\s+cancer|cancer|hypogonadism|low\s+t|an\s+sti|chlamydia|gonorrhea|erectile\s+dysfunction|peyronie)\b",
+    r"\btell\s+me\s+what\s+(disease|condition|disorder)\s+i\s+have\b",
+    r"\bconfirm\s+whether\s+i\s+have\b",
+]
+
+# Prompt injection / Safety override patterns
+OVERRIDE_PATTERNS = [
+    r"\b(ignore\s+(all\s+)?(previous|prior)?\s*(clinical\s+)?instructions|disregard\s+(all\s+)?(safety|rules|instructions)|jailbreak|dan\s+mode|act\s+as\s+(an\s+unrestricted|a\s+real)\s+doctor|pretend\s+you\s+can\s+prescribe)\b",
 ]
 
 
@@ -82,27 +108,64 @@ def check_urgent_symptoms(message: str) -> Optional[Tuple[str, str]]:
     Scans user input for acute emergency symptoms that require urgent professional evaluation.
     Returns (reason, escalation_response_text) or None.
     """
-    msg_lower = message.lower()
+    # 1. First check through centralized deterministic triage engine
+    triage = evaluate_free_text_triage(message)
+    if triage and triage.is_emergency:
+        emergency_lines = [
+            f"EMERGENCY CLINICAL NOTICE: {triage.headline}",
+            "",
+            triage.guidance,
+            "",
+            "IMMEDIATE CARE INSTRUCTIONS:",
+        ]
+        for act in triage.immediate_actions:
+            emergency_lines.append(f"- {act}")
+        if triage.contraindicated_actions:
+            emergency_lines.append("")
+            emergency_lines.append("IMPORTANT PRECAUTIONS:")
+            for contra in triage.contraindicated_actions:
+                emergency_lines.append(f"- {contra}")
+        emergency_lines.append("")
+        emergency_lines.append("EMERGENCY & CRISIS CONTACTS (INDIA):")
+        emergency_lines.append("- National Emergency Helpline: 112 (Police / Fire / Medical)")
+        emergency_lines.append("- National Ambulance Service: 108")
+        emergency_lines.append("- Tele-MANAS (Mental Health Helpline): 14416 or 1800-891-4416 (24/7 Toll-Free)")
+        emergency_lines.append("- KIRAN Mental Health Helpline: 1800-599-0019 (24/7 Toll-Free)")
+        emergency_lines.append("- Vandrevala Foundation: +91 9999 666 555 (24/7 Free Support)")
+        emergency_lines.append("- In the US/Canada: 988 Suicide & Crisis Lifeline")
 
+        trigger = triage.trigger_code.lower()
+        if trigger in ["testicular_torsion_risk", "acute_testicular_pain"]:
+            trigger = "testicular_torsion" if "torsion" in message.lower() else "acute_testicular_pain"
+
+        return (trigger, "\n".join(emergency_lines))
+
+    # 2. Check local fallback patterns
+    msg_lower = message.lower()
     for pattern, reason in URGENT_ESCALATION_PATTERNS:
         if re.search(pattern, msg_lower):
             if reason == "mental_health_crisis":
                 return (
                     reason,
                     "If you are feeling overwhelmed, hopeless, or having thoughts of self-harm, please reach out for immediate help. "
-                    "You are not alone. Please contact a crisis hotline immediately:\n\n"
-                    "- India Tele-MANAS: 14416 or 1800-891-4416 (Toll-Free, 24/7)\n"
-                    "- Vandrevala Foundation Helpline: +91 9999 666 555\n"
-                    "- AASRA: +91 98204 66726\n"
+                    "You are not alone. Please contact a verified crisis hotline immediately:\n\n"
+                    "- Tele-MANAS (Mental Health Helpline): 14416 or 1800-891-4416 (Toll-Free, 24/7)\n"
+                    "- National Emergency Helpline: 112 (Police / Fire / Medical)\n"
+                    "- KIRAN Helpline: 1800-599-0019 (Toll-Free, 24/7)\n"
+                    "- Vandrevala Foundation Helpline: +91 9999 666 555 (24/7 Free Support)\n"
                     "- In the US/Canada: 988 Suicide & Crisis Lifeline\n\n"
                     "Please connect with a mental health professional or emergency service right now.",
                 )
             elif reason in {"acute_testicular_pain", "testicular_torsion", "acute_scrotal_swelling"}:
                 return (
                     reason,
-                    "Sudden, severe testicular or scrotal pain is a medical emergency that requires immediate in-person evaluation. "
-                    "Conditions such as testicular torsion require urgent clinical attention within a few hours to protect blood flow and testicular health. "
-                    "Please do not wait or attempt home remedies—go to the nearest emergency room or consult a urologist immediately.",
+                    "Sudden or severe testicular or scrotal pain is a time-critical medical emergency. "
+                    "Seek emergency medical assessment immediately right now. Do not wait for symptoms to improve, "
+                    "and do not delay seeking care to complete questionnaires or research online. "
+                    "Proceed immediately to the nearest hospital Emergency Room or call emergency services (112 / 108 in India). "
+                    "Follow directions from attending emergency clinicians regarding examination and oral intake.\n\n"
+                    "- National Emergency Helpline: 112 (Police / Fire / Medical)\n"
+                    "- Ambulance Service: 108",
                 )
             elif reason == "penile_fracture_risk":
                 return (
@@ -117,6 +180,57 @@ def check_urgent_symptoms(message: str) -> Optional[Tuple[str, str]]:
                     "Please seek timely clinical care at an urgent care center or clinic.",
                 )
 
+    return None
+
+
+def check_medication_request(message: str) -> Optional[str]:
+    """
+    Deterministically checks if the user is asking for a prescription, drug dosage,
+    or pharmaceutical recommendation.
+    """
+    msg_l = message.lower()
+    for p in PRESCRIPTION_PATTERNS:
+        if re.search(p, msg_l):
+            return (
+                "MantraAI is an educational health intelligence platform and cannot prescribe medications, "
+                "recommend specific drug dosages, or issue pharmaceutical prescriptions. Prescription medications (such as "
+                "PDE5 inhibitors like sildenafil/tadalafil, hormone modulators like clomiphene, or 5-alpha reductase inhibitors) "
+                "require formal clinical evaluation, physical assessment, and an official prescription by a licensed "
+                "physician or urologist. Please consult a qualified doctor for personalized prescription care."
+            )
+    return None
+
+
+def check_diagnosis_request(message: str) -> Optional[str]:
+    """
+    Deterministically checks if the user is requesting a definitive medical diagnosis.
+    """
+    msg_l = message.lower()
+    for p in DIAGNOSIS_PATTERNS:
+        if re.search(p, msg_l):
+            return (
+                "MantraAI provides evidence-informed educational screening and cannot diagnose medical conditions. "
+                "A formal clinical diagnosis requires an in-person physical examination by a healthcare professional, "
+                "along with validated clinical diagnostic testing (such as a semen analysis, blood hormone profile, "
+                "or scrotal ultrasound). If you are experiencing symptoms, we recommend consulting a qualified physician "
+                "or urologist for a comprehensive physical evaluation."
+            )
+    return None
+
+
+def check_safety_override(message: str) -> Optional[str]:
+    """
+    Deterministically checks for prompt injection or attempts to override safety instructions.
+    """
+    msg_l = message.lower()
+    for p in OVERRIDE_PATTERNS:
+        if re.search(p, msg_l):
+            return (
+                "I am the MantraAI Health Companion. I operate under strict evidence-informed clinical safety boundaries "
+                "designed to protect user health and wellbeing. I cannot bypass safety guidelines, offer medical diagnoses, "
+                "or prescribe medications. I am here to provide evidence-based educational insights about men's reproductive "
+                "health, wellness factors, and lifestyle optimization."
+            )
     return None
 
 
@@ -433,6 +547,129 @@ def process_chat_message(
             created_at=asst_msg.created_at,
         )
 
+    # 2b. Check for medication prescription requests
+    med_refusal = check_medication_request(message_text)
+    if med_refusal:
+        user_msg = CompanionMessage(
+            conversation_id=conversation.id,
+            role="user",
+            content=message_text,
+        )
+        db.add(user_msg)
+        asst_msg = CompanionMessage(
+            conversation_id=conversation.id,
+            role="assistant",
+            content=med_refusal,
+            sources=[],
+            evidence_sufficiency="sufficient",
+            review_status="CLINICAL_SAFETY_BOUNDARY",
+            domain="medication_safety",
+            is_escalation=False,
+            escalation_reason="medication_prescription_prohibited",
+            disclaimer=DEFAULT_COMPANION_DISCLAIMER,
+            suggested_followups=["What questions should I ask my doctor about prescription options?"],
+        )
+        db.add(asst_msg)
+        conversation.updated_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(asst_msg)
+        return ChatResponse(
+            conversation_id=conversation.id,
+            message_id=asst_msg.id,
+            answer=med_refusal,
+            sources=[],
+            evidence_sufficiency="sufficient",
+            review_status="CLINICAL_SAFETY_BOUNDARY",
+            domain="medication_safety",
+            is_escalation=False,
+            escalation_reason="medication_prescription_prohibited",
+            disclaimer=DEFAULT_COMPANION_DISCLAIMER,
+            suggested_followups=["What questions should I ask my doctor about prescription options?"],
+            created_at=asst_msg.created_at,
+        )
+
+    # 2c. Check for direct diagnosis requests
+    diag_refusal = check_diagnosis_request(message_text)
+    if diag_refusal:
+        user_msg = CompanionMessage(
+            conversation_id=conversation.id,
+            role="user",
+            content=message_text,
+        )
+        db.add(user_msg)
+        asst_msg = CompanionMessage(
+            conversation_id=conversation.id,
+            role="assistant",
+            content=diag_refusal,
+            sources=[],
+            evidence_sufficiency="sufficient",
+            review_status="CLINICAL_SAFETY_BOUNDARY",
+            domain="diagnostic_boundary",
+            is_escalation=False,
+            escalation_reason="diagnosis_prohibited",
+            disclaimer=DEFAULT_COMPANION_DISCLAIMER,
+            suggested_followups=["What diagnostic tests are standard during a urology evaluation?"],
+        )
+        db.add(asst_msg)
+        conversation.updated_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(asst_msg)
+        return ChatResponse(
+            conversation_id=conversation.id,
+            message_id=asst_msg.id,
+            answer=diag_refusal,
+            sources=[],
+            evidence_sufficiency="sufficient",
+            review_status="CLINICAL_SAFETY_BOUNDARY",
+            domain="diagnostic_boundary",
+            is_escalation=False,
+            escalation_reason="diagnosis_prohibited",
+            disclaimer=DEFAULT_COMPANION_DISCLAIMER,
+            suggested_followups=["What diagnostic tests are standard during a urology evaluation?"],
+            created_at=asst_msg.created_at,
+        )
+
+    # 2d. Check for prompt injection / safety override
+    override_refusal = check_safety_override(message_text)
+    if override_refusal:
+        user_msg = CompanionMessage(
+            conversation_id=conversation.id,
+            role="user",
+            content=message_text,
+        )
+        db.add(user_msg)
+        asst_msg = CompanionMessage(
+            conversation_id=conversation.id,
+            role="assistant",
+            content=override_refusal,
+            sources=[],
+            evidence_sufficiency="sufficient",
+            review_status="CLINICAL_SAFETY_BOUNDARY",
+            domain="safety_boundary",
+            is_escalation=False,
+            escalation_reason="safety_override_refused",
+            disclaimer=DEFAULT_COMPANION_DISCLAIMER,
+            suggested_followups=["What topics can the MantraAI Companion assist with?"],
+        )
+        db.add(asst_msg)
+        conversation.updated_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(asst_msg)
+        return ChatResponse(
+            conversation_id=conversation.id,
+            message_id=asst_msg.id,
+            answer=override_refusal,
+            sources=[],
+            evidence_sufficiency="sufficient",
+            review_status="CLINICAL_SAFETY_BOUNDARY",
+            domain="safety_boundary",
+            is_escalation=False,
+            escalation_reason="safety_override_refused",
+            disclaimer=DEFAULT_COMPANION_DISCLAIMER,
+            suggested_followups=["What topics can the MantraAI Companion assist with?"],
+            created_at=asst_msg.created_at,
+        )
+
     # 3. Retrieve Evidence & Context
     sources, sufficiency, domain = gather_evidence_for_query(message_text, db)
     valid_source_ids = {s.source_id for s in sources}
@@ -462,7 +699,14 @@ def process_chat_message(
     resolved_api_key = settings.GROQ_API_KEY
     resolved_model = settings.GROQ_MODEL
 
-    if resolved_api_key and resolved_api_key.strip():
+    allow_llm = True
+    if settings.ENFORCE_USER_CONSENT:
+        from app.services.user_data_service import has_active_consent
+        if not has_active_consent(db, user, "THIRD_PARTY_AI_ANALYSIS"):
+            allow_llm = False
+            logger.info("User %s lacks active THIRD_PARTY_AI_ANALYSIS consent. Refusing outbound Groq call.", str(user.id))
+
+    if allow_llm and resolved_api_key and resolved_api_key.strip():
         system_prompt = build_companion_system_prompt()
         user_prompt = build_companion_user_prompt(
             current_message=message_text,

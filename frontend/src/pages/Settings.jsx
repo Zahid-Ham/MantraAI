@@ -55,7 +55,17 @@ const TABS = [
 
 export default function Settings({ onNavigateHome: _onNavigateHome }) {
   const { user, updateUserProfile, resetPassword, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const hash = window.location.hash || '';
+      if (hash.includes('tab=privacy') || hash.includes('tab=data')) return 'privacy';
+      if (hash.includes('tab=security')) return 'security';
+      if (hash.includes('tab=preferences')) return 'preferences';
+      return 'profile';
+    } catch {
+      return 'profile';
+    }
+  });
 
   // Profile Form State
   const [fullName, setFullName] = useState(user?.displayName || '');
@@ -257,43 +267,25 @@ export default function Settings({ onNavigateHome: _onNavigateHome }) {
     }
   };
 
-  // Download User Health Data
+  // Download User Health Data via backend export endpoint
   const handleDownloadData = async () => {
     setExportingData(true);
     setExportSuccessMsg('');
     try {
-      const sessions = await apiRequest('/api/v1/assessments');
-      const exportPayload = {
-        exportedAt: new Date().toISOString(),
-        user: {
-          email: user?.email || 'authenticated_user',
-          displayName: user?.displayName || 'User',
-        },
-        profileMetadata: {
-          gender,
-          location: location || 'Not provided',
-        },
-        preferences: {
-          theme,
-          language,
-          units,
-        },
-        assessments: Array.isArray(sessions) ? sessions : [],
-      };
-
+      const exportPayload = await apiRequest('/api/v1/auth/export');
       const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportPayload, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute('href', dataStr);
-      downloadAnchor.setAttribute('download', `mantra_health_data_${new Date().toISOString().slice(0, 10)}.json`);
+      downloadAnchor.setAttribute('download', `mantra_health_data_export_${new Date().toISOString().slice(0, 10)}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
 
-      setExportSuccessMsg('Data archive downloaded successfully.');
+      setExportSuccessMsg('Complete data archive downloaded successfully.');
       setTimeout(() => setExportSuccessMsg(''), 4000);
     } catch (err) {
       console.error('Failed to export data:', err);
-      alert('Unable to export data at this time. Please try again.');
+      alert('Unable to export data at this time. Please check your connection and try again.');
     } finally {
       setExportingData(false);
     }
@@ -1534,30 +1526,51 @@ export default function Settings({ onNavigateHome: _onNavigateHome }) {
               </button>
             </div>
 
-            <div className="space-y-4 text-xs text-[#57534E] leading-relaxed">
+            <div className="space-y-4 text-xs text-[#57534E] leading-relaxed max-h-[60vh] overflow-y-auto pr-1">
               <p>
-                MantraAI is engineered with strict boundary controls and transparent user isolation:
+                MantraAI operates under a strict privacy-first architecture with verified user isolation, portable exports, and guaranteed deletion controls:
               </p>
 
               <div className="space-y-2.5">
                 <div className="p-3 bg-[#FAF9F6] border border-[#E8E5DF] rounded-xl space-y-1">
-                  <div className="font-bold text-[#1C1917]">1. Scoped User Ownership</div>
+                  <div className="font-bold text-[#1C1917]">1. Authentication & Account Data</div>
                   <p className="text-[11px] text-[#78716C]">
-                    All assessment responses, longitudinal scores, and generated reports belong exclusively to your authenticated profile ID.
+                    We authenticate sessions via Firebase Authentication (email and Google OAuth). Your account record stores your unique UID, email, and optional display name.
                   </p>
                 </div>
 
                 <div className="p-3 bg-[#FAF9F6] border border-[#E8E5DF] rounded-xl space-y-1">
-                  <div className="font-bold text-[#1C1917]">2. No Commercial Data Resale</div>
+                  <div className="font-bold text-[#1C1917]">2. Health Data & Questionnaire Storage</div>
                   <p className="text-[11px] text-[#78716C]">
-                    We do not sell, rent, or trade your survey responses or health context to advertisers or commercial brokers.
+                    Self-reported questionnaire answers (across 13 domains including lifestyle, reproductive parameters, and environmental exposures), longitudinal reports, AI companion chat turns, daily health metrics, and wellness plans are stored securely in PostgreSQL and linked strictly to your user ID.
                   </p>
                 </div>
 
                 <div className="p-3 bg-[#FAF9F6] border border-[#E8E5DF] rounded-xl space-y-1">
-                  <div className="font-bold text-[#1C1917]">3. Educational Non-Diagnostic Standard</div>
+                  <div className="font-bold text-[#1C1917]">3. Third-Party AI Processing (Groq API)</div>
                   <p className="text-[11px] text-[#78716C]">
-                    MantraAI reports provide educational screening guidance referenced against WHO, AUA, and EAU clinical guidelines. They do not constitute formal medical diagnoses.
+                    To synthesize structured assessment reports and power the AI Health Companion, sanitized health responses are processed using Groq cloud inference (Llama 3.3 70B). We do not permit Groq or upstream model providers to train foundational models on your sensitive submissions.
+                  </p>
+                </div>
+
+                <div className="p-3 bg-[#FAF9F6] border border-[#E8E5DF] rounded-xl space-y-1">
+                  <div className="font-bold text-[#1C1917]">4. Zero Commercial Data Monetization</div>
+                  <p className="text-[11px] text-[#78716C]">
+                    We never sell, rent, lease, or trade your survey answers, health context, or telemetry to commercial brokers, advertisers, or third-party marketing services.
+                  </p>
+                </div>
+
+                <div className="p-3 bg-[#FAF9F6] border border-[#E8E5DF] rounded-xl space-y-1">
+                  <div className="font-bold text-[#1C1917]">5. Retention Boundaries & Account Deletion</div>
+                  <p className="text-[11px] text-[#78716C] leading-relaxed">
+                    Personal records in PostgreSQL are hard-deleted upon user request via Settings. Cloud database backups are purged on a rolling 30-day snapshot cycle. Groq LLM inference operates ephemerally without training. Local device records in Android Health Connect must be managed directly via Android OS settings.
+                  </p>
+                </div>
+
+                <div className="p-3 bg-[#FAF9F6] border border-[#E8E5DF] rounded-xl space-y-1">
+                  <div className="font-bold text-[#1C1917]">6. Educational Non-Diagnostic Standard & Contact</div>
+                  <p className="text-[11px] text-[#78716C]">
+                    MantraAI reports provide educational screening guidance referenced against WHO, AUA/ASRM, and EAU guidelines. They do not constitute formal medical diagnoses. For privacy inquiries or data rights requests, contact <span className="font-mono text-[#1E3A2B] font-semibold">privacy@mantraai.health</span>.
                   </p>
                 </div>
               </div>
@@ -1591,13 +1604,21 @@ function DeleteAccountDialog({ onClose, onConfirm }) {
 
     setDeleting(true);
     try {
-      // Clear client session and execute callback
+      // 1. Transactionally delete user data graph in backend & Firebase
+      await apiRequest('/api/v1/auth/account', {
+        method: 'DELETE',
+        body: JSON.stringify({ confirmation: 'DELETE' }),
+      });
+
+      // 2. Clear client session
       localStorage.clear();
       sessionStorage.clear();
+
+      // 3. Complete logout callback
       await onConfirm();
     } catch (err) {
       console.error('Account deletion error:', err);
-      alert('Unable to complete request. Please try again.');
+      alert('Unable to complete account deletion. Please try again or contact support.');
     } finally {
       setDeleting(false);
     }

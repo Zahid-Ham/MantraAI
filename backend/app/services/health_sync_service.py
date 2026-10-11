@@ -96,6 +96,20 @@ class HealthSyncService:
                 .first()
             )
 
+            # Determine synthetic provenance
+            is_synthetic = bool(
+                getattr(item, "is_synthetic", False)
+                or item.source == "mock"
+                or source_name == "mock"
+                or (item.provenance and "synthetic" in item.provenance.lower())
+                or (item.source_device and any(k in item.source_device.lower() for k in ["mock", "demo", "synthetic"]))
+            )
+            provenance = (
+                item.provenance
+                if (item.provenance and item.provenance != "device_sensor")
+                else ("mock_provider" if (item.source == "mock" or source_name == "mock") else ("synthetic_demo" if is_synthetic else "device_sensor"))
+            )
+
             if existing:
                 # Check for updates
                 has_changes = False
@@ -116,6 +130,11 @@ class HealthSyncService:
                         setattr(existing, field, val)
                         has_changes = True
 
+                if existing.is_synthetic != is_synthetic or existing.provenance != provenance:
+                    existing.is_synthetic = is_synthetic
+                    existing.provenance = provenance
+                    has_changes = True
+
                 if has_changes:
                     existing.source_device = item.source_device or existing.source_device
                     existing.synced_at = datetime.utcnow()
@@ -129,6 +148,8 @@ class HealthSyncService:
                     date=item.date,
                     source=item.source,
                     source_device=item.source_device,
+                    is_synthetic=is_synthetic,
+                    provenance=provenance,
                     steps=item.steps,
                     active_minutes=item.active_minutes,
                     workout_minutes=item.workout_minutes,

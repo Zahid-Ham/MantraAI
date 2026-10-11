@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Integer, Float, Date, DateTime, ForeignKey, func, UniqueConstraint, Text
+from sqlalchemy import Column, String, Integer, Float, Date, DateTime, ForeignKey, func, UniqueConstraint, Text, Boolean
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -38,6 +38,8 @@ class HealthDailyMetrics(Base):
     date = Column(Date, nullable=False, index=True)
     source = Column(String, nullable=False, index=True)  # e.g., "mock", "health_connect", "manual"
     source_device = Column(String, nullable=True)  # e.g., "Mock Health Device", "Pixel 8"
+    is_synthetic = Column(Boolean, nullable=False, default=False, server_default='false', index=True)
+    provenance = Column(String, nullable=True, default="device_sensor")
     
     # Primary health metrics (all nullable to reflect real-world capture availability)
     steps = Column(Integer, nullable=True)

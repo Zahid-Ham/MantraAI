@@ -25,6 +25,8 @@ class NormalizedDailyHealthData(BaseModel):
     active_calories: Optional[float] = Field(None, ge=0, le=20000, description="Active energy burned in kilocalories")
     distance: Optional[float] = Field(None, ge=0, le=500000, description="Total distance in meters")
     water_intake: Optional[float] = Field(None, ge=0, le=50000, description="Water intake in milliliters")
+    is_synthetic: bool = Field(False, description="Whether metric record was generated synthetically or for testing")
+    provenance: Optional[str] = Field("device_sensor", description="Source provenance marker: 'device_sensor', 'synthetic_demo', 'mock_provider'")
 
     @field_validator("steps", "active_minutes", "workout_minutes", "sleep_duration_minutes", "resting_heart_rate", "active_calories", mode="before")
     @classmethod
@@ -55,6 +57,8 @@ class HealthDailyMetricsOut(BaseModel):
     date: dt.date
     source: str
     source_device: Optional[str] = None
+    is_synthetic: bool = False
+    provenance: Optional[str] = None
     steps: Optional[int] = None
     active_minutes: Optional[int] = None
     workout_minutes: Optional[int] = None

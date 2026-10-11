@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 import firebase_admin
 from firebase_admin import credentials, auth
-from fastapi import Depends, HTTPException, status, Header
+from fastapi import Depends, HTTPException, status, Header, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.config import settings
@@ -107,6 +107,7 @@ def require_admin_user(
     return user
 
 def get_current_user(
+    request: Request,
     db: Session = Depends(get_db),
     cred: HTTPAuthorizationCredentials = Depends(security)
 ) -> User:
@@ -135,6 +136,43 @@ def get_current_user(
 
     email = decoded_token.get("email")
     display_name = decoded_token.get("name")
+
+    # Check deletion lifecycle state
+    from app.models.deletion import AccountDeletionRecord
+    deletion_rec = (
+        db.query(AccountDeletionRecord)
+        .filter(AccountDeletionRecord.firebase_uid == firebase_uid)
+        .order_by(AccountDeletionRecord.initiated_at.desc())
+        .first()
+    )
+
+    if deletion_rec:
+        if deletion_rec.status == "COMPLETED":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Account has been permanently deleted.",
+            )
+        elif deletion_rec.status == "PENDING_FIREBASE":
+            # Database records are wiped; Firebase deletion is pending retry.
+            # Allow deletion retry requests to proceed, but block normal operations.
+            req_path = request.url.path if request else ""
+            is_deletion_route = any(p in req_path for p in ["/auth/account", "/account/delete"])
+            if request and not is_deletion_route:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Account is in pending deletion. Please retry account deletion to finalize removal.",
+                )
+
+            # Return transient user object for deletion retry without persisting new DB row
+            transient_user = User(
+                id=deletion_rec.user_id,
+                firebase_uid=firebase_uid,
+                email=email,
+                display_name=display_name,
+            )
+            transient_user._is_pending_deletion = True
+            setattr(transient_user, "auth_time", decoded_token.get("auth_time"))
+            return transient_user
 
     # Fetch existing database user or upsert new row
     user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
@@ -171,4 +209,22 @@ def get_current_user(
         except Exception:
             db.rollback()
 
+    # Attach token auth_time metadata for sensitive operations (e.g., account deletion)
+    setattr(user, "auth_time", decoded_token.get("auth_time"))
+
     return user
+
+
+def verify_recent_authentication(user: User, max_age_seconds: int = 900) -> None:
+    """
+    Verifies that the user authenticated recently within max_age_seconds (default 15 minutes).
+    Raises HTTP 401 if auth_time is present and exceeds max_age_seconds.
+    """
+    auth_time = getattr(user, "auth_time", None)
+    if auth_time is not None:
+        current_ts = int(datetime.utcnow().timestamp())
+        if (current_ts - auth_time) > max_age_seconds:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Recent authentication required. Please sign in again before performing irreversible account deletion.",
+            )

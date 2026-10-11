@@ -279,6 +279,7 @@ def synthesize_unmatched_claim(
     query: str,
     db: Session,
     domain_hint: Optional[str] = None,
+    user: Optional[User] = None,
 ) -> MythFactQueryResponse:
     """
     Handles unknown or inadequately matched claims by retrieving relevant guidelines
@@ -399,7 +400,14 @@ def synthesize_unmatched_claim(
 
     synthesized_output: Optional[SynthesizedMythFactLLMOutput] = None
 
-    if resolved_api_key and resolved_api_key.strip():
+    allow_llm = True
+    if user and settings.ENFORCE_USER_CONSENT:
+        from app.services.user_data_service import has_active_consent
+        if not has_active_consent(db, user, "THIRD_PARTY_AI_ANALYSIS"):
+            allow_llm = False
+            logger.info("User %s lacks active THIRD_PARTY_AI_ANALYSIS consent. Refusing outbound Groq call in Myth vs Fact.", str(user.id))
+
+    if allow_llm and resolved_api_key and resolved_api_key.strip():
         try:
             raw_response = execute_groq_request(
                 system_prompt=build_groq_myth_fact_system_prompt(),
@@ -531,7 +539,7 @@ def process_myth_fact_query(
             disclaimer=DEFAULT_DISCLAIMER,
         )
     else:
-        response = synthesize_unmatched_claim(query, db, domain_hint=request.domain_hint)
+        response = synthesize_unmatched_claim(query, db, domain_hint=request.domain_hint, user=user)
 
     # Persist in user query history if user is authenticated and history saving enabled
     if user and request.save_history:

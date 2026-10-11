@@ -39,6 +39,8 @@ describe('Demo Health Data Writer (Development Only)', () => {
       const result = generateDemoHealthRecords(targetDate);
 
       expect(result.dateString).toBe('2026-10-04');
+      expect(result.is_synthetic).toBe(true);
+      expect(result.provenance).toBe('synthetic_demo');
       expect(result.summary).toEqual({
         steps: 6842,
         active_calories: 412,

@@ -35,6 +35,7 @@ from app.config import settings
 from app.database import Base, get_db
 from app.auth.firebase_auth import get_current_user
 from app.models.user import User
+from app.models.consent import UserConsent
 from app.models.companion import CompanionConversation, CompanionMessage
 from app.schemas.companion import (
     ChatRequest,
@@ -81,7 +82,7 @@ def db_session():
 
 @pytest.fixture
 def test_user_a(db_session: Session):
-    """Creates Test User A."""
+    """Creates Test User A with active consent."""
     uid = f"user-a-{uuid4().hex[:8]}"
     user = User(
         firebase_uid=uid,
@@ -91,12 +92,21 @@ def test_user_a(db_session: Session):
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
+
+    consent = UserConsent(
+        user_id=user.id,
+        consent_type="THIRD_PARTY_AI_ANALYSIS",
+        policy_version="1.0",
+        action="ACCEPTED",
+    )
+    db_session.add(consent)
+    db_session.commit()
     return user
 
 
 @pytest.fixture
 def test_user_b(db_session: Session):
-    """Creates Test User B."""
+    """Creates Test User B with active consent."""
     uid = f"user-b-{uuid4().hex[:8]}"
     user = User(
         firebase_uid=uid,
@@ -106,6 +116,15 @@ def test_user_b(db_session: Session):
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
+
+    consent = UserConsent(
+        user_id=user.id,
+        consent_type="THIRD_PARTY_AI_ANALYSIS",
+        policy_version="1.0",
+        action="ACCEPTED",
+    )
+    db_session.add(consent)
+    db_session.commit()
     return user
 
 

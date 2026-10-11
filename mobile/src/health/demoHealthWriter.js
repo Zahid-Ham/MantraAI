@@ -156,6 +156,8 @@ export function generateDemoHealthRecords(targetDate = new Date()) {
 
   return {
     dateString,
+    is_synthetic: true,
+    provenance: 'synthetic_demo',
     summary: {
       steps: 6842,
       active_calories: 412,

@@ -36,11 +36,17 @@ def run_migrations_offline() -> None:
     script output.
 
     """
+    try:
+        import psycopg  # noqa: F401
+        _pg_driver = "postgresql+psycopg://"
+    except ImportError:
+        _pg_driver = "postgresql+psycopg2://"
+
     url = settings.DATABASE_URL
     if url.startswith("postgresql://"):
-        url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+        url = url.replace("postgresql://", _pg_driver, 1)
     elif url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql+psycopg://", 1)
+        url = url.replace("postgres://", _pg_driver, 1)
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -61,13 +67,21 @@ def run_migrations_online() -> None:
     """
     try:
         from sqlalchemy import create_engine
+        try:
+            import psycopg  # noqa: F401
+            _pg_driver = "postgresql+psycopg://"
+        except ImportError:
+            _pg_driver = "postgresql+psycopg2://"
+
         db_url = settings.DATABASE_URL
         if db_url.startswith("postgresql://"):
-            db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
+            db_url = db_url.replace("postgresql://", _pg_driver, 1)
         elif db_url.startswith("postgres://"):
-            db_url = db_url.replace("postgres://", "postgresql+psycopg://", 1)
-        elif db_url.startswith("postgresql+psycopg2://"):
-            db_url = db_url.replace("postgresql+psycopg2://", "postgresql+psycopg://", 1)
+            db_url = db_url.replace("postgres://", _pg_driver, 1)
+        elif db_url.startswith("postgresql+psycopg://") and _pg_driver != "postgresql+psycopg://":
+            db_url = db_url.replace("postgresql+psycopg://", _pg_driver, 1)
+        elif db_url.startswith("postgresql+psycopg2://") and _pg_driver != "postgresql+psycopg2://":
+            db_url = db_url.replace("postgresql+psycopg2://", _pg_driver, 1)
 
         connectable = create_engine(
             db_url,

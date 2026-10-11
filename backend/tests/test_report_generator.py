@@ -608,9 +608,10 @@ def test_successful_persistence_via_complete_endpoint(valid_report_dict):
     with patch("app.auth.firebase_auth.get_current_user", return_value=mock_user):
         with patch("app.database.get_db", return_value=mock_db):
             with patch("urllib.request.urlopen", return_value=mock_groq_resp):
-                # We can call complete_assessment logic directly
-                from app.routers.assessment import complete_assessment
-                result = complete_assessment(assessment_id=session_id, db=mock_db, current_user=mock_user)
+                with patch("app.services.user_data_service.has_active_consent", return_value=True):
+                    # We can call complete_assessment logic directly
+                    from app.routers.assessment import complete_assessment
+                    result = complete_assessment(assessment_id=session_id, db=mock_db, current_user=mock_user)
 
     assert result is not None
     assert mock_session.status == "COMPLETED"

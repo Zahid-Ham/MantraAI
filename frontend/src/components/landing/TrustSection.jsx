@@ -84,24 +84,24 @@ export default function TrustSection() {
   const content = {
     en: {
       tag: 'Shielded Protocol',
-      title: 'Clinical validation, absolute privacy.',
-      desc: 'We operate under a strict zero-trust privacy paradigm. By stripping away identifiers, we create a secure space for men to confront health risks without fear of exposure.',
+      title: 'Clinical validation, authenticated privacy.',
+      desc: 'We operate under a strict privacy-first paradigm. All records are scoped to verified sessions with comprehensive user data control, portable export, and a permanent account deletion workflow.',
       stats: [
-        { value: '100%', label: 'Anonymous by Default', description: 'Zero account signup required for diagnostic assessments. We do not link searches to physical identity.' },
-        { value: '0',    label: 'PII Stored', description: 'Zero collection of names, phone numbers, or emails during risk screenings. Complete data boundary.' },
-        { value: '10k+', label: 'Localized Datasets', description: 'Engineered specifically for the Indian male genetic, lifestyle, and dietary phenotype profiles.' },
-        { value: '24/7', label: 'Secure Assessment', description: 'Instant access to peer-reviewed clinical risk models without administrative delay or scheduling.' },
+        { value: 'Owner', label: 'Data Ownership', description: 'Direct data control. Export your complete records as portable JSON or permanently erase your user data graph directly from Settings.' },
+        { value: '0',     label: 'Data Monetization', description: 'Zero sale, rental, or marketing trade of your sensitive health context or survey responses to third parties.' },
+        { value: '10k+',  label: 'Localized Datasets', description: 'Engineered specifically for Indian demographic and dietary lifestyle profiles (NFHS-5 grounded).' },
+        { value: '24/7',  label: 'Secure Assessment', description: 'On-demand access to peer-reviewed clinical risk models without administrative delay or scheduling.' },
       ],
     },
     hi: {
       tag: 'सुरक्षित प्रोटोकॉल',
-      title: 'नैदानिक ​​सत्यापन, पूर्ण गोपनीयता।',
-      desc: 'हम एक सख्त शून्य-विश्वास (zero-trust) गोपनीयता प्रतिमान के तहत काम करते हैं। व्यक्तिगत पहचान को हटाकर, हम पुरुषों के लिए बिना किसी डर के स्वास्थ्य जोखिमों का सामना करने के लिए एक सुरक्षित स्थान बनाते हैं।',
+      title: 'नैदानिक ​​सत्यापन, प्रमाणित गोपनीयता।',
+      desc: 'हम एक सख्त गोपनीयता-प्रथम प्रतिमान के तहत काम करते हैं। सभी रिकॉर्ड प्रमाणित सत्रों तक सीमित हैं, जिसमें व्यापक डेटा नियंत्रण, पोर्टेबल निर्यात और स्थायी खाता विलोपन प्रक्रिया शामिल है।',
       stats: [
-        { value: '100%', label: 'डिफ़ॉल्ट रूप से अज्ञात', description: 'नैदानिक मूल्यांकन के लिए शून्य खाता साइनअप आवश्यक है।' },
-        { value: '0',    label: 'व्यक्तिगत डेटा स्टोर', description: 'स्क्रीनिंग के दौरान नाम, फोन नंबर या ईमेल का शून्य संग्रह।' },
-        { value: '10k+', label: 'स्थानीयकृत डेटासेट', description: 'विशेष रूप से भारतीय पुरुषों के आनुवंशिक, जीवनशैली और आहार प्रोफाइल के लिए तैयार।' },
-        { value: '24/7', label: 'सुरक्षित लक्षण जांच', description: 'बिना किसी प्रशासनिक देरी के सहकर्मी-समीक्षित नैदानिक जोखिम मॉडल तक त्वरित पहुंच।' },
+        { value: 'स्वामित्व', label: 'डेटा नियंत्रण', description: 'प्रत्यक्ष डेटा नियंत्रण। सेटिंग्स से अपने रिकॉर्ड को पोर्टेबल JSON में निर्यात करें या संपूर्ण डेटा को स्थायी रूप से मिटाएं।' },
+        { value: '0',        label: 'डेटा मुद्रीकरण', description: 'तीसरे पक्षों को आपकी संवेदनशील स्वास्थ्य जानकारी या सर्वेक्षण उत्तरों का शून्य मुद्रीकरण या बिक्री।' },
+        { value: '10k+',     label: 'स्थानीयकृत डेटासेट', description: 'विशेष रूप से भारतीय पुरुषों के जीवनशैली और आहार प्रोफाइल (NFHS-5) के लिए तैयार।' },
+        { value: '24/7',     label: 'सुरक्षित लक्षण जांच', description: 'बिना किसी प्रशासनिक देरी के सहकर्मी-समीक्षित नैदानिक जोखिम मॉडल तक पहुंच।' },
       ],
     },
   }[language];

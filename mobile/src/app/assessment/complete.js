@@ -55,7 +55,7 @@ export default function AssessmentComplete() {
         </View>
 
         <Text style={styles.securityNote}>
-          🔒 End-to-end HIPAA compliant database isolation
+          🔒 Authenticated database isolation & user data ownership
         </Text>
       </View>
     </SafeAreaView>
