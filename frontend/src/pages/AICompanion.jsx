@@ -30,6 +30,9 @@ export default function AICompanion({ onNavigateHome }) {
   const [includeHealthContext, setIncludeHealthContext] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState(null);
+  const [consentRequired, setConsentRequired] = useState(false);
+  const [isGrantingConsent, setIsGrantingConsent] = useState(false);
+  const [lastAttemptedText, setLastAttemptedText] = useState('');
 
   // History / Sidebar state
   const [conversationsList, setConversationsList] = useState([]);
@@ -126,7 +129,9 @@ export default function AICompanion({ onNavigateHome }) {
     if (!text || isSending) return;
 
     setError(null);
+    setConsentRequired(false);
     setInputText('');
+    setLastAttemptedText(text);
 
     // Optimistic user message turn
     const tempUserMsg = {
@@ -175,9 +180,71 @@ export default function AICompanion({ onNavigateHome }) {
       fetchConversations();
     } catch (err) {
       console.error('Chat turn error:', err);
-      setError(err.message || 'Unable to connect to the AI Health Companion. Please retry.');
+      const isConsentErr =
+        err.status === 403 &&
+        (err.code === 'CONSENT_REQUIRED' ||
+          (err.message && err.message.toLowerCase().includes('consent')) ||
+          (err.detail && typeof err.detail === 'object' && err.detail.error === 'CONSENT_REQUIRED'));
+
+      if (isConsentErr) {
+        setConsentRequired(true);
+        setError('Active consent for AI health analysis is required to consult the AI Companion.');
+      } else {
+        const errorMsg =
+          typeof err === 'string'
+            ? err
+            : err.message || 'Unable to connect to the AI Health Companion. Please retry.';
+        setError(errorMsg);
+      }
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const handleGrantConsent = async () => {
+    try {
+      setIsGrantingConsent(true);
+      await apiRequest('/api/v1/auth/consent', {
+        method: 'POST',
+        body: JSON.stringify({
+          consent_type: 'THIRD_PARTY_AI_ANALYSIS',
+          policy_version: '1.0',
+          action: 'ACCEPTED',
+        }),
+      });
+      await apiRequest('/api/v1/auth/consent', {
+        method: 'POST',
+        body: JSON.stringify({
+          consent_type: 'HEALTH_DATA_PROCESSING',
+          policy_version: '1.0',
+          action: 'ACCEPTED',
+        }),
+      }).catch(() => {});
+
+      setConsentRequired(false);
+      setError(null);
+
+      // Auto-retry the pending message without duplicating optimistic turns
+      const retryText =
+        lastAttemptedText ||
+        (messages.length > 0 && messages[messages.length - 1].role === 'user'
+          ? messages[messages.length - 1].content
+          : '');
+
+      if (retryText) {
+        setMessages((prev) => {
+          if (prev.length > 0 && prev[prev.length - 1].role === 'user') {
+            return prev.slice(0, -1);
+          }
+          return prev;
+        });
+        handleSendMessage(retryText);
+      }
+    } catch (cErr) {
+      console.error('Failed to grant consent:', cErr);
+      setError(cErr.message || 'Unable to record consent. Please try again.');
+    } finally {
+      setIsGrantingConsent(false);
     }
   };
 
@@ -502,22 +569,92 @@ export default function AICompanion({ onNavigateHome }) {
                 </div>
               )}
 
-              {/* Error Message with Retry */}
+              {/* Error Message with Retry / Consent Action */}
               {error && (
-                <div className="p-4 rounded-xl bg-[#FEF2F2] border border-[#FCA5A5] text-[#991B1B] text-xs flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 shrink-0 text-[#DC2626]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>{error}</span>
+                <div
+                  className={`p-4 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                    consentRequired
+                      ? 'bg-[#FEFCE8] border-[#FEF08A] text-[#854D0E]'
+                      : 'bg-[#FEF2F2] border-[#FCA5A5] text-[#991B1B]'
+                  }`}
+                >
+                  <div className="flex items-start sm:items-center gap-2.5">
+                    {consentRequired ? (
+                      <svg
+                        className="w-5 h-5 shrink-0 text-[#CA8A04] mt-0.5 sm:mt-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        className="w-4 h-4 shrink-0 text-[#DC2626]"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    )}
+                    <div>
+                      <div className="font-semibold">{error}</div>
+                      {consentRequired && (
+                        <div className="text-[11px] text-[#A16207] mt-0.5">
+                          MantraAI uses privacy-preserving AI analysis grounded in authoritative clinical guidelines. Grant consent to consult the AI Companion.
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleSendMessage()}
-                    className="px-2.5 py-1 rounded bg-[#DC2626] text-white font-semibold text-xs hover:bg-[#B91C1C] transition-colors cursor-pointer shrink-0"
-                  >
-                    Retry
-                  </button>
+
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                    {consentRequired ? (
+                      <button
+                        type="button"
+                        onClick={handleGrantConsent}
+                        disabled={isGrantingConsent}
+                        className="px-3 py-1.5 rounded-lg bg-[#1E3A2B] text-white font-semibold text-xs hover:bg-[#162C20] transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                      >
+                        {isGrantingConsent ? 'Enabling...' : 'Grant Consent & Continue'}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const retryText =
+                            lastAttemptedText ||
+                            (messages.length > 0 && messages[messages.length - 1].role === 'user'
+                              ? messages[messages.length - 1].content
+                              : '');
+                          if (retryText) {
+                            setMessages((prev) => {
+                              if (prev.length > 0 && prev[prev.length - 1].role === 'user') {
+                                return prev.slice(0, -1);
+                              }
+                              return prev;
+                            });
+                            handleSendMessage(retryText);
+                          } else {
+                            handleSendMessage();
+                          }
+                        }}
+                        className="px-2.5 py-1 rounded bg-[#DC2626] text-white font-semibold text-xs hover:bg-[#B91C1C] transition-colors cursor-pointer shrink-0"
+                      >
+                        Retry
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 

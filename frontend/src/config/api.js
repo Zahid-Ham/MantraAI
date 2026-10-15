@@ -33,7 +33,25 @@ export async function apiRequest(endpoint, options = {}) {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.detail || `HTTP API Error ${response.status}`);
+    let errorMessage = `HTTP API Error ${response.status}`;
+    if (typeof errorData.detail === 'string') {
+      errorMessage = errorData.detail;
+    } else if (Array.isArray(errorData.detail)) {
+      errorMessage = errorData.detail.map((d) => d.msg || d.message || JSON.stringify(d)).join('; ');
+    } else if (errorData.detail && typeof errorData.detail === 'object') {
+      errorMessage = errorData.detail.message || errorData.detail.error || JSON.stringify(errorData.detail);
+    } else if (typeof errorData.message === 'string') {
+      errorMessage = errorData.message;
+    } else if (typeof errorData.error === 'string') {
+      errorMessage = errorData.error;
+    }
+
+    const err = new Error(errorMessage);
+    err.status = response.status;
+    err.detail = errorData.detail;
+    err.data = errorData;
+    err.code = (errorData.detail && typeof errorData.detail === 'object' ? errorData.detail.error : null) || errorData.code || errorData.error;
+    throw err;
   }
 
   return await response.json();

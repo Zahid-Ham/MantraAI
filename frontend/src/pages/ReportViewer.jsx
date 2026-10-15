@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { apiRequest } from '../config/api';
 import AppShell from '../components/layout/AppShell';
 import EmergencyContactsCard from '../components/common/EmergencyContactsCard';
+import { fetchAssessmentComparison, getFactorTransitionMeta } from '../utils/longitudinal';
 
 export const FIELD_LABEL_MAP = {
   // Reproductive History & Symptoms
@@ -169,6 +170,8 @@ export const formatReportedContextItem = (item) => {
 export default function ReportViewer({ onNavigateHome }) {
   const [report, setReport] = useState(null);
   const [result, setResult] = useState(null);
+  const [comparison, setComparison] = useState(null);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('report-overview');
@@ -202,12 +205,14 @@ export default function ReportViewer({ onNavigateHome }) {
       try {
         setLoading(true);
         setError('');
-        const [reportData, resultData] = await Promise.all([
+        const [reportData, resultData, compData] = await Promise.all([
           apiRequest(`/api/v1/assessments/${sessId}/report`),
           apiRequest(`/api/v1/assessments/${sessId}/results`).catch(() => null),
+          fetchAssessmentComparison(sessId).catch(() => null),
         ]);
         setReport(reportData);
         setResult(resultData);
+        setComparison(compData);
       } catch (err) {
         console.error('Error fetching report:', err);
         setError('Failed to fetch the requested report details. Please try again or return to My Reports.');
@@ -687,6 +692,169 @@ export default function ReportViewer({ onNavigateHome }) {
 
               </div>
             </div>
+
+            {/* 3b. Longitudinal Comparison: Changes Since Previous Assessment */}
+            {comparison && comparison.comparison_metadata && comparison.comparison_metadata.has_comparison && (
+              <div className="bg-white border border-[#E8E5DF] rounded-3xl p-6 sm:p-7 shadow-xs print-card space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#F3EFEA] pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-[#EBF5EE] text-[#1E3A2B] flex items-center justify-center shrink-0">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-[#1C1917]">
+                        Changes Since Your Previous Assessment
+                      </h3>
+                      <p className="text-xs text-[#78716C] mt-0.5">
+                        {comparison.comparison_metadata.elapsed_days !== null
+                          ? `${comparison.comparison_metadata.elapsed_days} days elapsed since your prior check-in.`
+                          : 'Deterministic comparison with previous completed assessment.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsComparisonOpen((prev) => !prev)}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-[#E8E5DF] bg-[#FAF9F6] hover:bg-[#F3EFEA] text-[#57534E] hover:text-[#1C1917] transition-all cursor-pointer self-start sm:self-auto"
+                  >
+                    <span>{isComparisonOpen ? 'Collapse' : 'Expand'}</span>
+                    <svg
+                      className={`w-3.5 h-3.5 transition-transform ${isComparisonOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+
+                {isComparisonOpen && (
+                  <div className="space-y-5">
+                    {/* Compatibility warnings if present */}
+                    {comparison.comparison_metadata.compatibility_notes?.length > 0 && (
+                      <div className="p-3.5 bg-[#FFFBEB] border border-[#FDE68A] rounded-xl text-xs text-[#92400E] space-y-1">
+                        <div className="font-bold text-[#78350F]">Questionnaire Version Discrepancy</div>
+                        {comparison.comparison_metadata.compatibility_notes.map((note, idx) => (
+                          <div key={idx} className="text-[11.5px] leading-relaxed">{note}</div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Summary Stat Pills */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="p-3 rounded-xl bg-[#EBF5EE] border border-[#C8E6D2]">
+                        <div className="text-[10px] font-bold text-[#1E3A2B] uppercase">No Longer Reported</div>
+                        <div className="text-xl font-bold text-[#1E3A2B] mt-0.5">
+                          {comparison.summary.no_longer_reported_focus_areas_count}
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-[#FEF3C7] border border-[#FDE68A]">
+                        <div className="text-[10px] font-bold text-[#B45309] uppercase">Newly Reported</div>
+                        <div className="text-xl font-bold text-[#B45309] mt-0.5">
+                          {comparison.summary.newly_reported_focus_areas_count}
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                        <div className="text-[10px] font-bold text-[#475569] uppercase">Persistent Focus</div>
+                        <div className="text-xl font-bold text-[#1C1917] mt-0.5">
+                          {comparison.summary.persistent_focus_areas_count}
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0]">
+                        <div className="text-[10px] font-bold text-[#15803D] uppercase">Protective Habits</div>
+                        <div className="text-xl font-bold text-[#15803D] mt-0.5">
+                          {comparison.summary.positive_habits_adopted_count + comparison.summary.positive_habits_maintained_count}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Observational Narrative */}
+                    <div className="p-4 rounded-xl bg-[#FAF9F6] border border-[#E8E5DF] text-xs text-[#44403C] leading-relaxed">
+                      {comparison.summary.executive_narrative}
+                    </div>
+
+                    {/* Factor Transitions List Grouped By Domain */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-bold text-[#1C1917] uppercase tracking-wider">
+                        Factor Transitions
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {comparison.domains
+                          .filter((d) => d.factors.length > 0)
+                          .map((dom) => (
+                            <div
+                              key={dom.domain_key}
+                              className="p-3.5 rounded-xl border border-[#E8E5DF] bg-[#FAF9F6] space-y-2.5"
+                            >
+                              <div className="text-xs font-bold text-[#1C1917] flex items-center justify-between">
+                                <span>{dom.domain_title}</span>
+                                <span className="text-[10px] font-normal text-[#78716C]">
+                                  {dom.factors.length} factor{dom.factors.length > 1 ? 's' : ''}
+                                </span>
+                              </div>
+                              <div className="space-y-2">
+                                {dom.factors.map((factor) => {
+                                  const meta = getFactorTransitionMeta(factor.transition_type);
+                                  return (
+                                    <div
+                                      key={factor.id}
+                                      className={`p-2.5 rounded-lg border ${meta.border} ${meta.bg} space-y-1`}
+                                    >
+                                      <div className="flex items-center justify-between gap-1.5">
+                                        <span className="text-xs font-bold text-[#1C1917] truncate">
+                                          {factor.title}
+                                        </span>
+                                        <span className={`text-[9.5px] font-bold px-1.5 py-0.5 rounded-md border ${meta.border} ${meta.bg} ${meta.text} shrink-0`}>
+                                          {meta.label}
+                                        </span>
+                                      </div>
+                                      <p className="text-[11px] text-[#57534E] leading-snug">
+                                        {factor.explanation}
+                                      </p>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+
+                    {/* Wellness Plan Adherence Context */}
+                    {comparison.wellness_plan_context?.has_linked_plan && (
+                      <div className="p-4 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-bold text-[#14532D]">
+                            Wellness Plan Adherence ({comparison.wellness_plan_context.plan_title || 'Active Routine'})
+                          </h4>
+                          {comparison.wellness_plan_context.adherence_rate_pct !== null && (
+                            <span className="text-[11px] font-bold text-[#15803D] bg-[#DCFCE7] px-2 py-0.5 rounded-full">
+                              {Math.round(comparison.wellness_plan_context.adherence_rate_pct)}% Adherence
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-[#166534] leading-relaxed">
+                          {comparison.wellness_plan_context.adherence_narrative}
+                        </p>
+                        <p className="text-[10px] text-[#15803D]/80 italic pt-1 border-t border-[#BBF7D0]">
+                          {comparison.wellness_plan_context.disclaimer}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Non-diagnostic disclaimer footer */}
+                    <div className="text-[10px] text-[#A8A29E] italic leading-normal pt-2 border-t border-[#F3EFEA]">
+                      {comparison.clinical_disclaimer}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* 4. Key Highlights Metrics */}
             <div className="space-y-3">

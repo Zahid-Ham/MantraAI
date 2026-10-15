@@ -1,4 +1,5 @@
 import React from 'react';
+import { apiRequest } from '../config/api';
 
 // =============================================================================
 // 6 CANONICAL MANTRAAI HEALTH DOMAINS
@@ -61,8 +62,8 @@ export const DOMAIN_DEFINITIONS = [
     description: 'Sleep duration & consistency, physical activity levels, dietary patterns, and hydration.',
   },
   {
-    key: 'environmental_heat_context',
-    title: 'Environmental & Heat Context',
+    key: 'environmental_exposure',
+    title: 'Environmental & Heat Exposure',
     shortTitle: 'Environmental',
     color: '#16A34A', // green-600
     bgLight: '#F0FDF4',
@@ -75,8 +76,8 @@ export const DOMAIN_DEFINITIONS = [
     description: 'Scrotal thermal exposures (hot baths, sauna, laptop usage), occupational & chemical context.',
   },
   {
-    key: 'substance_medication_context',
-    title: 'Substance & Medication Context',
+    key: 'substance_medication',
+    title: 'Substance & Medication Use',
     shortTitle: 'Substance Use',
     color: '#E11D48', // rose-600
     bgLight: '#FFF1F2',
@@ -90,24 +91,126 @@ export const DOMAIN_DEFINITIONS = [
   },
 ];
 
+// Helper to normalize domain keys including legacy variants
+export function normalizeFrontendDomainKey(key) {
+  if (key === 'environmental_heat_context') return 'environmental_exposure';
+  if (key === 'substance_medication_context') return 'substance_medication';
+  return key;
+}
+
 // =============================================================================
-// REPORTED CONTEXT INDICATOR (0–100 NORMALIZED RATIO)
+// BACKEND API CLIENT FOR LONGITUDINAL COMPARISON
+// =============================================================================
+
+/**
+ * Fetches deterministic longitudinal comparison for an assessment session.
+ * @param {string} assessmentId - Current assessment UUID
+ * @param {string|null} targetId - Optional comparison target UUID
+ * @returns {Promise<Object>} AssessmentComparisonOut payload
+ */
+export async function fetchAssessmentComparison(assessmentId, targetId = null) {
+  if (!assessmentId) return null;
+  const endpoint = `/api/v1/assessments/${assessmentId}/compare${
+    targetId ? `?target_id=${encodeURIComponent(targetId)}` : ''
+  }`;
+  return await apiRequest(endpoint);
+}
+
+// =============================================================================
+// FACTOR TRANSITION BADGE FORMATTING (TRANSPARENT CATEGORICAL TRANSITIONS)
+// =============================================================================
+
+export function getFactorTransitionMeta(transitionType) {
+  switch (transitionType) {
+    case 'NEWLY_REPORTED':
+      return {
+        label: 'Newly Reported',
+        bg: 'bg-[#FEF3C7]',
+        text: 'text-[#B45309]',
+        border: 'border-[#FDE68A]',
+        dot: 'bg-[#D97706]',
+        tooltip: 'Focus area newly reported in this assessment.',
+      };
+    case 'NO_LONGER_REPORTED':
+      return {
+        label: 'No Longer Reported',
+        bg: 'bg-[#ECFDF5]',
+        text: 'text-[#047857]',
+        border: 'border-[#A7F3D0]',
+        dot: 'bg-[#10B981]',
+        tooltip: 'Reported previously but no longer reported in this assessment. (Observational, not a medical cure).',
+      };
+    case 'PERSISTENT':
+      return {
+        label: 'Persistent Focus Area',
+        bg: 'bg-[#F1F5F9]',
+        text: 'text-[#475569]',
+        border: 'border-[#CBD5E1]',
+        dot: 'bg-[#64748B]',
+        tooltip: 'Focus area remains reported across both assessments.',
+      };
+    case 'POSITIVE_ADOPTED':
+      return {
+        label: 'Positive Habit Adopted',
+        bg: 'bg-[#F0FDF4]',
+        text: 'text-[#15803D]',
+        border: 'border-[#BBF7D0]',
+        dot: 'bg-[#22C55E]',
+        tooltip: 'Newly reported protective lifestyle routine.',
+      };
+    case 'POSITIVE_MAINTAINED':
+      return {
+        label: 'Positive Habit Maintained',
+        bg: 'bg-[#EBF5EE]',
+        text: 'text-[#1E3A2B]',
+        border: 'border-[#C8E6D2]',
+        dot: 'bg-[#059669]',
+        tooltip: 'Protective habit continued from prior assessment.',
+      };
+    case 'POSITIVE_LAPSED':
+      return {
+        label: 'Positive Habit Lapsed',
+        bg: 'bg-[#FFFBEB]',
+        text: 'text-[#92400E]',
+        border: 'border-[#FDE68A]',
+        dot: 'bg-[#F59E0B]',
+        tooltip: 'Protective habit reported previously is no longer reported.',
+      };
+    case 'NEWLY_RECORDED_CONTEXT':
+      return {
+        label: 'Newly Recorded Context',
+        bg: 'bg-[#F5F3FF]',
+        text: 'text-[#6D28D9]',
+        border: 'border-[#DDD6FE]',
+        dot: 'bg-[#8B5CF6]',
+        tooltip: 'Newly recorded; question was unanswered in prior assessment.',
+      };
+    case 'HISTORICAL_CONDITION_NOT_RECORDED':
+      return {
+        label: 'Historical Condition (Unrecorded)',
+        bg: 'bg-[#F8FAFC]',
+        text: 'text-[#64748B]',
+        border: 'border-[#E2E8F0]',
+        dot: 'bg-[#94A3B8]',
+        tooltip: 'Permanent past history noted in earlier assessment. Omitting it does not imply medical cure.',
+      };
+    default:
+      return {
+        label: 'Context Factor',
+        bg: 'bg-[#FAF9F6]',
+        text: 'text-[#57534E]',
+        border: 'border-[#E8E5DF]',
+        dot: 'bg-[#78716C]',
+        tooltip: 'Self-reported contextual factor.',
+      };
+  }
+}
+
 // =============================================================================
 /**
- * Calculates a transparent, non-clinical Reported Context Indicator (0–100) based strictly on
- * the domain's reported positive factors (P) and modifiable focus areas (M).
- *
- * Mathematical Transformation:
- *   If P + M === 0: returns null (representing "No comparable factors" / "No factors reported")
- *   Otherwise: Math.round((P / (P + M)) * 100)
- *
- * NON-CLINICAL SAFETY NOTICE:
- * This indicator is a non-clinical visualization derived from self-reported contextual factors.
- * It is NOT a medical score, wellness score, fertility score, risk score, clinical score, or diagnosis.
- *
- * @param {number} priorityCount - Number of modifiable focus areas (M) in this domain.
- * @param {number} positiveCount - Number of reported positive/protective factors (P) in this domain.
- * @returns {number|null} - 0 to 100 normalized percentage or null if no factors exist in this domain.
+ * Calculates a non-clinical contextual indicator (0-100) for visual trend mapping.
+ * Ratio of reported positive/protective habits relative to total contextual factors.
+ * Not a medical score, clinical rating, or diagnosis.
  */
 export function calculateDomainContextIndicator(priorityCount, positiveCount) {
   const M = Number(priorityCount) || 0;
@@ -115,14 +218,14 @@ export function calculateDomainContextIndicator(priorityCount, positiveCount) {
   const total = P + M;
 
   if (total === 0) {
-    return null; // Explicitly indicates no comparable factors reported for this domain
+    return null;
   }
 
   return Math.round((P / total) * 100);
 }
 
 // =============================================================================
-// DERIVE LONGITUDINAL SESSION DATA
+// DERIVE LONGITUDINAL SESSION DATA (RAW CATEGORICAL COUNTS & VISUAL INDICATORS)
 // =============================================================================
 export function deriveLongitudinalData(completedSessionsChronological, reportsMap) {
   return completedSessionsChronological.map((session, index) => {
@@ -145,16 +248,22 @@ export function deriveLongitudinalData(completedSessionsChronological, reportsMa
 
       if (report) {
         if (Array.isArray(report.priority_factors)) {
-          const domPriority = report.priority_factors.filter((f) => f.domain === dom.key);
+          const domPriority = report.priority_factors.filter(
+            (f) => normalizeFrontendDomainKey(f.domain) === dom.key
+          );
           priorityCount += domPriority.length;
           factorsList = factorsList.concat(domPriority);
         }
         if (Array.isArray(report.positive_factors)) {
-          const domPositive = report.positive_factors.filter((f) => f.domain === dom.key);
+          const domPositive = report.positive_factors.filter(
+            (f) => normalizeFrontendDomainKey(f.domain) === dom.key
+          );
           positiveCount += domPositive.length;
         }
         if (Array.isArray(report.structured_findings)) {
-          const domStruct = report.structured_findings.filter((f) => f.domain === dom.key);
+          const domStruct = report.structured_findings.filter(
+            (f) => normalizeFrontendDomainKey(f.domain) === dom.key
+          );
           if (priorityCount === 0 && domStruct.length > 0) {
             priorityCount = domStruct.length;
           }
@@ -162,14 +271,14 @@ export function deriveLongitudinalData(completedSessionsChronological, reportsMa
       }
 
       const calculatedScore = calculateDomainContextIndicator(priorityCount, positiveCount);
-
       domainScores[dom.key] = calculatedScore;
+
       domainFactors[dom.key] = {
         priorityCount,
         positiveCount,
         factors: factorsList,
         indicator: calculatedScore,
-        hasData: calculatedScore !== null,
+        hasData: priorityCount > 0 || positiveCount > 0,
       };
     });
 
@@ -187,7 +296,7 @@ export function deriveLongitudinalData(completedSessionsChronological, reportsMa
 }
 
 // =============================================================================
-// DERIVE BASELINE VS LATEST COMPARISON
+// DERIVE BASELINE VS LATEST COMPARISON (FACTUAL CATEGORICAL TOTALS)
 // =============================================================================
 export function deriveComparison(longitudinalData) {
   if (longitudinalData.length === 0) {
@@ -218,8 +327,6 @@ export function deriveComparison(longitudinalData) {
   const domainsComp = {};
 
   DOMAIN_DEFINITIONS.forEach((dom) => {
-    const baseScore = baseline.domainScores[dom.key]; // number or null
-    const latestScore = latest.domainScores[dom.key]; // number or null
     const basePriority = baseline.domainFactors[dom.key]?.priorityCount || 0;
     const latestPriority = latest.domainFactors[dom.key]?.priorityCount || 0;
     const basePositive = baseline.domainFactors[dom.key]?.positiveCount || 0;
@@ -238,14 +345,14 @@ export function deriveComparison(longitudinalData) {
       const priorityIncreased = latestPriority > basePriority;
 
       if (priorityReduced || (positiveIncreased && !priorityIncreased)) {
-        statusText = 'Fewer contextual factors identified';
+        statusText = 'Fewer contextual focus areas identified';
         trendType = 'positive';
         if (priorityReduced) {
           const diff = basePriority - latestPriority;
           changeLabel = `-${diff} Focus Area${diff > 1 ? 's' : ''}`;
         } else {
           const diff = latestPositive - basePositive;
-          changeLabel = `+${diff} Positive Factor${diff > 1 ? 's' : ''}`;
+          changeLabel = `+${diff} Positive Habit${diff > 1 ? 's' : ''}`;
         }
         areasWithChange += 1;
         improvedCount += 1;
@@ -258,34 +365,32 @@ export function deriveComparison(longitudinalData) {
         attentionCount += 1;
       } else {
         if (latestPriority === 0 && latestPositive === 0) {
-          statusText = 'No comparable factors reported';
+          statusText = 'No notable factors reported';
           trendType = 'neutral';
           changeLabel = 'No factors';
         } else {
-          statusText = 'Stable context';
+          statusText = 'Consistent context';
           trendType = 'neutral';
           changeLabel = 'No change';
         }
       }
     } else {
       if (latestPriority === 0 && latestPositive > 0) {
-        statusText = `${latestPositive} positive protective factor${latestPositive > 1 ? 's' : ''}`;
+        statusText = `${latestPositive} positive protective habit${latestPositive > 1 ? 's' : ''}`;
         changeLabel = `${latestPositive} Positive`;
       } else if (latestPriority > 0 && latestPositive > 0) {
-        statusText = `${latestPriority} focus area${latestPriority > 1 ? 's' : ''}, ${latestPositive} positive factor${latestPositive > 1 ? 's' : ''}`;
+        statusText = `${latestPriority} focus area${latestPriority > 1 ? 's' : ''}, ${latestPositive} positive habit${latestPositive > 1 ? 's' : ''}`;
         changeLabel = `${latestPriority} Focus / ${latestPositive} Pos`;
       } else if (latestPriority > 0) {
         statusText = `${latestPriority} modifiable focus area${latestPriority > 1 ? 's' : ''}`;
         changeLabel = `${latestPriority} Focus Area${latestPriority > 1 ? 's' : ''}`;
       } else {
-        statusText = 'No comparable factors reported';
+        statusText = 'No notable factors reported';
         changeLabel = 'Baseline';
       }
     }
 
     domainsComp[dom.key] = {
-      baseScore,
-      latestScore,
       statusText,
       trendType,
       changeLabel,
@@ -293,15 +398,14 @@ export function deriveComparison(longitudinalData) {
       latestPriority,
       basePositive,
       latestPositive,
-      hasData: latestScore !== null || baseScore !== null,
-      percentageFill: latestScore !== null ? latestScore : 0,
+      hasData: latestPriority > 0 || latestPositive > 0 || basePriority > 0 || basePositive > 0,
     };
   });
 
   let snapshotStatus = 'Baseline Established';
   if (hasComparison) {
     if (improvedCount >= 2) {
-      snapshotStatus = 'Positive Context Trend';
+      snapshotStatus = 'Positive Context Shift';
     } else if (attentionCount > 0) {
       snapshotStatus = 'Active Focus Areas';
     } else {

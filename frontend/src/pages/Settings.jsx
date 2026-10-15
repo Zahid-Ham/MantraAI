@@ -291,6 +291,58 @@ export default function Settings({ onNavigateHome: _onNavigateHome }) {
     }
   };
 
+  // User Consent Management
+  const [consents, setConsents] = useState([]);
+  const [loadingConsents, setLoadingConsents] = useState(false);
+  const [consentActionInProgress, setConsentActionInProgress] = useState('');
+
+  const fetchConsents = async () => {
+    try {
+      setLoadingConsents(true);
+      const data = await apiRequest('/api/v1/auth/consent');
+      if (Array.isArray(data)) {
+        setConsents(data);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch user consents:', err);
+    } finally {
+      setLoadingConsents(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'privacy') {
+      fetchConsents();
+    }
+  }, [activeTab]);
+
+  const hasConsent = (type) => {
+    const sorted = consents
+      .filter((c) => c.consent_type === type)
+      .sort((a, b) => new Date(b.recorded_at) - new Date(a.recorded_at));
+    return sorted.length > 0 && sorted[0].action === 'ACCEPTED';
+  };
+
+  const handleToggleConsent = async (consentType, currentlyActive) => {
+    try {
+      setConsentActionInProgress(consentType);
+      await apiRequest('/api/v1/auth/consent', {
+        method: 'POST',
+        body: JSON.stringify({
+          consent_type: consentType,
+          policy_version: '1.0',
+          action: currentlyActive ? 'REVOKED' : 'ACCEPTED',
+        }),
+      });
+      await fetchConsents();
+    } catch (err) {
+      console.error('Failed to update consent:', err);
+      alert('Unable to update consent: ' + (err.message || 'Unknown error'));
+    } finally {
+      setConsentActionInProgress('');
+    }
+  };
+
   return (
     <AppShell currentTab="settings">
       <div className="space-y-8 pb-16">
@@ -986,6 +1038,93 @@ export default function Settings({ onNavigateHome: _onNavigateHome }) {
                     <p className="text-[11px] text-[#78716C]">
                       Collected inputs are used exclusively to provide personalized wellness education and reference verified global medical guidelines (WHO, AUA/ASRM, EAU).
                     </p>
+                  </div>
+
+                  {/* Active Consents Management Card */}
+                  <div className="p-5 bg-white border border-[#E8E5DF] rounded-xl space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-bold text-sm text-[#1C1917]">
+                        Privacy & AI Processing Consents
+                      </h3>
+                      {loadingConsents && (
+                        <span className="text-[11px] text-[#78716C]">Loading status...</span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-[#78716C] leading-normal">
+                      MantraAI requires explicit, revokable user consent before performing health data processing or external AI-assisted clinical guideline synthesis.
+                    </p>
+
+                    <div className="space-y-3 pt-1">
+                      {/* HEALTH_DATA_PROCESSING */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-[#FAF9F6] border border-[#E8E5DF]">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-xs text-[#1C1917]">Health Data Processing</span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              hasConsent('HEALTH_DATA_PROCESSING')
+                                ? 'bg-[#EBF5EE] text-[#1E3A2B]'
+                                : 'bg-[#FEF2F2] text-[#991B1B]'
+                            }`}>
+                              {hasConsent('HEALTH_DATA_PROCESSING') ? 'Active' : 'Not Granted'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[#78716C]">
+                            Permits saving and analyzing structured health assessment responses and trends.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={consentActionInProgress === 'HEALTH_DATA_PROCESSING'}
+                          onClick={() => handleToggleConsent('HEALTH_DATA_PROCESSING', hasConsent('HEALTH_DATA_PROCESSING'))}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 disabled:opacity-50 ${
+                            hasConsent('HEALTH_DATA_PROCESSING')
+                              ? 'bg-white border border-[#E8E5DF] text-[#78716C] hover:bg-[#F3EFEA]'
+                              : 'bg-[#1E3A2B] text-white hover:bg-[#162C20]'
+                          }`}
+                        >
+                          {consentActionInProgress === 'HEALTH_DATA_PROCESSING'
+                            ? 'Saving...'
+                            : hasConsent('HEALTH_DATA_PROCESSING')
+                            ? 'Revoke'
+                            : 'Grant Consent'}
+                        </button>
+                      </div>
+
+                      {/* THIRD_PARTY_AI_ANALYSIS */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-[#FAF9F6] border border-[#E8E5DF]">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-xs text-[#1C1917]">Third-Party AI Health Analysis</span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              hasConsent('THIRD_PARTY_AI_ANALYSIS')
+                                ? 'bg-[#EBF5EE] text-[#1E3A2B]'
+                                : 'bg-[#FEF2F2] text-[#991B1B]'
+                            }`}>
+                              {hasConsent('THIRD_PARTY_AI_ANALYSIS') ? 'Active' : 'Not Granted'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[#78716C]">
+                            Enables the AI Health Companion and LLM-assisted clinical report synthesis.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={consentActionInProgress === 'THIRD_PARTY_AI_ANALYSIS'}
+                          onClick={() => handleToggleConsent('THIRD_PARTY_AI_ANALYSIS', hasConsent('THIRD_PARTY_AI_ANALYSIS'))}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 disabled:opacity-50 ${
+                            hasConsent('THIRD_PARTY_AI_ANALYSIS')
+                              ? 'bg-white border border-[#E8E5DF] text-[#78716C] hover:bg-[#F3EFEA]'
+                              : 'bg-[#1E3A2B] text-white hover:bg-[#162C20]'
+                          }`}
+                        >
+                          {consentActionInProgress === 'THIRD_PARTY_AI_ANALYSIS'
+                            ? 'Saving...'
+                            : hasConsent('THIRD_PARTY_AI_ANALYSIS')
+                            ? 'Revoke'
+                            : 'Grant Consent'}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

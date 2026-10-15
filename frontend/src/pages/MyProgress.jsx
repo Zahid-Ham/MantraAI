@@ -6,6 +6,8 @@ import {
   DOMAIN_DEFINITIONS,
   deriveLongitudinalData,
   deriveComparison,
+  fetchAssessmentComparison,
+  getFactorTransitionMeta,
 } from '../utils/longitudinal';
 
 export default function MyProgress({ onNavigateHome }) {
@@ -15,11 +17,15 @@ export default function MyProgress({ onNavigateHome }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('overview'); // overview, daily_activity, trends, improvements, action_plan, timeline
-  const [selectedDomain, setSelectedDomain] = useState('all');
-  const [timeframe, setTimeframe] = useState('all'); // all, 6m, 1y
-  const [hoveredPoint, setHoveredPoint] = useState(null);
   const [actionStatuses, setActionStatuses] = useState({});
   const [dismissedRecommendation, setDismissedRecommendation] = useState(false);
+
+  // Deterministic Longitudinal Comparison State (Phase 1D)
+  const [selectedSessionId, setSelectedSessionId] = useState(null);
+  const [selectedTargetId, setSelectedTargetId] = useState(null);
+  const [comparisonData, setComparisonData] = useState(null);
+  const [comparisonLoading, setComparisonLoading] = useState(false);
+  const [comparisonError, setComparisonError] = useState('');
 
   // Daily Health Data & Adaptive Goals state
   const [latestDailyMetric, setLatestDailyMetric] = useState(null);
@@ -81,22 +87,18 @@ export default function MyProgress({ onNavigateHome }) {
           setSessions(sorted);
 
           const completed = sorted.filter((s) => s.status === 'COMPLETED');
+          if (completed.length > 0) {
+            setSelectedSessionId((prev) => prev || completed[0].id);
 
-          // Fetch reports in parallel for completed sessions
-          const repMap = {};
-          await Promise.all(
-            completed.map(async (sess) => {
-              try {
-                const rep = await apiRequest(`/api/v1/assessments/${sess.id}/report`);
-                repMap[sess.id] = rep;
-              } catch (err) {
-                console.warn(`Report fetch skipped for session ${sess.id}:`, err);
+            // Fetch only the single latest report for action plan / recommendations
+            try {
+              const rep = await apiRequest(`/api/v1/assessments/${completed[0].id}/report`);
+              if (isMounted) {
+                setReportsMap({ [completed[0].id]: rep });
               }
-            })
-          );
-
-          if (isMounted) {
-            setReportsMap(repMap);
+            } catch (err) {
+              console.warn(`Latest report fetch skipped for session ${completed[0].id}:`, err);
+            }
           }
         }
       } catch (_err) {
@@ -117,6 +119,38 @@ export default function MyProgress({ onNavigateHome }) {
       isMounted = false;
     };
   }, []);
+
+  // Fetch deterministic comparison from backend when selected assessment changes
+  useEffect(() => {
+    if (!selectedSessionId) return;
+    let isMounted = true;
+
+    const loadComparison = async () => {
+      try {
+        setComparisonLoading(true);
+        setComparisonError('');
+        const data = await fetchAssessmentComparison(selectedSessionId, selectedTargetId);
+        if (isMounted) {
+          setComparisonData(data);
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error('Failed to load comparison data:', err);
+          setComparisonError('Unable to load longitudinal comparison. Please try again.');
+        }
+      } finally {
+        if (isMounted) {
+          setComparisonLoading(false);
+        }
+      }
+    };
+
+    loadComparison();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedSessionId, selectedTargetId]);
 
   // Fetch daily health metrics, today's adaptive goals, and trends
   const fetchHealthData = async () => {
@@ -1245,341 +1279,386 @@ export default function MyProgress({ onNavigateHome }) {
             {/* ========================================================================= */}
             {activeTab === 'overview' && (
               <div className="space-y-6">
-                
-                {/* 2-Column Section: Trends Chart (Left) & Domain Change Summary (Right) */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                  
-                  {/* Left Column (7 cols): Health Domain Trends */}
-                  <div className="lg:col-span-7 bg-white border border-[#E8E5DF] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#F3EFEA] pb-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-[#1E3A2B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                          </svg>
-                          <h2 className="text-base sm:text-[17px] font-bold text-[#1C1917]">
-                            Health Domain Trends
-                          </h2>
-                        </div>
-                        <p className="text-xs text-[#78716C] mt-0.5">
-                          Reported Context Indicator (0–100) reflecting self-reported protective factors vs. modifiable focus areas.
-                        </p>
-                      </div>
-
-                      {/* Time Filter Select */}
-                      <select
-                        value={timeframe}
-                        onChange={(e) => setTimeframe(e.target.value)}
-                        className="text-xs font-semibold bg-[#FAF9F6] border border-[#E8E5DF] rounded-lg px-2.5 py-1.5 text-[#57534E] hover:border-[#D0CBC0] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#1E3A2B] self-start sm:self-auto"
-                      >
-                        <option value="all">All Assessments</option>
-                        <option value="6m">Last 6 Months</option>
-                        <option value="1y">Last Year</option>
-                      </select>
-                    </div>
-
-                    {/* Interactive SVG Chart Container */}
-                    <div className="pt-2">
-                      <div className="relative w-full h-64 sm:h-72 select-none">
-                        
-                        {/* Chart Y-Axis Guide Labels */}
-                        <div className="absolute left-0 top-0 bottom-6 w-8 flex flex-col justify-between text-[11px] font-medium text-[#A8A29E] text-right pr-2 select-none">
-                          <span>100</span>
-                          <span>80</span>
-                          <span>60</span>
-                          <span>40</span>
-                          <span>20</span>
-                          <span>0</span>
-                        </div>
-
-                        {/* Chart SVG Canvas */}
-                        <div className="ml-9 mr-2 h-[calc(100%-24px)] relative">
-                          <svg className="w-full h-full overflow-visible" viewBox="0 0 400 200" preserveAspectRatio="none">
-                            {/* Horizontal Gridlines */}
-                            {[0, 40, 80, 120, 160, 200].map((yVal, idx) => (
-                              <line
-                                key={idx}
-                                x1="0"
-                                y1={yVal}
-                                x2="400"
-                                y2={yVal}
-                                stroke="#F3EFEA"
-                                strokeWidth="1"
-                                strokeDasharray={idx === 5 ? 'none' : '3 3'}
-                              />
-                            ))}
-
-                            {/* Lines for each domain */}
-                            {DOMAIN_DEFINITIONS.map((dom) => {
-                              if (selectedDomain !== 'all' && selectedDomain !== dom.key) return null;
-
-                              const points = longitudinalData
-                                .map((d, idx) => {
-                                  const score = d.domainScores[dom.key];
-                                  if (score === null || score === undefined) return null;
-                                  const totalPoints = Math.max(1, longitudinalData.length);
-                                  const x = totalPoints === 1 ? 200 : (idx / (totalPoints - 1)) * 380 + 10;
-                                  // Convert 0-100 score to SVG Y (0 is 200, 100 is 10)
-                                  const y = 200 - (score / 100) * 180 - 10;
-                                  return { x, y, score, date: d.dateLabel, d };
-                                })
-                                .filter(Boolean);
-
-                              if (points.length === 0) return null;
-
-                              let pathD = `M ${points[0].x} ${points[0].y}`;
-                              for (let i = 1; i < points.length; i++) {
-                                const prev = points[i - 1];
-                                const curr = points[i];
-                                const cp1x = prev.x + (curr.x - prev.x) / 2;
-                                const cp1y = prev.y;
-                                const cp2x = prev.x + (curr.x - prev.x) / 2;
-                                const cp2y = curr.y;
-                                pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${curr.x} ${curr.y}`;
-                              }
-
-                              return (
-                                <g key={dom.key}>
-                                  {/* Line (if >= 2 points) */}
-                                  {points.length > 1 && (
-                                    <path
-                                      d={pathD}
-                                      fill="none"
-                                      stroke={dom.color}
-                                      strokeWidth="2.4"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    />
-                                  )}
-
-                                  {/* Markers */}
-                                  {points.map((pt, pIdx) => (
-                                    <g key={pIdx}>
-                                      <circle
-                                        cx={pt.x}
-                                        cy={pt.y}
-                                        r="4.5"
-                                        fill={dom.color}
-                                        stroke="#FFFFFF"
-                                        strokeWidth="2"
-                                        className="cursor-pointer hover:r-6 transition-all"
-                                        onMouseEnter={() =>
-                                          setHoveredPoint({
-                                            domain: dom,
-                                            score: pt.score,
-                                            date: pt.d.fullDateLabel,
-                                            factors: pt.d.domainFactors[dom.key],
-                                            x: pt.x,
-                                            y: pt.y,
-                                          })
-                                        }
-                                        onMouseLeave={() => setHoveredPoint(null)}
-                                      />
-                                    </g>
-                                  ))}
-                                </g>
-                              );
-                            })}
-                          </svg>
-
-                          {/* Hover Tooltip Overlay */}
-                          {hoveredPoint && (
-                            <div
-                              className="absolute z-30 bg-[#1C1917] text-white p-3 rounded-xl shadow-lg text-xs pointer-events-none transition-all max-w-[240px]"
-                              style={{
-                                left: `${(hoveredPoint.x / 400) * 100}%`,
-                                top: `${Math.max(0, (hoveredPoint.y / 200) * 100 - 30)}%`,
-                                transform: 'translate(-50%, -100%)',
-                              }}
-                            >
-                              <div className="font-bold flex items-center gap-1.5" style={{ color: hoveredPoint.domain.color }}>
-                                <span>{hoveredPoint.domain.title}</span>
-                              </div>
-                              <div className="text-[11px] text-[#D6D3D1] mt-1">
-                                {hoveredPoint.date}
-                              </div>
-                              <div className="text-xs font-semibold text-white mt-0.5">
-                                Reported Context Indicator: <span className="font-bold">{hoveredPoint.score}%</span>
-                              </div>
-                              <div className="text-[11px] text-[#A8A29E] mt-1 flex items-center gap-2">
-                                <span>Focus: <strong className="text-white">{hoveredPoint.factors?.priorityCount ?? 0}</strong></span>
-                                <span>•</span>
-                                <span>Positive: <strong className="text-[#34D399]">{hoveredPoint.factors?.positiveCount ?? 0}</strong></span>
-                              </div>
-                              <div className="text-[9.5px] text-[#A8A29E]/80 mt-1.5 pt-1.5 border-t border-white/10 leading-tight italic">
-                                Non-clinical visualization derived from self-reported context. Not a medical score.
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* X-Axis Date Labels */}
-                        <div className="ml-9 mr-2 h-6 flex justify-between items-center text-[11px] font-medium text-[#78716C] pt-1 border-t border-[#E8E5DF]">
-                          {longitudinalData.length === 1 ? (
-                            <div className="w-full text-center">
-                              {longitudinalData[0].dateLabel} (Baseline)
-                            </div>
-                          ) : (
-                            longitudinalData.map((d, i) => (
-                              <span key={i} className="truncate">
-                                {d.dateLabel}
-                              </span>
-                            ))
-                          )}
-                        </div>
-
-                      </div>
-
-                      {/* Single Assessment Note */}
-                      {longitudinalData.length === 1 && (
-                        <div className="mt-3 p-3 bg-[#FAF9F6] border border-[#E8E5DF] rounded-xl flex items-center gap-2 text-xs text-[#57534E]">
-                          <svg className="w-4 h-4 text-[#1E3A2B] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span>
-                            <strong>Baseline Established:</strong> Single-session baseline recorded. Complete your next quarterly check-in to generate multi-point comparative trend lines.
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Domain Legend / Filter Pills */}
-                      <div className="flex flex-wrap items-center justify-center gap-2 pt-3 border-t border-[#F3EFEA] mt-2">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedDomain('all')}
-                          className={`text-[11px] font-semibold px-2.5 py-1 rounded-full transition-all cursor-pointer ${
-                            selectedDomain === 'all'
-                              ? 'bg-[#1E3A2B] text-white shadow-2xs'
-                              : 'bg-[#F3EFEA] text-[#78716C] hover:text-[#1C1917]'
-                          }`}
-                        >
-                          All Domains
-                        </button>
-
-                        {DOMAIN_DEFINITIONS.map((dom) => {
-                          const isSelected = selectedDomain === dom.key;
-                          return (
-                            <button
-                              key={dom.key}
-                              type="button"
-                              onClick={() => setSelectedDomain(isSelected ? 'all' : dom.key)}
-                              className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full transition-all cursor-pointer ${
-                                isSelected
-                                  ? 'ring-2 ring-offset-1 text-white shadow-2xs'
-                                  : 'bg-[#FAF9F6] text-[#57534E] hover:bg-[#F3EFEA] border border-[#E8E5DF]'
-                              }`}
-                              style={{
-                                backgroundColor: isSelected ? dom.color : undefined,
-                                ringColor: isSelected ? dom.color : undefined,
-                              }}
-                            >
-                              <span
-                                className="w-2 h-2 rounded-full shrink-0"
-                                style={{ backgroundColor: isSelected ? '#FFFFFF' : dom.color }}
-                              />
-                              <span>{dom.shortTitle}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      <p className="text-[10px] text-[#A8A29E] text-center italic pt-2">
-                        A non-clinical visualization of self-reported contextual factors. It is not a medical score or diagnosis.
-                      </p>
-
-                    </div>
-                  </div>
-
-                  {/* Right Column (5 cols): Domain Change Summary */}
-                  <div className="lg:col-span-5 bg-white border border-[#E8E5DF] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
-                    <div className="border-b border-[#F3EFEA] pb-3">
+                           {/* Longitudinal Context Comparison Header & Selectors */}
+                <div className="bg-white border border-[#E8E5DF] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-5">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#F3EFEA] pb-4">
+                    <div>
                       <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-[#1E3A2B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className="w-5 h-5 text-[#1E3A2B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
-                        <h2 className="text-base sm:text-[17px] font-bold text-[#1C1917]">
-                          Domain Change Summary
+                        <h2 className="text-base sm:text-lg font-bold text-[#1C1917]">
+                          Longitudinal Health Context Comparison
                         </h2>
                       </div>
                       <p className="text-xs text-[#78716C] mt-0.5">
-                        Comparison between your baseline and most recent assessment.
+                        Deterministic, observational tracking comparing self-reported health factors across completed check-ins.
                       </p>
                     </div>
 
-                    {/* 6 Domain Rows Matching Visual Reference */}
-                    <div className="space-y-3.5 pt-1">
-                      {DOMAIN_DEFINITIONS.map((dom) => {
-                        const comp = comparison.domains[dom.key] || {
-                          latestScore: null,
-                          statusText: 'Baseline recorded',
-                          changeLabel: 'Baseline',
-                          trendType: 'neutral',
-                        };
+                    {/* Session & Target Selectors */}
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-1.5 text-xs text-[#57534E]">
+                        <span className="font-semibold text-[#1C1917]">Assessment:</span>
+                        <select
+                          value={selectedSessionId || ''}
+                          onChange={(e) => {
+                            setSelectedSessionId(e.target.value);
+                            setSelectedTargetId(null);
+                          }}
+                          className="text-xs font-semibold bg-[#FAF9F6] border border-[#E8E5DF] rounded-lg px-2.5 py-1.5 text-[#1C1917] hover:border-[#D0CBC0] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#1E3A2B]"
+                        >
+                          {completedSessionsNewestFirst.map((s, idx) => {
+                            const d = new Date(s.completed_at || s.started_at);
+                            const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                            return (
+                              <option key={s.id} value={s.id}>
+                                {label} {idx === 0 ? '(Latest)' : ''}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
 
-                        return (
-                          <div key={dom.key} className="space-y-1.5">
-                            <div className="flex items-center justify-between text-xs">
-                              
-                              {/* Left: Icon & Domain Name */}
-                              <div className="flex items-center gap-2 min-w-0">
-                                <div
-                                  className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
-                                  style={{ backgroundColor: dom.bgLight, color: dom.color }}
-                                >
-                                  {dom.icon}
+                      {completedSessionsNewestFirst.length > 1 && (
+                        <div className="flex items-center gap-1.5 text-xs text-[#57534E]">
+                          <span className="font-semibold text-[#1C1917]">Compare Against:</span>
+                          <select
+                            value={selectedTargetId || ''}
+                            onChange={(e) => setSelectedTargetId(e.target.value || null)}
+                            className="text-xs font-semibold bg-[#FAF9F6] border border-[#E8E5DF] rounded-lg px-2.5 py-1.5 text-[#1C1917] hover:border-[#D0CBC0] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#1E3A2B]"
+                          >
+                            <option value="">Immediate Predecessor (Default)</option>
+                            {completedSessionsChronological
+                              .filter((s) => s.id !== selectedSessionId)
+                              .map((s) => {
+                                const d = new Date(s.completed_at || s.started_at);
+                                const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                                return (
+                                  <option key={s.id} value={s.id}>
+                                    {label}
+                                  </option>
+                                );
+                              })}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Loading State */}
+                  {comparisonLoading && (
+                    <div className="p-8 text-center bg-[#FAF9F6] border border-[#E8E5DF] rounded-2xl flex flex-col items-center justify-center gap-2">
+                      <div className="w-6 h-6 border-2 border-[#1E3A2B] border-t-transparent rounded-full animate-spin" />
+                      <span className="text-xs text-[#57534E]">Calculating deterministic assessment transitions...</span>
+                    </div>
+                  )}
+
+                  {/* Error State */}
+                  {comparisonError && !comparisonLoading && (
+                    <div className="p-4 bg-[#FEF2F2] border border-[#FEE2E2] rounded-xl text-xs text-[#991B1B] flex items-center justify-between">
+                      <span>{comparisonError}</span>
+                      <button
+                        onClick={() => setSelectedTargetId(null)}
+                        className="underline font-semibold cursor-pointer"
+                      >
+                        Reset Target
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Questionnaire Version Incompatibility Notice */}
+                  {!comparisonLoading && comparisonData?.comparison_metadata?.compatibility_notes?.length > 0 && (
+                    <div className="p-3.5 bg-[#FFFBEB] border border-[#FDE68A] rounded-xl text-xs text-[#92400E] flex items-start gap-2.5">
+                      <svg className="w-4 h-4 text-[#D97706] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <div className="space-y-1">
+                        <div className="font-bold text-[#78350F]">Questionnaire Version Discrepancy</div>
+                        {comparisonData.comparison_metadata.compatibility_notes.map((note, idx) => (
+                          <div key={idx} className="text-[11.5px] leading-relaxed">{note}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Missing/Unanswered Questions Notice */}
+                  {!comparisonLoading &&
+                    comparisonData &&
+                    (comparisonData.summary.unanswered_questions_current_count > 0 ||
+                      comparisonData.summary.unanswered_questions_previous_count > 0) && (
+                      <div className="p-3 bg-[#FAF9F6] border border-[#E8E5DF] rounded-xl text-xs text-[#57534E] flex items-center gap-2">
+                        <svg className="w-4 h-4 text-[#1E3A2B] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>
+                          <strong>Clinical Transparency:</strong> Questions skipped or unanswered in an assessment are evaluated as unrecorded context rather than negative answers.
+                        </span>
+                      </div>
+                    )}
+
+                  {/* Baseline-Only State */}
+                  {!comparisonLoading && comparisonData && !comparisonData.comparison_metadata.has_comparison && (
+                    <div className="p-8 text-center bg-[#FAF9F6] border border-[#E8E5DF] rounded-2xl space-y-3">
+                      <div className="w-12 h-12 rounded-xl bg-[#EBF5EE] text-[#1E3A2B] mx-auto flex items-center justify-center">
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-sm font-bold text-[#1C1917]">
+                        Baseline Health Context Established
+                      </h3>
+                      <p className="text-xs text-[#57534E] max-w-md mx-auto leading-relaxed">
+                        Your initial baseline health snapshot is recorded. Complete your next quarterly check-in (in 30–90 days) to track factor transitions, habit consistency, and modifiable lifestyle changes over time.
+                      </p>
+                      <button
+                        onClick={handleTakeNewAssessment}
+                        className="inline-flex items-center gap-2 bg-[#1E3A2B] hover:bg-[#14281D] text-white px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer"
+                      >
+                        Take Follow-Up Assessment
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Multi-Assessment Comparison Available */}
+                  {!comparisonLoading && comparisonData && comparisonData.comparison_metadata.has_comparison && (
+                    <div className="space-y-6">
+                      
+                      {/* Top 4 Categorical Transition Metric Cards */}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        
+                        {/* 1. No Longer Reported Focus Areas */}
+                        <div className="p-4 rounded-xl border border-[#C8E6D2] bg-[#EBF5EE] space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-bold text-[#1E3A2B] uppercase tracking-wide">
+                              No Longer Reported
+                            </span>
+                            <div className="w-2 h-2 rounded-full bg-[#10B981]" />
+                          </div>
+                          <div className="text-2xl font-bold text-[#1E3A2B]">
+                            {comparisonData.summary.no_longer_reported_focus_areas_count}
+                          </div>
+                          <p className="text-[11px] text-[#44403C]">
+                            Focus areas not present in current assessment
+                          </p>
+                        </div>
+
+                        {/* 2. Newly Reported Focus Areas */}
+                        <div className="p-4 rounded-xl border border-[#FDE68A] bg-[#FEF3C7] space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-bold text-[#B45309] uppercase tracking-wide">
+                              Newly Reported
+                            </span>
+                            <div className="w-2 h-2 rounded-full bg-[#D97706]" />
+                          </div>
+                          <div className="text-2xl font-bold text-[#B45309]">
+                            {comparisonData.summary.newly_reported_focus_areas_count}
+                          </div>
+                          <p className="text-[11px] text-[#78350F]">
+                            New focus areas reported in current assessment
+                          </p>
+                        </div>
+
+                        {/* 3. Persistent Focus Areas */}
+                        <div className="p-4 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-bold text-[#475569] uppercase tracking-wide">
+                              Persistent Focus
+                            </span>
+                            <div className="w-2 h-2 rounded-full bg-[#64748B]" />
+                          </div>
+                          <div className="text-2xl font-bold text-[#1C1917]">
+                            {comparisonData.summary.persistent_focus_areas_count}
+                          </div>
+                          <p className="text-[11px] text-[#64748B]">
+                            Focus areas noted in both assessments
+                          </p>
+                        </div>
+
+                        {/* 4. Protective Habits */}
+                        <div className="p-4 rounded-xl border border-[#BBF7D0] bg-[#F0FDF4] space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-bold text-[#15803D] uppercase tracking-wide">
+                              Protective Habits
+                            </span>
+                            <div className="w-2 h-2 rounded-full bg-[#22C55E]" />
+                          </div>
+                          <div className="text-2xl font-bold text-[#15803D]">
+                            {comparisonData.summary.positive_habits_adopted_count +
+                              comparisonData.summary.positive_habits_maintained_count}
+                          </div>
+                          <p className="text-[11px] text-[#166534]">
+                            {comparisonData.summary.positive_habits_adopted_count} adopted,{' '}
+                            {comparisonData.summary.positive_habits_maintained_count} maintained
+                          </p>
+                        </div>
+
+                      </div>
+
+                      {/* Executive Observational Summary & Disclaimer */}
+                      <div className="p-4 sm:p-5 rounded-2xl bg-[#FAF9F6] border border-[#E8E5DF] space-y-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 rounded-md bg-[#EBF5EE] text-[#1E3A2B] flex items-center justify-center shrink-0">
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <h3 className="text-xs sm:text-sm font-bold text-[#1C1917]">
+                            Executive Observational Summary
+                          </h3>
+                        </div>
+                        <p className="text-xs sm:text-[13px] text-[#44403C] leading-relaxed">
+                          {comparisonData.summary.executive_narrative}
+                        </p>
+                        <div className="pt-2 border-t border-[#E8E5DF] text-[10.5px] text-[#78716C] leading-normal italic">
+                          {comparisonData.clinical_disclaimer}
+                        </div>
+                      </div>
+
+                      {/* Domain Transition Drilldowns (6 Domains) */}
+                      <div className="space-y-4 pt-1">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-bold text-[#1C1917]">
+                            Domain Factor Transitions
+                          </h3>
+                          <span className="text-xs text-[#78716C]">
+                            {comparisonData.comparison_metadata.elapsed_days !== null
+                              ? `${comparisonData.comparison_metadata.elapsed_days} days elapsed between assessments`
+                              : ''}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {comparisonData.domains.map((domDelta) => {
+                            const domDef =
+                              DOMAIN_DEFINITIONS.find((d) => d.key === domDelta.domain_key) || {
+                                title: domDelta.domain_title,
+                                color: '#1E3A2B',
+                                bgLight: '#FAF9F6',
+                                icon: null,
+                              };
+
+                            return (
+                              <div
+                                key={domDelta.domain_key}
+                                className="p-4 sm:p-5 rounded-2xl border border-[#E8E5DF] bg-white hover:border-[#D0CBC0] transition-all space-y-3"
+                              >
+                                {/* Header */}
+                                <div className="flex items-start justify-between gap-2 border-b border-[#F3EFEA] pb-3">
+                                  <div className="flex items-center gap-2.5">
+                                    <div
+                                      className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                                      style={{ backgroundColor: domDef.bgLight, color: domDef.color }}
+                                    >
+                                      {domDef.icon || (
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                      )}
+                                    </div>
+                                    <div>
+                                      <h4 className="text-xs sm:text-sm font-bold text-[#1C1917]">
+                                        {domDelta.domain_title}
+                                      </h4>
+                                      <p className="text-[11px] text-[#78716C]">
+                                        {domDelta.domain_narrative}
+                                      </p>
+                                    </div>
+                                  </div>
                                 </div>
-                                <span className="font-semibold text-[#1C1917] truncate">
-                                  {dom.title}
-                                </span>
-                              </div>
 
-                              {/* Right: Change Indicator Badge */}
-                              <div className="flex items-center gap-2 shrink-0">
-                                <span
-                                  className={`font-bold text-[11px] ${
-                                    comp.trendType === 'positive'
-                                      ? 'text-[#059669]'
-                                      : comp.trendType === 'attention'
-                                      ? 'text-[#D97706]'
-                                      : 'text-[#78716C]'
-                                  }`}
-                                >
-                                  {comp.changeLabel}
-                                </span>
-                                
-                                {/* Trend Arrow */}
-                                {comp.trendType === 'positive' ? (
-                                  <svg className="w-3.5 h-3.5 text-[#059669]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.4}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7m0 0H7m10 0v10" />
-                                  </svg>
-                                ) : comp.trendType === 'attention' ? (
-                                  <svg className="w-3.5 h-3.5 text-[#D97706]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.4}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 7l10 10m0 0H7m10 0V7" />
-                                  </svg>
+                                {/* Factor Items */}
+                                {domDelta.factors.length > 0 ? (
+                                  <div className="space-y-2.5">
+                                    {domDelta.factors.map((factor) => {
+                                      const meta = getFactorTransitionMeta(factor.transition_type);
+                                      return (
+                                        <div
+                                          key={factor.id}
+                                          className={`p-2.5 rounded-xl border ${meta.border} ${meta.bg} space-y-1.5`}
+                                        >
+                                          <div className="flex items-center justify-between gap-2">
+                                            <div className="flex items-center gap-1.5 min-w-0">
+                                              <span className={`w-2 h-2 rounded-full shrink-0 ${meta.dot}`} />
+                                              <span className="text-xs font-bold text-[#1C1917] truncate">
+                                                {factor.title}
+                                              </span>
+                                            </div>
+                                            <span
+                                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${meta.border} ${meta.bg} ${meta.text} shrink-0`}
+                                            >
+                                              {meta.label}
+                                            </span>
+                                          </div>
+
+                                          <p className="text-[11px] text-[#44403C] leading-snug">
+                                            {factor.explanation}
+                                          </p>
+
+                                          {(factor.previous_reported_value || factor.current_reported_value) && (
+                                            <div className="flex items-center gap-2 text-[10px] text-[#78716C] pt-1 border-t border-black/5">
+                                              {factor.previous_reported_value && (
+                                                <span>Prior: <strong className="text-[#1C1917]">{factor.previous_reported_value}</strong></span>
+                                              )}
+                                              {factor.previous_reported_value && factor.current_reported_value && <span>→</span>}
+                                              {factor.current_reported_value && (
+                                                <span>Current: <strong className="text-[#1C1917]">{factor.current_reported_value}</strong></span>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
                                 ) : (
-                                  <svg className="w-3.5 h-3.5 text-[#A8A29E]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
-                                  </svg>
+                                  <div className="p-3 bg-[#FAF9F6] rounded-xl text-[11px] text-[#78716C] italic text-center">
+                                    No notable factor shifts reported in this domain.
+                                  </div>
+                                )}
+
+                                {/* Domain unrecorded questions notice if any */}
+                                {domDelta.unanswered_questions_current.length > 0 && (
+                                  <div className="text-[10px] text-[#A8A29E] italic pt-1">
+                                    {domDelta.unanswered_questions_current.length} question(s) unrecorded in current assessment.
+                                  </div>
                                 )}
                               </div>
-                            </div>
+                            );
+                          })}
+                        </div>
+                      </div>
 
-                            {/* Horizontal Progress Context Bar */}
-                            <div className="w-full h-2 bg-[#F3EFEA] rounded-full overflow-hidden">
-                              <div
-                                className="h-full rounded-full transition-all duration-500"
-                                style={{
-                                  width: `${comp.latestScore !== null ? Math.max(10, comp.latestScore) : 0}%`,
-                                  backgroundColor: dom.color,
-                                }}
-                              />
+                      {/* Linked Wellness Plan Adherence Context Card */}
+                      {comparisonData.wellness_plan_context?.has_linked_plan && (
+                        <div className="p-4 sm:p-5 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0] space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-lg bg-[#DCFCE7] text-[#15803D] flex items-center justify-center shrink-0">
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                              </div>
+                              <h4 className="text-xs sm:text-sm font-bold text-[#14532D]">
+                                Wellness Planner Engagement Context ({comparisonData.wellness_plan_context.plan_title || 'Active Plan'})
+                              </h4>
                             </div>
+                            {comparisonData.wellness_plan_context.adherence_rate_pct !== null && (
+                              <span className="text-xs font-bold text-[#15803D] bg-[#DCFCE7] px-2.5 py-1 rounded-full border border-[#BBF7D0]">
+                                {Math.round(comparisonData.wellness_plan_context.adherence_rate_pct)}% Routine Consistency
+                              </span>
+                            )}
                           </div>
-                        );
-                      })}
-                    </div>
+                          <p className="text-xs text-[#166534] leading-relaxed">
+                            {comparisonData.wellness_plan_context.adherence_narrative}
+                          </p>
+                          <div className="text-[10.5px] text-[#15803D]/80 leading-normal italic pt-1 border-t border-[#BBF7D0]">
+                            {comparisonData.wellness_plan_context.disclaimer}
+                          </div>
+                        </div>
+                      )}
 
-                  </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* 2-Column Section: Key Milestones (Left) & Personalized Recommendations (Right) */}
@@ -1791,7 +1870,7 @@ export default function MyProgress({ onNavigateHome }) {
                               className="text-xs font-bold px-2.5 py-1 rounded-full"
                               style={{ backgroundColor: dom.bgLight, color: dom.color }}
                             >
-                              {comp.latestScore !== null ? `${comp.latestScore}%` : 'No data'}
+                              {comp.changeLabel}
                             </span>
                           </div>
 
@@ -1808,13 +1887,6 @@ export default function MyProgress({ onNavigateHome }) {
                               <span>Positive Protective Factors:</span>
                               <span className="font-semibold text-[#059669]">{comp.latestPositive}</span>
                             </div>
-                          </div>
-
-                          <div className="w-full h-2 bg-[#F3EFEA] rounded-full overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all"
-                              style={{ width: `${comp.latestScore !== null ? comp.latestScore : 0}%`, backgroundColor: dom.color }}
-                            />
                           </div>
                         </div>
                       );
@@ -1891,9 +1963,9 @@ export default function MyProgress({ onNavigateHome }) {
 
                             <div className="flex items-center gap-4 shrink-0">
                               <div className="text-right">
-                                <div className="text-xs text-[#78716C]">Baseline → Latest</div>
+                                <div className="text-xs text-[#78716C]">Focus Factors</div>
                                 <div className="text-xs font-bold text-[#1C1917]">
-                                  {comp.baseScore !== null ? `${comp.baseScore}%` : '—'} → {comp.latestScore !== null ? `${comp.latestScore}%` : '—'}
+                                  {comp.basePriority} → {comp.latestPriority}
                                 </div>
                               </div>
                               <span

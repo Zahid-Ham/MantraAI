@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import AppShell from '../components/layout/AppShell';
 import { apiRequest } from '../config/api';
+import { fetchAssessmentComparison } from '../utils/longitudinal';
 
 export default function History({ onNavigateHome }) {
   const [sessions, setSessions] = useState([]);
   const [reportsMap, setReportsMap] = useState({});
+  const [comparisonsMap, setComparisonsMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [pdfToast, setPdfToast] = useState('');
@@ -50,22 +52,27 @@ export default function History({ onNavigateHome }) {
 
           const completed = sorted.filter((s) => s.status === 'COMPLETED');
           
-          // Fetch report content in parallel for all completed sessions
+          // Fetch report content and longitudinal comparisons in parallel for completed sessions
           const reportsObj = {};
+          const comparisonsObj = {};
           await Promise.all(
             completed.map(async (sess) => {
               try {
-                const rep = await apiRequest(`/api/v1/assessments/${sess.id}/report`);
-                reportsObj[sess.id] = rep;
+                const [rep, comp] = await Promise.all([
+                  apiRequest(`/api/v1/assessments/${sess.id}/report`).catch(() => null),
+                  fetchAssessmentComparison(sess.id).catch(() => null),
+                ]);
+                if (rep) reportsObj[sess.id] = rep;
+                if (comp) comparisonsObj[sess.id] = comp;
               } catch (err) {
-                // If detailed report is not yet generated or fails, keep fallback
-                console.warn(`Report fetch failed for session ${sess.id}:`, err);
+                console.warn(`Data fetch failed for session ${sess.id}:`, err);
               }
             })
           );
 
           if (isMounted) {
             setReportsMap(reportsObj);
+            setComparisonsMap(comparisonsObj);
           }
         }
       } catch (err) {
@@ -172,6 +179,47 @@ export default function History({ onNavigateHome }) {
       evidenceCount,
       headline,
       overview,
+    };
+  };
+
+  const getComparisonBadge = (comp) => {
+    if (!comp || !comp.comparison_metadata || !comp.comparison_metadata.has_comparison) {
+      return {
+        label: 'Baseline Recorded',
+        badgeClass: 'bg-[#FAF9F6] text-[#57534E] border-[#E8E5DF]',
+      };
+    }
+    const newlyReported = comp.summary?.newly_reported_focus_areas_count || 0;
+    const noLongerReported = comp.summary?.no_longer_reported_focus_areas_count || 0;
+    const habits = comp.summary?.positive_habits_adopted_count || 0;
+
+    if (newlyReported > 0 && noLongerReported > 0) {
+      return {
+        label: `+${newlyReported} New / -${noLongerReported} Not Flagged`,
+        badgeClass: 'bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]',
+      };
+    }
+    if (noLongerReported > 0) {
+      return {
+        label: `-${noLongerReported} No Longer Reported`,
+        badgeClass: 'bg-[#EBF5EE] text-[#047857] border-[#C8E6D2]',
+      };
+    }
+    if (newlyReported > 0) {
+      return {
+        label: `+${newlyReported} Newly Reported`,
+        badgeClass: 'bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]',
+      };
+    }
+    if (habits > 0) {
+      return {
+        label: `+${habits} Positive Habit${habits > 1 ? 's' : ''}`,
+        badgeClass: 'bg-[#F0FDF4] text-[#15803D] border-[#BBF7D0]',
+      };
+    }
+    return {
+      label: 'Consistent Context',
+      badgeClass: 'bg-[#FAF9F6] text-[#78716C] border-[#E8E5DF]',
     };
   };
 
@@ -327,6 +375,14 @@ export default function History({ onNavigateHome }) {
                     <span className="bg-[#E2F5EA] text-[#15803D] border border-[#C6EBCE] px-2.5 py-0.5 rounded-md text-xs font-bold">
                       Completed
                     </span>
+                    {(() => {
+                      const badge = getComparisonBadge(comparisonsMap[latestSession.id]);
+                      return (
+                        <span className={`border px-2.5 py-0.5 rounded-md text-xs font-bold ${badge.badgeClass}`}>
+                          {badge.label}
+                        </span>
+                      );
+                    })()}
                   </div>
 
                   {/* Summary Overview */}
@@ -516,16 +572,26 @@ export default function History({ onNavigateHome }) {
                   >
                     <div>
                       {/* Header Row: Date & Status */}
-                      <div className="flex items-center justify-between gap-2 pb-2">
+                      <div className="flex items-center justify-between gap-2 pb-2 flex-wrap">
                         <span className="text-xs font-medium text-[#57534E] flex items-center gap-1.5">
                           <svg className="w-3.5 h-3.5 text-[#78716C]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
                           <span>{formatDate(sess.completed_at || sess.started_at)}</span>
                         </span>
-                        <span className="bg-[#E2F5EA] text-[#15803D] border border-[#C6EBCE] px-2 py-0.5 rounded-md text-[10.5px] font-bold">
-                          Completed
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="bg-[#E2F5EA] text-[#15803D] border border-[#C6EBCE] px-2 py-0.5 rounded-md text-[10.5px] font-bold">
+                            Completed
+                          </span>
+                          {(() => {
+                            const badge = getComparisonBadge(comparisonsMap[sess.id]);
+                            return (
+                              <span className={`border px-2 py-0.5 rounded-md text-[10.5px] font-bold ${badge.badgeClass}`}>
+                                {badge.label}
+                              </span>
+                            );
+                          })()}
+                        </div>
                       </div>
 
                       {/* Title */}

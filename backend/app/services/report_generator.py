@@ -75,6 +75,8 @@ from app.schemas.report import (
 from app.services.normalizer import NormalizedAssessment, QUESTION_DOMAIN_MAP
 from app.services.context_engine import HealthContext, FactorItem
 from app.services.evidence_retriever import EvidenceContext, EvidenceItem
+from app.services.evidence_taxonomy import get_tag_domain
+from app.services.evidence_corpus import CHUNK_MAP, DOCUMENT_MAP
 
 logger = logging.getLogger(__name__)
 
@@ -508,6 +510,309 @@ def normalize_report_domain(domain: str) -> ReportDomain:
     return "lifestyle_wellness"
 
 
+# ---------------------------------------------------------------------------
+# Fallback Evidence Matching Helpers
+# ---------------------------------------------------------------------------
+
+def _get_item_domains(item: EvidenceItem) -> set[ReportDomain]:
+    """Extracts all valid report domains supported by an EvidenceItem's metadata."""
+    domains: set[ReportDomain] = set()
+    tags: set[str] = {t.lower().strip() for t in item.matched_tags if t}
+    chunk = CHUNK_MAP.get(item.evidence_id) or (CHUNK_MAP.get(item.chunk_id) if item.chunk_id else None)
+    if chunk:
+        tags.update(t.lower().strip() for t in chunk.evidence_tags if t)
+    else:
+        doc = DOCUMENT_MAP.get(item.document_id)
+        if doc:
+            tags.update(t.lower().strip() for t in doc.evidence_tags if t)
+
+    for t in tags:
+        canonical_dom = get_tag_domain(t)
+        if canonical_dom:
+            domains.add(normalize_report_domain(canonical_dom))
+        else:
+            if any(k in t for k in ("repro", "fertility", "semen", "varicocele", "testicular")):
+                domains.add("reproductive_health")
+            elif any(k in t for k in ("libido", "erectile", "masturbat", "pornograph")):
+                domains.add("sexual_health")
+            elif any(k in t for k in ("sleep", "sedentary", "activity", "exercise", "diet", "nutrition", "hydration", "bmi")):
+                domains.add("lifestyle_wellness")
+            elif any(k in t for k in ("heat", "temperature", "laptop", "toxin", "pesticide", "heavy_metal", "radiation")):
+                domains.add("environmental_exposure")
+            elif any(k in t for k in ("stress", "anxiety", "mood", "mental", "depression", "coping")):
+                domains.add("mental_behavioral_wellness")
+            elif any(k in t for k in ("tobacco", "nicotine", "smoking", "alcohol", "cannabis", "steroid", "medication", "drug")):
+                domains.add("substance_medication")
+    return domains
+
+
+def find_evidence_for_domain(
+    evidence_items: list[EvidenceItem],
+    target_domain: ReportDomain,
+    limit: int = 2,
+) -> list[str]:
+    """Returns canonical evidence IDs from retrieved items that defensibly match the target domain."""
+    matching_ids: list[str] = []
+    norm_target = normalize_report_domain(target_domain)
+    for item in evidence_items:
+        if norm_target in _get_item_domains(item):
+            if item.evidence_id not in matching_ids:
+                matching_ids.append(item.evidence_id)
+            if len(matching_ids) >= limit:
+                break
+    return matching_ids
+
+
+def find_evidence_for_factor(
+    evidence_items: list[EvidenceItem],
+    factor_domain: str,
+    factor_tags: Optional[list[str]] = None,
+    limit: int = 2,
+) -> list[str]:
+    """
+    Returns canonical evidence IDs from retrieved items that defensibly support
+    the given factor. Items with direct tag overlap within the factor's domain
+    are prioritized. Returns empty list if no domain/tag match is found.
+    """
+    norm_domain = normalize_report_domain(factor_domain)
+    f_tags = {t.lower().strip() for t in (factor_tags or []) if t and isinstance(t, str)}
+
+    direct_tag_matches: list[str] = []
+    domain_matches: list[str] = []
+
+    for item in evidence_items:
+        item_doms = _get_item_domains(item)
+        if norm_domain not in item_doms:
+            continue
+
+        all_item_tags = {t.lower().strip() for t in item.matched_tags if t}
+        chunk = CHUNK_MAP.get(item.evidence_id) or (CHUNK_MAP.get(item.chunk_id) if item.chunk_id else None)
+        if chunk:
+            all_item_tags.update(t.lower().strip() for t in chunk.evidence_tags if t)
+
+        has_overlap = bool(f_tags.intersection(all_item_tags))
+        if not has_overlap and f_tags:
+            has_overlap = any(
+                (ft in it or it in ft)
+                for ft in f_tags
+                for it in all_item_tags
+            )
+
+        if has_overlap:
+            if item.evidence_id not in direct_tag_matches:
+                direct_tag_matches.append(item.evidence_id)
+        else:
+            if item.evidence_id not in domain_matches:
+                domain_matches.append(item.evidence_id)
+
+    if f_tags:
+        return direct_tag_matches[:limit]
+
+    return domain_matches[:limit]
+
+
+# ---------------------------------------------------------------------------
+# Factor-Specific Action Templates & Deterministic Resolver
+# ---------------------------------------------------------------------------
+
+class FallbackActionTemplate:
+    """Encapsulates a reviewed, conservative educational action template."""
+    def __init__(
+        self,
+        title: str,
+        description: str,
+        domain: ReportDomain,
+        rationale: str,
+        timeframe: str,
+        action_type: ActionType,
+        evidence_tags: list[str],
+    ):
+        self.title = title
+        self.description = description
+        self.domain = domain
+        self.rationale = rationale
+        self.timeframe = timeframe
+        self.action_type = action_type
+        self.evidence_tags = evidence_tags
+
+
+MOVEMENT_ACTION = FallbackActionTemplate(
+    title="Take Regular Movement Breaks",
+    description="Incorporate 5-minute walking or stretching breaks during prolonged desk work, and aim for 20 to 30 minutes of moderate activity most days.",
+    domain="lifestyle_wellness",
+    rationale="Regular light movement stimulates circulation and prevents prolonged physical inactivity.",
+    timeframe="Start this week",
+    action_type="lifestyle",
+    evidence_tags=["sedentary_behavior", "physical_activity", "cardiovascular_fitness"],
+)
+
+SLEEP_ACTION = FallbackActionTemplate(
+    title="Establish a Consistent Sleep Schedule",
+    description="Aim to sleep and wake at similar times each day and limit bright screens 30 minutes before bed.",
+    domain="lifestyle_wellness",
+    rationale="Consistent sleep schedules promote restorative rest and cellular recovery.",
+    timeframe="Next 2-4 weeks",
+    action_type="lifestyle",
+    evidence_tags=["sleep_duration", "circadian_rhythm", "recovery"],
+)
+
+HEAT_ACTION = FallbackActionTemplate(
+    title="Use a Laptop Desk or Stand",
+    description="Avoid resting warm laptops or heating devices directly on your lap or groin area.",
+    domain="environmental_exposure",
+    rationale="Keeping the groin area at a normal resting temperature supports optimal testicular comfort and function.",
+    timeframe="Ongoing",
+    action_type="lifestyle",
+    evidence_tags=["device_heat", "hyperthermia", "scrotal_temperature"],
+)
+
+STRESS_ACTION = FallbackActionTemplate(
+    title="Incorporate Daily Relaxation & Recovery Breaks",
+    description="Dedicate 10 to 15 minutes each evening to quiet breathing, gentle walks, or unwinding without work devices.",
+    domain="mental_behavioral_wellness",
+    rationale="Lowering everyday sympathetic nervous tension supports autonomic recovery and restorative sleep.",
+    timeframe="1-2 weeks",
+    action_type="self_monitoring",
+    evidence_tags=["stress", "autonomic_regulation", "cortisol", "mindfulness"],
+)
+
+TOBACCO_ACTION = FallbackActionTemplate(
+    title="Plan Gradual Tobacco & Nicotine Reduction",
+    description="Work toward reducing daily tobacco and nicotine use, and consult a healthcare provider for evidence-informed cessation resources.",
+    domain="substance_medication",
+    rationale="Reducing tobacco use supports vascular elasticity, microvascular circulation, and decreases oxidative stress.",
+    timeframe="Next 1-3 months",
+    action_type="lifestyle",
+    evidence_tags=["tobacco", "nicotine", "tobacco_abstinence", "vascular_health"],
+)
+
+ALCOHOL_ACTION = FallbackActionTemplate(
+    title="Moderate Alcohol Consumption",
+    description="Keep alcohol consumption within conservative guidelines, including regular alcohol-free days during the week.",
+    domain="substance_medication",
+    rationale="Moderating alcohol supports liver function, restorative sleep architecture, and general physiological wellness.",
+    timeframe="Next 2-4 weeks",
+    action_type="lifestyle",
+    evidence_tags=["alcohol", "alcohol_moderation", "metabolic_health"],
+)
+
+NUTRITION_ACTION = FallbackActionTemplate(
+    title="Incorporate More Whole Foods & Daily Hydration",
+    description="Add fresh fruits, leafy vegetables, or whole grains to meals and ensure steady hydration throughout the day.",
+    domain="lifestyle_wellness",
+    rationale="Antioxidant-rich whole foods and adequate hydration provide micronutrients that support cellular wellness.",
+    timeframe="Next 2-4 weeks",
+    action_type="lifestyle",
+    evidence_tags=["dietary_antioxidants", "diet_quality", "hydration", "micronutrients"],
+)
+
+DIGITAL_ACTION = FallbackActionTemplate(
+    title="Adopt Mindful Digital Consumption Boundaries",
+    description="Set intentional limits on adult digital media and screen time, prioritizing offline recovery and restful routines.",
+    domain="sexual_health",
+    rationale="Balanced digital habits encourage realistic intimacy standards, healthy dopamine regulation, and reduced psychosexual stress.",
+    timeframe="Next 2-4 weeks",
+    action_type="self_monitoring",
+    evidence_tags=["digital_habits", "behavioral_control", "media_expectations", "relational_intimacy"],
+)
+
+CLINICAL_HISTORY_ACTION = FallbackActionTemplate(
+    title="Discuss Health History With a Healthcare Provider",
+    description="Schedule an in-person routine consultation with a doctor or urologist to review your self-reported history.",
+    domain="reproductive_health",
+    rationale="In-person clinical evaluation provides physical examination and context that cannot be assessed through screening questionnaires.",
+    timeframe="Next 1-3 months",
+    action_type="professional_discussion",
+    evidence_tags=["urology_consultation", "varicocele_screening", "reproductive_history"],
+)
+
+INTIMACY_ACTION = FallbackActionTemplate(
+    title="Practice Compassionate Intimacy Communication",
+    description="Engage in open, low-pressure conversations with your partner or a counselor regarding expectations and comfort.",
+    domain="sexual_health",
+    rationale="Taking a supportive, pressure-free approach reduces performance anxiety and enhances psychosexual wellbeing.",
+    timeframe="Ongoing",
+    action_type="education",
+    evidence_tags=["performance_anxiety", "intimacy_confidence", "psychosexual_health"],
+)
+
+TOXIN_ACTION = FallbackActionTemplate(
+    title="Reduce Ambient Chemical & Toxin Contact",
+    description="Use appropriate protective equipment when handling chemicals and opt for glass or stainless-steel containers for food storage.",
+    domain="environmental_exposure",
+    rationale="Limiting exposure to industrial chemicals and plasticizers supports cellular wellness and endocrine protection.",
+    timeframe="Ongoing",
+    action_type="lifestyle",
+    evidence_tags=["environmental_toxins", "endocrine_disruptors", "endocrine_protection"],
+)
+
+EXACT_FACTOR_ACTION_MAP: dict[str, FallbackActionTemplate] = {
+    "sedentary_activity_level": MOVEMENT_ACTION,
+    "low_physical_activity": MOVEMENT_ACTION,
+    "short_sleep_duration": SLEEP_ACTION,
+    "irregular_sleep": SLEEP_ACTION,
+    "laptop_heat_exposure": HEAT_ACTION,
+    "frequent_heat_exposure": HEAT_ACTION,
+    "elevated_perceived_stress": STRESS_ACTION,
+    "severe_perceived_stress": STRESS_ACTION,
+    "elevated_mood_screening_proxy": STRESS_ACTION,
+    "elevated_anxiety_screening_proxy": STRESS_ACTION,
+    "tobacco_exposure": TOBACCO_ACTION,
+    "smoking_habit": TOBACCO_ACTION,
+    "alcohol_consumption": ALCOHOL_ACTION,
+    "low_produce_intake": NUTRITION_ACTION,
+    "frequent_processed_food": NUTRITION_ACTION,
+    "low_hydration": NUTRITION_ACTION,
+    "perceived_loss_of_control_digital": DIGITAL_ACTION,
+    "difficulty_moderating_consumption": DIGITAL_ACTION,
+    "digital_behavior_functional_impact": DIGITAL_ACTION,
+    "high_daily_screen_time_adult_content": DIGITAL_ACTION,
+    "digital_content_emotional_coping": DIGITAL_ACTION,
+    "masturbation_control": DIGITAL_ACTION,
+    "spectatoring_self_monitoring": DIGITAL_ACTION,
+    "pornography_driven_performance_standard": DIGITAL_ACTION,
+    "known_varicocele_history": CLINICAL_HISTORY_ACTION,
+    "prior_sti_history": CLINICAL_HISTORY_ACTION,
+    "scrotal_or_groin_injury": CLINICAL_HISTORY_ACTION,
+    "childhood_disease_mumps": CLINICAL_HISTORY_ACTION,
+    "ejaculation_concerns": CLINICAL_HISTORY_ACTION,
+    "partnered_sexual_difficulty": INTIMACY_ACTION,
+    "genital_self_image_concern": INTIMACY_ACTION,
+    "libido_changes": INTIMACY_ACTION,
+}
+
+def resolve_fallback_action_template(factor_id: str) -> Optional[FallbackActionTemplate]:
+    """Deterministically maps a factor ID or category to a reviewed conservative educational action."""
+    f_id = factor_id.lower().strip()
+    if f_id in EXACT_FACTOR_ACTION_MAP:
+        return EXACT_FACTOR_ACTION_MAP[f_id]
+
+    if "sedentary" in f_id or "physical_activity" in f_id or "exercise" in f_id:
+        return MOVEMENT_ACTION
+    if "sleep" in f_id:
+        return SLEEP_ACTION
+    if "heat" in f_id or "laptop" in f_id:
+        return HEAT_ACTION
+    if "stress" in f_id or "mood" in f_id or "anxiety" in f_id:
+        return STRESS_ACTION
+    if "tobacco" in f_id or "smoking" in f_id or "nicotine" in f_id:
+        return TOBACCO_ACTION
+    if "alcohol" in f_id:
+        return ALCOHOL_ACTION
+    if "produce" in f_id or "diet" in f_id or "processed" in f_id or "hydration" in f_id or "nutrition" in f_id:
+        return NUTRITION_ACTION
+    if "digital" in f_id or "pornograph" in f_id or "masturbat" in f_id or "spectator" in f_id or "screen_time" in f_id:
+        return DIGITAL_ACTION
+    if "varicocele" in f_id or "sti" in f_id or "mumps" in f_id or "injury" in f_id or "ejacul" in f_id:
+        return CLINICAL_HISTORY_ACTION
+    if "partner" in f_id or "libido" in f_id or "image" in f_id or "intimacy" in f_id:
+        return INTIMACY_ACTION
+    if "toxin" in f_id or "pesticide" in f_id or "chemical" in f_id or "plastic" in f_id:
+        return TOXIN_ACTION
+
+    return None
+
+
 def humanize_factor_title(factor_id: str) -> str:
     """Converts internal factor IDs into friendly everyday titles."""
     mapping = {
@@ -630,13 +935,17 @@ def build_fallback_report(
 
     # 2. Extract valid evidence IDs
     valid_ids = [e.evidence_id for e in evidence_context.items]
-    first_ev_id = [valid_ids[0]] if valid_ids else []
 
     # 3. Build Priority Factors from modifiable factors
     priority_factors: list[PriorityFactorReportItem] = []
     for idx, f in enumerate(health_context.modifiable_factors[:5]):
         source_q_ids = [q for q in f.source_question_ids if q in QUESTION_DOMAIN_MAP] or ["physical_activity_level"]
         norm_domain = normalize_report_domain(f.domain)
+        f_refs = find_evidence_for_factor(
+            evidence_context.items,
+            factor_domain=f.domain,
+            factor_tags=f.evidence_tags,
+        )
         priority_factors.append(
             PriorityFactorReportItem(
                 id=f"pf_{idx + 1}",
@@ -644,7 +953,7 @@ def build_fallback_report(
                 title=humanize_factor_title(f.id),
                 description=humanize_factor_description(f),
                 source_question_ids=source_q_ids,
-                evidence_refs=first_ev_id,
+                evidence_refs=f_refs[:2],
                 actionable=True,
                 severity="moderate",
             )
@@ -658,7 +967,7 @@ def build_fallback_report(
                 title="Routine Health Maintenance",
                 description="Continue balanced lifestyle habits, good daily hydration, and regular physical activity to support your baseline wellness.",
                 source_question_ids=["physical_activity_level"],
-                evidence_refs=first_ev_id,
+                evidence_refs=[],
                 actionable=True,
                 severity="low",
             )
@@ -669,6 +978,11 @@ def build_fallback_report(
     for idx, p in enumerate(health_context.positive_factors[:5]):
         source_q_ids = [q for q in p.source_question_ids if q in QUESTION_DOMAIN_MAP] or ["age_years"]
         norm_domain = normalize_report_domain(p.domain)
+        p_refs = find_evidence_for_factor(
+            evidence_context.items,
+            factor_domain=p.domain,
+            factor_tags=p.evidence_tags,
+        )
         positive_factors.append(
             PositiveFactorReportItem(
                 id=f"pos_{idx + 1}",
@@ -676,7 +990,7 @@ def build_fallback_report(
                 title=humanize_positive_title(p.id),
                 description=humanize_positive_description(p),
                 source_question_ids=source_q_ids,
-                evidence_refs=first_ev_id,
+                evidence_refs=p_refs[:2],
             )
         )
 
@@ -688,36 +1002,59 @@ def build_fallback_report(
                 title="Proactive Health Engagement",
                 description="Taking the time to complete this comprehensive health screening demonstrates proactive personal wellness engagement.",
                 source_question_ids=["age_years"],
-                evidence_refs=first_ev_id,
+                evidence_refs=[],
             )
         )
 
-    # 5. Build Action Plan
+    # 5. Build Action Plan with deterministic, factor-specific mapping
     personalized_actions: list[PersonalizedAction] = []
-    action_templates = [
-        ("Take Daily Movement Breaks", "Incorporate 5-minute walking or stretching breaks every hour during prolonged desk work.", "Regular light movement stimulates circulation and prevents prolonged physical inactivity.", "Start this week", "lifestyle"),
-        ("Establish a Consistent Bedtime", "Aim to sleep and wake at similar times each day and limit bright screens 30 minutes before bed.", "Consistent sleep schedules promote restorative rest and cellular recovery.", "Next 2-4 weeks", "lifestyle"),
-        ("Use a Laptop Desk or Stand", "Avoid resting warm laptops or heating devices directly on your lap.", "Keeping the groin area at a normal resting temperature supports optimal testicular comfort and function.", "Ongoing", "lifestyle"),
-    ]
+    seen_action_titles: set[str] = set()
 
-    for idx, f in enumerate(health_context.modifiable_factors[:3]):
-        norm_domain = normalize_report_domain(f.domain)
-        tmpl = action_templates[idx % len(action_templates)]
+    for f in health_context.modifiable_factors[:5]:
+        tmpl = resolve_fallback_action_template(f.id)
+        if tmpl and tmpl.title.lower() not in seen_action_titles:
+            act_refs = find_evidence_for_factor(
+                evidence_context.items,
+                factor_domain=tmpl.domain,
+                factor_tags=tmpl.evidence_tags,
+            )
+            personalized_actions.append(
+                PersonalizedAction(
+                    id=f"act_{len(personalized_actions) + 1}",
+                    title=tmpl.title,
+                    description=tmpl.description,
+                    domain=tmpl.domain,
+                    rationale=tmpl.rationale,
+                    evidence_refs=act_refs[:2],
+                    timeframe=tmpl.timeframe,
+                    action_type=tmpl.action_type,
+                    priority=len(personalized_actions) + 1,
+                )
+            )
+            seen_action_titles.add(tmpl.title.lower())
+            if len(personalized_actions) >= 3:
+                break
+
+    # If modifiable factors existed but none matched reviewed templates, provide clearly labeled educational fallback
+    if not personalized_actions and health_context.modifiable_factors:
+        first_mod = health_context.modifiable_factors[0]
+        norm_domain = normalize_report_domain(first_mod.domain)
         personalized_actions.append(
             PersonalizedAction(
-                id=f"act_{idx + 1}",
-                title=tmpl[0],
-                description=tmpl[1],
+                id="act_1",
+                title="Routine Health Discussion",
+                description=f"Consider discussing {humanize_factor_title(first_mod.id)} with a qualified clinician for personalized educational guidance.",
                 domain=norm_domain,
-                rationale=tmpl[2],
-                evidence_refs=first_ev_id,
-                timeframe=tmpl[3],
-                action_type=tmpl[4],
-                priority=idx + 1,
+                rationale="Consulting a qualified healthcare provider ensures guidance is tailored to your individual medical context.",
+                evidence_refs=[],
+                timeframe="Next 1-3 months",
+                action_type="professional_discussion",
+                priority=1,
             )
         )
 
     if not personalized_actions:
+        act_refs = find_evidence_for_domain(evidence_context.items, "lifestyle_wellness")
         personalized_actions.append(
             PersonalizedAction(
                 id="act_baseline",
@@ -725,7 +1062,7 @@ def build_fallback_report(
                 description="Continue balanced nutrition, regular hydration, and daily physical movement.",
                 domain="lifestyle_wellness",
                 rationale="Consistent daily habits support long-term physical stamina and metabolic wellness.",
-                evidence_refs=first_ev_id,
+                evidence_refs=act_refs[:2],
                 timeframe="ongoing",
                 action_type="lifestyle",
                 priority=1,
@@ -818,39 +1155,39 @@ def build_fallback_report(
             summary="A review of your self-reported history suggests an overall stable baseline, with opportunities to maintain general reproductive wellbeing.",
             reported_context=[f.reason for f in health_context.context_flags if "repro" in f.domain],
             relevant_factors=[f.reason for f in health_context.modifiable_factors if "repro" in f.domain],
-            evidence_refs=first_ev_id,
+            evidence_refs=find_evidence_for_domain(evidence_context.items, "reproductive_health"),
             limitations=["Questionnaire responses provide self-reported context only and do not replace laboratory semen analysis or physical examination."],
         ),
         sexual_health=SexualHealthReportSection(
             summary="Your responses indicate healthy psychosexual awareness. Remember that intimacy and energy naturally fluctuate with daily stress and sleep.",
             reported_context=[f.reason for f in health_context.context_flags if "sex" in f.domain],
             relevant_factors=[f.reason for f in health_context.modifiable_factors if "sex" in f.domain],
-            evidence_refs=first_ev_id,
+            evidence_refs=find_evidence_for_domain(evidence_context.items, "sexual_health"),
             limitations=["Sexual wellbeing reflects personal experience and normal physiological variability."],
         ),
         mental_behavioral_wellness=MentalBehavioralWellnessReportSection(
             summary="Managing everyday stress, balancing work hours, and maintaining restorative relaxation routines are important pillars of your overall health.",
             reported_context=[f.reason for f in health_context.context_flags if "mental" in f.domain or "stress" in f.domain],
             relevant_factors=[f.reason for f in health_context.modifiable_factors if "mental" in f.domain or "stress" in f.domain],
-            evidence_refs=first_ev_id,
+            evidence_refs=find_evidence_for_domain(evidence_context.items, "mental_behavioral_wellness"),
             limitations=["Brief screening indicators are informational and do not represent formal psychiatric diagnoses."],
         ),
         lifestyle_wellness=LifestyleWellnessReportSection(
             summary="Daily movement, consistent sleep schedules, and balanced hydration create a strong foundation for long-term physical vitality.",
             relevant_factors=[f.reason for f in health_context.modifiable_factors if "lifestyle" in f.domain],
-            evidence_refs=first_ev_id,
+            evidence_refs=find_evidence_for_domain(evidence_context.items, "lifestyle_wellness"),
             limitations=["Lifestyle assessments are based on self-reported estimates."],
         ),
         environmental_exposure=EnvironmentalExposureReportSection(
             summary="Minimizing prolonged direct heat around the groin and maintaining good ergonomic habits help protect your everyday comfort.",
             relevant_factors=[f.reason for f in health_context.modifiable_factors if "heat" in f.domain or "env" in f.domain],
-            evidence_refs=first_ev_id,
+            evidence_refs=find_evidence_for_domain(evidence_context.items, "environmental_exposure"),
             limitations=["Observational associations reflect general health patterns rather than direct individual outcomes."],
         ),
         substance_medication=SubstanceMedicationReportSection(
             summary="Maintaining a tobacco-free lifestyle and moderating substance exposure support healthy blood vessels and circulation.",
             relevant_factors=[f.reason for f in health_context.modifiable_factors if "substance" in f.domain or "med" in f.domain],
-            evidence_refs=first_ev_id,
+            evidence_refs=find_evidence_for_domain(evidence_context.items, "substance_medication"),
             limitations=["Medication and supplement reviews must always be conducted directly with prescribing physicians."],
         ),
         priority_factors=priority_factors,
@@ -899,7 +1236,6 @@ def enrich_and_complete_report(
     8. Ensures executive summary themes and attention areas match populated factors.
     """
     valid_ev_ids = [e.evidence_id for e in evidence_context.items]
-    first_ev_id = [valid_ev_ids[0]] if valid_ev_ids else []
 
     # 1. Evidence: ensure all retrieved evidence items are present with full metadata
     existing_ev_ids = {e.evidence_id for e in report.evidence}
@@ -924,7 +1260,11 @@ def enrich_and_complete_report(
     if not enriched_positive and health_context.positive_factors:
         for p in health_context.positive_factors:
             source_q_ids = [q for q in p.source_question_ids if q in QUESTION_DOMAIN_MAP] or ["age_years"]
-            p_refs = [e.evidence_id for e in evidence_context.items if any(t in p.domain for t in e.matched_tags)] or first_ev_id
+            p_refs = find_evidence_for_factor(
+                evidence_context.items,
+                factor_domain=p.domain,
+                factor_tags=p.evidence_tags,
+            )
             enriched_positive.append(
                 PositiveFactorReportItem(
                     id=f"pos_{len(enriched_positive) + 1}",
@@ -946,7 +1286,7 @@ def enrich_and_complete_report(
                 title="Proactive Health Engagement",
                 description="Taking the time to complete this comprehensive screening demonstrates proactive engagement with personal wellness.",
                 source_question_ids=["age_years"],
-                evidence_refs=first_ev_id,
+                evidence_refs=[],
             )
         )
 
@@ -955,7 +1295,11 @@ def enrich_and_complete_report(
     if not enriched_priority and health_context.modifiable_factors:
         for f in health_context.modifiable_factors:
             source_q_ids = [q for q in f.source_question_ids if q in QUESTION_DOMAIN_MAP] or ["physical_activity_level"]
-            f_refs = [e.evidence_id for e in evidence_context.items if any(t in f.domain for t in e.matched_tags)] or first_ev_id
+            f_refs = find_evidence_for_factor(
+                evidence_context.items,
+                factor_domain=f.domain,
+                factor_tags=f.evidence_tags,
+            )
             enriched_priority.append(
                 PriorityFactorReportItem(
                     id=f"pf_{len(enriched_priority) + 1}",
@@ -979,40 +1323,72 @@ def enrich_and_complete_report(
                 title="Routine Health Maintenance",
                 description="Continue balanced lifestyle habits, good daily hydration, and regular physical activity to support your baseline wellness.",
                 source_question_ids=["physical_activity_level"],
-                evidence_refs=first_ev_id,
+                evidence_refs=[],
                 actionable=True,
                 severity="low",
             )
         )
 
-    # 4. Action Plan: enrich if completely empty
+    # 4. Action Plan: enrich if completely empty using deterministic factor mapping
     enriched_actions = list(report.personalized_action_plan)
     if not enriched_actions:
-        action_templates = [
-            ("Take Daily Movement Breaks", "Incorporate 5-minute walking or stretching breaks every hour during prolonged desk work to stimulate pelvic circulation.", "lifestyle_wellness", "Regular light movement prevents prolonged physical stagnation and promotes metabolic wellness.", "Start this week", "lifestyle"),
-            ("Maintain a Consistent Sleep Schedule", "Aim to sleep and wake at similar times each day and limit bright screens 30 minutes before bed.", "lifestyle_wellness", "Consistent sleep schedules promote restorative rest and endocrine balance.", "Next 2-4 weeks", "lifestyle"),
-            ("Avoid Direct Groin Heat Exposure", "Avoid resting warm laptops or heating devices directly on your lap or groin area.", "environmental_exposure", "Keeping the scrotal area at normal resting temperature supports optimal tissue function.", "Ongoing", "lifestyle"),
-            ("Mindful Stress Reduction", "Incorporate 10-15 minutes of quiet breathing, outdoor walks, or relaxation into your daily evening routine.", "mental_behavioral_wellness", "Lowering sympathetic nervous stress supports autonomic nervous balance.", "1-2 weeks", "self_monitoring"),
-        ]
         existing_act_titles = {a.title.lower() for a in enriched_actions}
-        for tmpl in action_templates:
-            if tmpl[0].lower() not in existing_act_titles:
-                act_refs = [e.evidence_id for e in evidence_context.items if any(t in tmpl[2] for t in e.matched_tags)] or first_ev_id
+        for f in health_context.modifiable_factors[:5]:
+            tmpl = resolve_fallback_action_template(f.id)
+            if tmpl and tmpl.title.lower() not in existing_act_titles:
+                act_refs = find_evidence_for_factor(
+                    evidence_context.items,
+                    factor_domain=tmpl.domain,
+                    factor_tags=tmpl.evidence_tags,
+                )
                 enriched_actions.append(
                     PersonalizedAction(
                         id=f"act_{len(enriched_actions) + 1}",
-                        title=tmpl[0],
-                        description=tmpl[1],
-                        domain=tmpl[2],
-                        rationale=tmpl[3],
+                        title=tmpl.title,
+                        description=tmpl.description,
+                        domain=tmpl.domain,
+                        rationale=tmpl.rationale,
                         evidence_refs=act_refs[:2],
-                        timeframe=tmpl[4],
-                        action_type=tmpl[5],
+                        timeframe=tmpl.timeframe,
+                        action_type=tmpl.action_type,
                         priority=len(enriched_actions) + 1,
                     )
                 )
+                existing_act_titles.add(tmpl.title.lower())
                 if len(enriched_actions) >= 4:
                     break
+
+        if not enriched_actions and health_context.modifiable_factors:
+            first_mod = health_context.modifiable_factors[0]
+            enriched_actions.append(
+                PersonalizedAction(
+                    id="act_1",
+                    title="Routine Health Discussion",
+                    description=f"Consider discussing {humanize_factor_title(first_mod.id)} with a qualified clinician for personalized educational guidance.",
+                    domain=normalize_report_domain(first_mod.domain),
+                    rationale="Consulting a qualified healthcare provider ensures guidance is tailored to your individual medical context.",
+                    evidence_refs=[],
+                    timeframe="Next 1-3 months",
+                    action_type="professional_discussion",
+                    priority=1,
+                )
+            )
+
+        if not enriched_actions:
+            act_refs = find_evidence_for_domain(evidence_context.items, "lifestyle_wellness")
+            enriched_actions.append(
+                PersonalizedAction(
+                    id="act_baseline",
+                    title="Maintain Daily Wellness Routine",
+                    description="Continue balanced nutrition, regular hydration, and daily physical movement.",
+                    domain="lifestyle_wellness",
+                    rationale="Consistent daily habits support long-term physical stamina and metabolic wellness.",
+                    evidence_refs=act_refs[:2],
+                    timeframe="ongoing",
+                    action_type="lifestyle",
+                    priority=1,
+                )
+            )
 
     # 5. Clinician Discussion Questions: enrich if completely empty
     enriched_questions = list(report.questions_to_discuss_with_clinician)
@@ -1088,7 +1464,8 @@ def enrich_and_complete_report(
     rep = report.reproductive_health
     rep_factors = rep.relevant_factors or [f.reason for f in health_context.modifiable_factors if "repro" in f.domain]
     rep_context = rep.reported_context or [f.reason for f in health_context.context_flags if "repro" in f.domain]
-    rep_refs = [r for r in rep.evidence_refs if r in valid_ev_ids] or first_ev_id
+    rep_valid = [r for r in rep.evidence_refs if r in valid_ev_ids]
+    rep_refs = rep_valid if rep_valid else find_evidence_for_domain(evidence_context.items, "reproductive_health")
     rep_summary = rep.summary if rep.summary and len(rep.summary) > 20 else (
         "No specific reproductive concerns were identified from the answers provided in this area."
         if not rep_factors and not rep_context else
@@ -1098,7 +1475,8 @@ def enrich_and_complete_report(
     sex = report.sexual_health
     sex_factors = sex.relevant_factors or [f.reason for f in health_context.modifiable_factors if "sex" in f.domain]
     sex_context = sex.reported_context or [f.reason for f in health_context.context_flags if "sex" in f.domain]
-    sex_refs = [r for r in sex.evidence_refs if r in valid_ev_ids] or first_ev_id
+    sex_valid = [r for r in sex.evidence_refs if r in valid_ev_ids]
+    sex_refs = sex_valid if sex_valid else find_evidence_for_domain(evidence_context.items, "sexual_health")
     sex_summary = sex.summary if sex.summary and len(sex.summary) > 20 else (
         "No specific psychosexual concerns were identified from your assessment responses."
         if not sex_factors and not sex_context else
@@ -1108,7 +1486,8 @@ def enrich_and_complete_report(
     men = report.mental_behavioral_wellness
     men_factors = men.relevant_factors or [f.reason for f in health_context.modifiable_factors if "mental" in f.domain or "stress" in f.domain or "psych" in f.domain]
     men_context = men.reported_context or [f.reason for f in health_context.context_flags if "mental" in f.domain or "stress" in f.domain]
-    men_refs = [r for r in men.evidence_refs if r in valid_ev_ids] or first_ev_id
+    men_valid = [r for r in men.evidence_refs if r in valid_ev_ids]
+    men_refs = men_valid if men_valid else find_evidence_for_domain(evidence_context.items, "mental_behavioral_wellness")
     men_summary = men.summary if men.summary and len(men.summary) > 20 else (
         "No elevated stress or sleep challenges were reported in this screening."
         if not men_factors and not men_context else
@@ -1117,7 +1496,8 @@ def enrich_and_complete_report(
 
     life = report.lifestyle_wellness
     life_factors = life.relevant_factors or [f.reason for f in health_context.modifiable_factors if "lifestyle" in f.domain or "sleep" in f.domain or "diet" in f.domain]
-    life_refs = [r for r in life.evidence_refs if r in valid_ev_ids] or first_ev_id
+    life_valid = [r for r in life.evidence_refs if r in valid_ev_ids]
+    life_refs = life_valid if life_valid else find_evidence_for_domain(evidence_context.items, "lifestyle_wellness")
     life_summary = life.summary if life.summary and len(life.summary) > 20 else (
         "Your responses indicate solid baseline daily lifestyle habits."
         if not life_factors else
@@ -1126,7 +1506,8 @@ def enrich_and_complete_report(
 
     env = report.environmental_exposure
     env_factors = env.relevant_factors or [f.reason for f in health_context.modifiable_factors if "env" in f.domain or "heat" in f.domain]
-    env_refs = [r for r in env.evidence_refs if r in valid_ev_ids] or first_ev_id
+    env_valid = [r for r in env.evidence_refs if r in valid_ev_ids]
+    env_refs = env_valid if env_valid else find_evidence_for_domain(evidence_context.items, "environmental_exposure")
     env_summary = env.summary if env.summary and len(env.summary) > 20 else (
         "No significant environmental heat or chemical exposures were identified."
         if not env_factors else
@@ -1135,7 +1516,8 @@ def enrich_and_complete_report(
 
     sub = report.substance_medication
     sub_factors = sub.relevant_factors or [f.reason for f in health_context.modifiable_factors if "substance" in f.domain or "med" in f.domain or "alcohol" in f.domain or "tobacco" in f.domain]
-    sub_refs = [r for r in sub.evidence_refs if r in valid_ev_ids] or first_ev_id
+    sub_valid = [r for r in sub.evidence_refs if r in valid_ev_ids]
+    sub_refs = sub_valid if sub_valid else find_evidence_for_domain(evidence_context.items, "substance_medication")
     sub_summary = sub.summary if sub.summary and len(sub.summary) > 20 else (
         "No tobacco, alcohol escalation, or unmonitored substance exposures were reported."
         if not sub_factors else

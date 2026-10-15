@@ -1,10 +1,10 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
 from sqlalchemy.orm import Session
 from uuid import UUID
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from app.database import get_db
 from app.auth.firebase_auth import get_current_user
@@ -34,6 +34,8 @@ from app.services.triage_service import (
     evaluate_free_text_triage,
     TriageResult,
 )
+from app.schemas.longitudinal import AssessmentComparisonOut
+from app.services.longitudinal_service import LongitudinalService
 
 logger = logging.getLogger(__name__)
 
@@ -432,6 +434,36 @@ def get_assessment_report(
 
     # Return report content dictionary
     return report.report_content
+
+
+@router.get("/{assessment_id}/compare", response_model=AssessmentComparisonOut)
+def compare_assessment(
+    assessment_id: UUID,
+    target_id: Optional[UUID] = Query(None, description="Optional target assessment ID to compare against"),
+    request: Request = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Deterministically compare a completed assessment session with a prior completed session.
+    Defaults to the immediately preceding completed session if target_id is omitted.
+    Returns structured categorical factor transitions, domain deltas, and wellness plan adherence context.
+    Does not invoke external LLMs and requires no third-party AI consent.
+    """
+    if request:
+        check_rate_limit(
+            request=request,
+            key=f"assessment_compare:{current_user.id}",
+            max_requests=getattr(settings, "RATE_LIMIT_DEFAULT_PER_MINUTE", 60),
+            window_seconds=60,
+        )
+
+    return LongitudinalService.compare_assessment_sessions(
+        db=db,
+        current_user=current_user,
+        current_assessment_id=assessment_id,
+        target_assessment_id=target_id,
+    )
 
 
 @router.delete("/{assessment_id}", response_model=AssessmentDeleteResponse)

@@ -505,7 +505,7 @@ export default function Dashboard({ onNavigateHome }) {
                         {DOMAIN_DEFINITIONS.map((dom) => {
                           const points = longitudinalData
                             .map((d, idx) => {
-                              const score = d.domainScores[dom.key];
+                              const score = d?.domainScores ? d.domainScores[dom.key] : null;
                               if (score === null || score === undefined) return null;
                               const totalPoints = Math.max(1, longitudinalData.length);
                               const x = totalPoints === 1 ? 200 : (idx / (totalPoints - 1)) * 380 + 10;
@@ -554,8 +554,8 @@ export default function Dashboard({ onNavigateHome }) {
                                       setHoveredPoint({
                                         domain: dom,
                                         score: pt.score,
-                                        date: pt.d.fullDateLabel,
-                                        factors: pt.d.domainFactors[dom.key],
+                                        date: pt.d?.fullDateLabel,
+                                        factors: pt.d?.domainFactors ? pt.d.domainFactors[dom.key] : null,
                                         x: pt.x,
                                         y: pt.y,
                                       })
