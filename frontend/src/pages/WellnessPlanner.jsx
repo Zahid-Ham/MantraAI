@@ -179,7 +179,7 @@ export default function WellnessPlanner({ onNavigateHome }) {
               )}
             </div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1C1917]">
-              {user?.displayName ? `${user.displayName.split(' ')[0]}'s ` : ''}Personalized Wellness Planner
+              Personalized Wellness Planner
             </h1>
             <p className="text-sm text-[#78716C] mt-1 max-w-2xl">
               Track daily evidence-informed wellness habits and adaptive movement targets. Adherence scores reflect self-reported routine consistency, not a clinical fertility or health score.

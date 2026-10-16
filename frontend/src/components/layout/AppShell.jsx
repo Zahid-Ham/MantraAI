@@ -25,14 +25,17 @@ export default function AppShell({ children, currentTab = 'assess', onNavigateHo
     });
   };
 
-  const displayName = user?.displayName || (user?.email ? user.email.split('@')[0] : 'Rahul Agarwal');
-  const initials = displayName
-    .split(' ')
-    .filter(Boolean)
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) || 'RA';
+  const isGuest = !user?.displayName || user.displayName.toLowerCase().includes('zahid') || user.displayName === 'Rahul Agarwal';
+  const displayName = isGuest ? 'Guest Member' : user.displayName;
+  const initials = isGuest
+    ? 'GM'
+    : displayName
+        .split(' ')
+        .filter(Boolean)
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2) || 'GM';
 
   const navItems = [
     {
@@ -167,13 +170,19 @@ export default function AppShell({ children, currentTab = 'assess', onNavigateHo
             <span className="absolute top-2 right-2 w-2 h-2 bg-[#EF4444] rounded-full ring-2 ring-white" />
           </button>
 
-          {/* User Initials Avatar */}
+          {/* User Profile / Guest Avatar */}
           <a
             href="#settings"
-            className="w-8 h-8 rounded-full bg-[#5A9A74] text-white flex items-center justify-center text-xs font-bold shadow-xs hover:opacity-90"
+            className="w-8 h-8 rounded-full bg-[#EBF5EE] text-[#1E3A2B] border border-[#D5E7DB] flex items-center justify-center text-xs font-bold shadow-xs hover:opacity-90"
             title={displayName}
           >
-            {initials}
+            {isGuest ? (
+              <svg className="w-4 h-4 text-[#1E3A2B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            ) : (
+              initials
+            )}
           </a>
 
           {/* Mobile menu toggle */}
@@ -346,12 +355,23 @@ export default function AppShell({ children, currentTab = 'assess', onNavigateHo
               className="flex items-center gap-2.5 p-1.5 pr-2.5 rounded-full hover:bg-[#F3EFEA] transition-colors group cursor-pointer"
               title="View Profile"
             >
-              <div className="w-8 h-8 rounded-full bg-[#5A9A74] text-white flex items-center justify-center text-xs font-bold shadow-xs">
-                {initials}
+              <div className="w-8 h-8 rounded-full bg-[#EBF5EE] text-[#1E3A2B] border border-[#D5E7DB] flex items-center justify-center text-xs font-bold shadow-xs">
+                {isGuest ? (
+                  <svg className="w-4 h-4 text-[#1E3A2B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                ) : (
+                  initials
+                )}
               </div>
-              <span className="text-xs font-semibold text-[#1C1917] group-hover:text-[#1E3A2B]">
-                {displayName}
-              </span>
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-semibold text-[#1C1917] group-hover:text-[#1E3A2B]">
+                  {displayName}
+                </span>
+                <span className="text-[10px] text-[#78716C] leading-none">
+                  Private Session
+                </span>
+              </div>
               <svg className="w-3.5 h-3.5 text-[#78716C] group-hover:text-[#1C1917]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>

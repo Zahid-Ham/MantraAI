@@ -122,9 +122,13 @@ export default function Dashboard({ onNavigateHome }) {
   const latestSession = completedSessionsNewestFirst[0] || null;
   const latestReport = latestSession ? reportsMap[latestSession.id] : null;
 
-  // Derive firstName for clean welcome header
-  const rawDisplayName = user?.displayName || (user?.email ? user.email.split('@')[0] : '');
-  const firstName = rawDisplayName ? rawDisplayName.split(' ')[0] : 'there';
+  // Dynamic time-of-day greeting (Sanctuary welcome)
+  const timeGreeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }, []);
 
   // Calculate elapsed time since first assessment
   const timeSinceFirstAssessment = useMemo(() => {
@@ -185,9 +189,9 @@ export default function Dashboard({ onNavigateHome }) {
         {/* ========================================================================= */}
         <div className="relative overflow-hidden bg-white border border-[#E8E5DF] rounded-2xl p-5 sm:p-7 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div className="relative z-10 max-w-xl">
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5">
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-serif text-[#1C1917] tracking-tight">
-                Welcome back, {firstName}
+                {timeGreeting}, Guest
               </h1>
               {/* Natural Leaf Icon SVG */}
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#EBF5EE] text-[#1E3A2B] flex items-center justify-center shrink-0">
@@ -195,9 +199,16 @@ export default function Dashboard({ onNavigateHome }) {
                   <path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 008 20C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z" />
                 </svg>
               </div>
+              {/* Discreet Privacy Pill Badge */}
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#EBF5EE] text-[#1E3A2B] border border-[#D5E7DB]">
+                <svg className="w-3 h-3 text-[#2D5A3C]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                Private Session
+              </span>
             </div>
             <p className="text-xs sm:text-sm text-[#57534E] mt-1.5 leading-relaxed">
-              Here's an overview of your health journey with MantraAI.
+              Welcome to your confidential health sanctuary. Here's an overview of your wellness journey.
             </p>
           </div>
 
